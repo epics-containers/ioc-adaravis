@@ -1,1 +1,1 @@
-image for generic ADAravis IOCs
+image for generic gige camera IOCs
