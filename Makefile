@@ -1,0 +1,50 @@
+TOP = ../..
+include $(TOP)/configure/CONFIG
+
+PROD_IOC = ioc
+DBD += ioc.dbd
+ioc_DBD += base.dbd
+ioc_DBD += devIocStats.dbd
+ioc_DBD += asyn.dbd
+ioc_DBD += busySupport.dbd
+ioc_DBD += ADSupport.dbd
+ioc_DBD += NDPluginSupport.dbd
+ioc_DBD += NDFileHDF5.dbd
+ioc_DBD += NDFileJPEG.dbd
+ioc_DBD += NDFileTIFF.dbd
+ioc_DBD += NDFileNull.dbd
+ioc_DBD += NDPosPlugin.dbd
+ioc_DBD += aravisCameraSupport.dbd
+ioc_DBD += calcSupport.dbd
+ioc_DBD += PVAServerRegister.dbd
+ioc_DBD += NDPluginPva.dbd
+ioc_DBD += ADZMQSupport.dbd
+ioc_DBD += ffmpegServer.dbd
+ioc_SRCS += ioc_registerRecordDeviceDriver.cpp
+ioc_LIBS += ffmpegServer
+ioc_LIBS += avdevice
+ioc_LIBS += avformat
+ioc_LIBS += avcodec
+ioc_LIBS += avutil
+ioc_LIBS += swscale
+ioc_LIBS += swresample
+ioc_LIBS += ADZMQ
+ioc_LIBS += ntndArrayConverter
+ioc_LIBS += nt
+ioc_LIBS += pvData
+ioc_LIBS += pvDatabase
+ioc_LIBS += pvAccessCA
+ioc_LIBS += pvAccessIOC
+ioc_LIBS += pvAccess
+ioc_LIBS += calc
+ioc_LIBS += aravisCamera
+ioc_LIBS += NDPlugin
+ioc_LIBS += ADBase
+ioc_LIBS += busy
+ioc_LIBS += asyn
+ioc_LIBS += devIocStats
+ioc_SYS_LIBS += zmq
+ioc_LIBS += $(EPICS_BASE_IOC_LIBS)
+ioc_SRCS += iocMain.cpp
+
+include $(TOP)/configure/RULES

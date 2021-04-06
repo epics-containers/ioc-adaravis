@@ -1,0 +1,5 @@
+# Generic RELEASE file that should work for all Support modules and IOCs
+
+SUPPORT=NOT-YET-SET # 'make release' in the support folder will set this
+AREA_DETECTOR=$(SUPPORT)
+include $(SUPPORT)/configure/RELEASE
