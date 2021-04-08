@@ -2,8 +2,7 @@
 ARG REGISTRY=gcr.io/diamond-privreg/controls/prod
 ARG ADCORE_VERSION=3.10b1
 
-FROM epics-adcore
-#FROM ${REGISTRY}/epics/epics-adcore:${ADCORE_VERSION}
+FROM ${REGISTRY}/epics/epics-adcore:${ADCORE_VERSION}
 
 ARG ARAVISGIGE_VERSION=R3-0
 
