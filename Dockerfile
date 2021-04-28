@@ -1,6 +1,6 @@
 # EPICS SynApps Dockerfile
 ARG REGISTRY=gcr.io/diamond-privreg/controls/prod
-ARG ADCORE_VERSION=3.10b1
+ARG ADCORE_VERSION=3.10b1.1
 
 FROM ${REGISTRY}/epics/epics-adcore:${ADCORE_VERSION}
 
