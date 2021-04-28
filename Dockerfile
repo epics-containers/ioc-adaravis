@@ -37,8 +37,8 @@ RUN ./add_module.sh areaDetector ADGenICam ADGENICAM ${ADGENICAM_VERSION}
 RUN ./add_module.sh areaDetector ADAravis ADARAVIS ${ADARAVIS_VERSION}
 
 # add CONFIG_SITE.linux and RELEASE.local
-COPY --chown=1000 configure ${SUPPORT}/ADGenICam-${ADGENICAM_VERSION}/configure
-COPY --chown=1000 configure ${SUPPORT}/ADAravis-${ADARAVIS_VERSION}/configure
+COPY --chown=${USER_UID}:${USER_GID} configure ${SUPPORT}/ADGenICam-${ADGENICAM_VERSION}/configure
+COPY --chown=${USER_UID}:${USER_GID} configure ${SUPPORT}/ADAravis-${ADARAVIS_VERSION}/configure
 
 # update dependencies and build
 RUN make release && \
@@ -48,7 +48,7 @@ RUN make release && \
     make -C ADAravis-${ADARAVIS_VERSION} clean
 
 # update the generic IOC Makefile
-COPY --chown=1000 Makefile ${SUPPORT}/ioc/iocApp/src
+COPY --chown=${USER_UID}:${USER_GID} Makefile ${SUPPORT}/ioc/iocApp/src
 
 # update dependencies and build (separate step for efficient image layers)
 RUN make release && \
