@@ -1,4 +1,4 @@
-# EPICS SynApps Dockerfile
+# Add support for GigE cameras with the ADAravis support module
 ARG REGISTRY=ghcr.io/epics-containers
 ARG ADCORE_VERSION=3.10r1.0
 
