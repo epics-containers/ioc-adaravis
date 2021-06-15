@@ -4,7 +4,6 @@ ARG ADCORE_VERSION=3.10r1.0
 
 FROM ${REGISTRY}/epics-adcore:${ADCORE_VERSION}
 
-
 # install additional tools and libs
 USER root
 
