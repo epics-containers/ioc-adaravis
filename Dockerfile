@@ -4,8 +4,6 @@ ARG ADCORE_VERSION=3.10r1.0
 
 FROM ${REGISTRY}/epics-adcore:${ADCORE_VERSION}
 
-ARG ADARAVIS_VERSION=R2-2-1
-ARG ADGENICAM_VERSION=R1-8
 
 # install additional tools and libs
 USER root
@@ -33,6 +31,9 @@ RUN cd /usr/local && \
 USER ${USERNAME}
 
 # get additional support modules
+ARG ADARAVIS_VERSION=R2-2-1
+ARG ADGENICAM_VERSION=R1-8
+
 RUN python3 module.py add areaDetector ADGenICam ADGENICAM ${ADGENICAM_VERSION}
 RUN python3 module.py add areaDetector ADAravis ADARAVIS ${ADARAVIS_VERSION}
 
