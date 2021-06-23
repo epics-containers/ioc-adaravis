@@ -1,8 +1,8 @@
 # Add support for GigE cameras with the ADAravis support module
 ARG REGISTRY=ghcr.io/epics-containers
-ARG ADCORE_VERSION=3.10r1.0
+ARG ADCORE_VERSION=3.10r1.1
 
-FROM ${REGISTRY}/epics-adcore:${ADCORE_VERSION}
+FROM ${REGISTRY}/epics-areadetector:${ADCORE_VERSION}
 
 # install additional tools and libs
 USER root
