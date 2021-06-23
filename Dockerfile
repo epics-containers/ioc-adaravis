@@ -44,7 +44,9 @@ COPY --chown=${USER_UID}:${USER_GID} configure ${SUPPORT}/ADAravis-${ADARAVIS_VE
 COPY --chown=${USER_UID}:${USER_GID} Makefile ${SUPPORT}/ioc/iocApp/src
 
 # update dependencies and build the support modules and the ioc
-RUN python3 module.py dependencies && \
-    make && \
-    make  clean
+RUN python3 module.py dependencies
+RUN make -j -C  ${SUPPORT}/ADGenICam-${ADGENICAM_VERSION} && \
+    make -j -C  ${SUPPORT}/ADAravis-${ADARAVIS_VERSION} && \
+    make -j -C  ${EPICS_ROOT}/ioc && \
+    make -j clean
 
