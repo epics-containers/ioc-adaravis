@@ -1,6 +1,6 @@
 # Add support for GigE cameras with the ADAravis support module
 ARG REGISTRY=ghcr.io/epics-containers
-ARG ADCORE_VERSION=3.10r1.1
+ARG ADCORE_VERSION=3.10r2.0
 
 FROM ${REGISTRY}/epics-areadetector:${ADCORE_VERSION}
 
@@ -13,19 +13,20 @@ RUN apt-get update && apt-get upgrade -y && \
     meson \
     intltool \
     pkg-config \
-    xz-utils
+    xz-utils \
+    && rm -rf /var/lib/apt/lists/*
 
 # build aravis library
 RUN cd /usr/local && \
-    git clone https://github.com/AravisProject/aravis && \
+    git clone -b ARAVIS_0_8_1 --depth 1 https://github.com/AravisProject/aravis && \
     cd aravis && \
-    git checkout ARAVIS_0_8_1 && \
     meson build && \
     cd build && \
     ninja && \
     ninja install && \
     echo /usr/local/lib64 > /etc/ld.so.conf.d/usr.conf && \
-    ldconfig
+    ldconfig && \
+    rm -fr /usr/local/aravis
 
 USER ${USERNAME}
 

@@ -10,5 +10,4 @@ USR_INCLUDES += -I$(GLIBPREFIX)/lib/x86_64-linux-gnu/glib-2.0/include/
 glib-2.0_DIR = $(GLIBPREFIX)/lib/x86_64-linux-gnu
 
 ARAVIS_INCLUDE  = /usr/local/include/aravis-0.8/
-ARAVIS_LIB      = /usr/local/lib64
 
