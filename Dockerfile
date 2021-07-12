@@ -32,7 +32,9 @@ RUN cd /usr/local && \
     cd build && \
     ninja && \
     ninja install && \
-    rm -fr /usr/local/aravis
+    rm -fr /usr/local/aravis \
+    echo /usr/local/lib64 > /etc/ld.so.conf.d/usr.conf && \
+    ldconfig
 
 USER ${USERNAME}
 
