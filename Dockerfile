@@ -1,13 +1,10 @@
 # Add support for GigE cameras with the ADAravis support module
-ARG REGISTRY=ghcr.io/epics-containers
-ARG ADCORE_VERSION=3.10r3.0
-
 ARG ADARAVIS_VERSION=R2-2-1
 ARG ADGENICAM_VERSION=R1-8
 
 ##### build stage ##############################################################
 
-FROM ${REGISTRY}/epics-areadetector:${ADCORE_VERSION} AS developer
+FROM ghcr.io/epics-containers/epics-areadetector:3.10r3.0 AS developer
 
 ARG ADARAVIS_VERSION
 ARG ADGENICAM_VERSION
@@ -58,7 +55,7 @@ RUN make -j -C  ${SUPPORT}/ADGenICam-${ADGENICAM_VERSION} && \
 
 ##### runtime stage ############################################################
 
-FROM ${REGISTRY}/epics-areadetector:${ADCORE_VERSION}.run AS runtime
+FROM ghcr.io/epics-containers/epics-areadetector:3.10r3.0.run AS runtime
 
 ARG ADARAVIS_VERSION
 ARG ADGENICAM_VERSION
