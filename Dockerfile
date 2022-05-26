@@ -4,17 +4,16 @@ ARG ADGENICAM_VERSION=R1-8
 
 ##### build stage ##############################################################
 
-FROM ghcr.io/epics-containers/epics-areadetector:3.10r3.0 AS developer
+FROM ghcr.io/epics-containers/epics-areadetector:1.0.0 AS developer
 
 ARG ADARAVIS_VERSION
 ARG ADGENICAM_VERSION
 
 # install additional packages
-USER root
-
 RUN apt-get update && apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
     libglib2.0-dev \
+    libxml2-dev \
     meson \
     intltool \
     pkg-config \
@@ -33,18 +32,16 @@ RUN cd /usr/local && \
     echo /usr/local/lib64 > /etc/ld.so.conf.d/usr.conf && \
     ldconfig
 
-USER ${USERNAME}
-
 # get additional support modules
 RUN python3 module.py add areaDetector ADGenICam ADGENICAM ${ADGENICAM_VERSION}
 RUN python3 module.py add areaDetector ADAravis ADARAVIS ${ADARAVIS_VERSION}
 
 # add CONFIG_SITE.linux and RELEASE.local
-COPY --chown=${USER_UID}:${USER_GID} configure ${SUPPORT}/ADGenICam-${ADGENICAM_VERSION}/configure
-COPY --chown=${USER_UID}:${USER_GID} configure ${SUPPORT}/ADAravis-${ADARAVIS_VERSION}/configure
+COPY configure ${SUPPORT}/ADGenICam-${ADGENICAM_VERSION}/configure
+COPY configure ${SUPPORT}/ADAravis-${ADARAVIS_VERSION}/configure
 
 # update the generic IOC Makefile to include the new support
-COPY --chown=${USER_UID}:${USER_GID} Makefile ${IOC}/iocApp/src
+COPY Makefile ${IOC}/iocApp/src
 
 # update dependencies and build the support modules and the ioc
 RUN python3 module.py dependencies
@@ -55,26 +52,23 @@ RUN make -j -C  ${SUPPORT}/ADGenICam-${ADGENICAM_VERSION} && \
 
 ##### runtime stage ############################################################
 
-FROM ghcr.io/epics-containers/epics-areadetector:3.10r3.0.run AS runtime
+FROM ghcr.io/epics-containers/epics-areadetector:1.0.0.run AS runtime
 
 ARG ADARAVIS_VERSION
 ARG ADGENICAM_VERSION
 
 # install runtime libraries from additional packages section above
-USER root
-
 RUN apt-get update -y && apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
     libglib2.0-bin \
+    libxml2 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=developer /usr/local/lib/x86_64-linux-gnu/libaravis* /usr/local/lib/x86_64-linux-gnu/
 ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib/x86_64-linux-gnu/
 
-USER ${USERNAME}
-
 # get the products from the build stage
 COPY --from=developer ${SUPPORT}/ADGenICam-${ADGENICAM_VERSION} ${SUPPORT}/ADGenICam-${ADGENICAM_VERSION}
 COPY --from=developer ${SUPPORT}/ADAravis-${ADARAVIS_VERSION} ${SUPPORT}/ADAravis-${ADARAVIS_VERSION}
-COPY --from=developer --chown=${USER_UID}:${USER_GID} ${IOC} ${IOC}
+COPY --from=developer ${IOC} ${IOC}
 COPY --from=developer ${SUPPORT}/configure ${SUPPORT}/configure
