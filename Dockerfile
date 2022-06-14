@@ -4,7 +4,7 @@ ARG ADGENICAM_VERSION=R1-8
 
 ##### build stage ##############################################################
 
-FROM ghcr.io/epics-containers/epics-areadetector:1.0.0 AS developer
+FROM ghcr.io/epics-containers/epics-areadetector:1.2.0 AS developer
 
 ARG ADARAVIS_VERSION
 ARG ADGENICAM_VERSION
@@ -52,7 +52,7 @@ RUN make -j -C  ${SUPPORT}/ADGenICam-${ADGENICAM_VERSION} && \
 
 ##### runtime stage ############################################################
 
-FROM ghcr.io/epics-containers/epics-areadetector:1.0.0.run AS runtime
+FROM ghcr.io/epics-containers/epics-areadetector-run:1.2.0 AS runtime
 
 ARG ADARAVIS_VERSION
 ARG ADGENICAM_VERSION
