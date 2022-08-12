@@ -52,7 +52,7 @@ RUN make -j -C  ${SUPPORT}/ADGenICam-${ADGENICAM_VERSION} && \
 
 ##### runtime stage ############################################################
 
-FROM ghcr.io/epics-containers/epics-areadetector-run:1.2.0 AS runtime
+FROM ghcr.io/epics-containers/epics-areadetector-run:1.2.1 AS runtime
 
 ARG ADARAVIS_VERSION
 ARG ADGENICAM_VERSION
