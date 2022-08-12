@@ -4,7 +4,7 @@ ARG ADGENICAM_VERSION=R1-8
 
 ##### build stage ##############################################################
 
-FROM ghcr.io/epics-containers/epics-areadetector:1.2.0 AS developer
+FROM ghcr.io/epics-containers/epics-areadetector:1.2.1 AS developer
 
 ARG ADARAVIS_VERSION
 ARG ADGENICAM_VERSION
