@@ -58,6 +58,7 @@ FROM ghcr.io/epics-containers/epics-base-linux-runtime:work AS runtime
 RUN apt-get update -y && apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
     libglib2.0-bin \
+    libusb-1.0-0 \
     libxml2 \
     && rm -rf /var/lib/apt/lists/*
 
