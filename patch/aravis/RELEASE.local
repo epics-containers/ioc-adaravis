@@ -1,0 +1,5 @@
+# Generic RELEASE file that should work for all Support modules and IOCs
+
+SUPPORT=NotYetSet
+AREA_DETECTOR=$(SUPPORT)
+include $(SUPPORT)/configure/RELEASE

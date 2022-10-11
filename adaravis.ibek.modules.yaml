@@ -1,0 +1,46 @@
+modules:
+  autosave:
+    macro: AUTOSAVE
+    tag: R5-10-2
+    git: github.com/epics-modules/autosave.git
+  asyn:
+    macro: ASYN
+    tag: R4-42
+    git: github.com/epics-modules/asyn.git
+    patch: patch/asyn
+  busy:
+    macro: BUSY
+    tag: R1-7-3
+    git: github.com/epics-modules/busy.git
+  sscan:
+    macro: SSCAN
+    tag: R2-11-5
+    git: github.com/epics-modules/sscan.git
+  calc:
+    macro: CALC
+    tag: R3-7-4
+    git: github.com/epics-modules/calc.git
+  adsupport:
+    macro: ADSUPPORT
+    patch: patch/adsupport
+    tag: R1-9-1
+    git: github.com/areaDetector/ADSupport.git
+    makeargs: -j
+  adcore:
+    macro: ADCORE
+    patch: patch/adcore
+    tag: R3-12-1
+    git: github.com/areaDetector/ADCore.git
+    makeargs: -j
+  adgenicam:
+    macro: ADGENICAM
+    patch: patch/adgenicam
+    tag: R1-8
+    git: github.com/areaDetector/ADGenICam.git
+    makeargs: -j
+  adaravis:
+    macro: ADARAVIS
+    patch: patch/adaravis
+    tag: R2-2-1
+    git: github.com/areaDetector/ADAravis.git
+    makeargs: -j

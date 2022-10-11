@@ -1,0 +1,1 @@
+cp patch/ad/* /repos/epics/support/adsupport/configure

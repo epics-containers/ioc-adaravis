@@ -1,0 +1,1 @@
+cp patch/aravis/* /repos/epics/support/adaravis/configure
