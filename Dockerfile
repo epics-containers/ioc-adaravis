@@ -10,7 +10,7 @@ RUN apt-get update && apt-get upgrade -y && \
     libboost-all-dev
 
 COPY ctools /ctools/
-RUN pip install ibek==0.9.5.b2
+RUN pip install ibek==0.9.5.b2 telnetlib3
 # copy the global ibek files
 COPY ibek-defs/_global /ctools/_global/
 
@@ -54,6 +54,12 @@ RUN bash /ctools/minimize.sh ${IOC} $(ls -d ${SUPPORT}/*/) /ctools
 ##### runtime stage ############################################################
 
 FROM ghcr.io/epics-containers/epics-base-${TARGET_ARCHITECTURE}-runtime:${BASE} AS runtime
+
+# these installs required for RTEMS only
+RUN apt-get update && apt-get upgrade -y && \
+    apt-get install -y --no-install-recommends \
+    telnet netcat psmisc \
+    && rm -rf /var/lib/apt/lists/*
 
 # add products from build stage
 COPY --from=runtime_prep /min_files /
