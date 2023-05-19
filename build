@@ -1,0 +1,12 @@
+#!/bin/bash
+
+THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+# a script to locally build all targets containers for this IOC
+# Note this requires the ec command form
+# https://github.com/epics-containers/epics-containers-cli
+
+cd ${THIS_DIR}
+
+ec dev build --arch linux
+ec dev build --arch rtems
