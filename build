@@ -9,4 +9,4 @@ THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd ${THIS_DIR}
 
 ec dev build --arch linux
-ec dev build --arch rtems
+#ec dev build --arch rtems
