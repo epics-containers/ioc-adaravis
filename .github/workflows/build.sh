@@ -19,7 +19,7 @@ TAG=${TAG:-latest}
 REGISTRY=${REGISTRY:-ghcr.io}
 if [[ -z ${REPOSITORY} ]] ; then
     # For local builds, infer the registry from git remote (assumes ghcr)
-    REPOSITORY=$(git remote -v | sed  "s/.*@github.com:\(.*\)\.git.*/ghcr.io\/\1/" | tail -1)
+    REPOSITORY=$(git remote -v | sed   "s/.*@github.com:\(.*\) \(.*\)*/\1/" | tail -1)
     echo "inferred registry ${REPOSITORY}"
 fi
 
@@ -27,7 +27,7 @@ NEWCACHE=${CACHE}-new
 
 if ! docker -v 2> /dev/null; then
     echo "switching to podman ..."
-    PODMAN=true
+    docker=podman
     shopt -s expand_aliases
     alias docker=podman
 
@@ -35,6 +35,7 @@ if ! docker -v 2> /dev/null; then
     cachefrom=""
     cacheto=""
 else
+    docker=docker
     # setup a buildx driver for multi-arch / remote cached builds
     docker buildx create --driver docker-container --use
     # docker command line parameters
@@ -58,18 +59,22 @@ do_build() {
         -t ${image_name}
     "
 
-    if [[ ${PUSH} == "true" && ${PODMAN} != "true" ]] ; then
-        args="--push "${args}
+    if [[ $docker != "podman" ]] ; then
+        if [[ ${PUSH} == "true" ]] ; then
+            args="--push "${args}
+        else
+            args="--load "${args}
+        fi
     fi
 
     echo "CONTAINER BUILD FOR ${image_name} with ARCHITECTURE=${ARCHITECTURE} ..."
 
     (
         set -x
-        docker buildx build ${args} ${*} .
+        $docker buildx build ${args} ${*} .
     )
 
-    if [[ ${PUSH} == "true" && ${PODMAN} == "true" ]] ; then
+    if [[ ${PUSH} == "true" && $docker == "podman" ]] ; then
         podman push ${image_name}
     fi
 }
@@ -89,6 +94,19 @@ do_build() {
 do_build ${ARCH} developer ${cachefrom}
 do_build ${ARCH} runtime ${cachefrom} ${cacheto}
 
-# remove old cache to avoid indefinite growth
-rm -rf ${CACHE}
-mv ${NEWCACHE} ${CACHE}
+
+if [[ $docker != "podman" ]] ; then
+    # remove old cache to avoid indefinite growth
+    rm -rf ${CACHE}
+    mv ${NEWCACHE} ${CACHE}
+fi
+
+# get the schema file from the developer container
+echo "Getting schema file from developer container ..."
+id=$($docker create ${image_name})
+# convention for schema name is module.ibek.ioc.schema.json
+# we get this my removing the ioc- prefix from the module name
+SCHEMA=$(basename ${REPOSITORY} | sed 's/^ioc-//').ibek.ioc.schema.json
+$docker cp $id:/epics/ioc/${SCHEMA} .
+$docker rm -v $id
+echo "schema file(s): $(ls *.ibek.ioc.schema.json)"

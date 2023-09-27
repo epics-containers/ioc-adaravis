@@ -1,2 +1,4 @@
 .history
 repos*
+# build pulls the schema out of the container - ignore it
+*.ibek.ioc.schema.json
