@@ -78,8 +78,8 @@ elif [ -f ${ibek_src} ]; then
     final_ioc_startup=/tmp/st.cmd
 
     # get ibek the support yaml files this ioc's support modules
-    defs=/ctools/*/*.ibek.support.yaml
-    ibek build-startup ${ibek_src} ${defs} --out ${final_ioc_startup} --db-out ${db_src}
+    defs=/workspaces/*/ibek-support/*/*.ibek.support.yaml
+    ibek startup generate ${ibek_src} ${defs} --out ${final_ioc_startup} --db-out ${db_src}
 
     # build expanded database using the db_src shell script
     if [ -f ${db_src} ]; then
