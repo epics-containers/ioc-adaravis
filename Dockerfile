@@ -53,6 +53,8 @@ FROM ${REGISTRY}/epics-base-${TARGET_ARCHITECTURE}-runtime:${BASE} AS runtime
 COPY --from=developer /venv /venv
 # add products from build stage
 COPY --from=runtime_prep /min_files /
+# get the Aravis library we built
+COPY --from=developer /usr/local/lib/x86_64-linux-gnu/libaravis-0.8.so.0 /usr/local/lib/x86_64-linux-gnu/
 
 # install runtime system dependencies, collected from install.sh scripts
 RUN ibek support apt-install --runtime
