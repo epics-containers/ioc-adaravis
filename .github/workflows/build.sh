@@ -39,6 +39,7 @@ else
     # setup a buildx driver for multi-arch / remote cached builds
     docker buildx create --driver docker-container --use
     # docker command line parameters
+    mkdir -p $(dirname ${CACHE})
     cachefrom=--cache-from=type=local,src=${CACHE}
     cacheto=--cache-to=type=local,dest=${NEWCACHE},mode=max
 fi
@@ -92,14 +93,6 @@ do_build() {
 # cache.
 
 do_build ${ARCH} developer ${cachefrom}
-do_build ${ARCH} runtime ${cachefrom} ${cacheto}
-
-
-if [[ $docker != "podman" ]] ; then
-    # remove old cache to avoid indefinite growth
-    rm -rf ${CACHE}
-    mv ${NEWCACHE} ${CACHE}
-fi
 
 # get the schema file from the developer container
 echo "Getting schema file from developer container ..."
@@ -110,3 +103,11 @@ SCHEMA=$(basename ${REPOSITORY} | sed 's/^ioc-//').ibek.ioc.schema.json
 $docker cp $id:/epics/ioc/${SCHEMA} .
 $docker rm -v $id
 echo "schema file(s): $(ls *.ibek.ioc.schema.json)"
+
+do_build ${ARCH} runtime ${cachefrom} ${cacheto}
+
+if [[ $docker != "podman" ]] ; then
+    # remove old cache to avoid indefinite growth
+    rm -rf ${CACHE}
+    mv ${NEWCACHE} ${CACHE}
+fi
