@@ -1,9 +1,25 @@
 #!/bin/bash
 
+# set up the environment and run the CI build script locally
+# to test changes before pushing to github
+
 set -xe
 
-THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+THIS_DIR=$(dirname ${0})
 
+# this function inferrs the repository from the git remote
+function get_repository() {
+    REPOSITORY=$(git remote -v | tail -1)
+
+    echo '
+import re
+repo_only = re.sub(r".*github.com[:/](.*)[.]git.*", r"\1", "'${REPOSITORY}'")
+print(repo_only)
+    ' | python3
+}
+
+export REPOSITORY=$(get_repository)
 export TAG=${TAG:-local}
+export DOCKER=podman
 
 ./.github/workflows/build.sh

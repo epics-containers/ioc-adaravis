@@ -13,29 +13,24 @@
 #   REPOSITORY: the container repository to push to
 #   CACHE: the directory to use for caching
 
+DOCKER=${DOCKER:-docker}
 ARCH=${ARCH:-linux}
 PUSH=${PUSH:-false}
 TAG=${TAG:-latest}
 REGISTRY=${REGISTRY:-ghcr.io}
 if [[ -z ${REPOSITORY} ]] ; then
-    # For local builds, infer the registry from git remote (assumes ghcr)
-    REPOSITORY=$(git remote -v | sed   "s/.*@github.com:\(.*\) \(.*\)*/\1/" | tail -1)
-    echo "inferred registry ${REPOSITORY}"
+    echo ERROR: REPOSITORY not set
+    exit 1
 fi
 
 NEWCACHE=${CACHE}-new
 
-if ! docker -v 2> /dev/null; then
-    echo "switching to podman ..."
-    docker=podman
-    shopt -s expand_aliases
-    alias docker=podman
 
+if [[ ${DOCKER} == podman ]] ; then
     # podman command line parameters (just use local cache)
     cachefrom=""
     cacheto=""
 else
-    docker=docker
     # setup a buildx driver for multi-arch / remote cached builds
     docker buildx create --driver docker-container --use
     # docker command line parameters
@@ -60,7 +55,7 @@ do_build() {
         -t ${image_name}
     "
 
-    if [[ $docker != "podman" ]] ; then
+    if [[ $DOCKER != "podman" ]] ; then
         if [[ ${PUSH} == "true" ]] ; then
             args="--push "${args}
         else
@@ -72,10 +67,10 @@ do_build() {
 
     (
         set -x
-        $docker buildx build ${args} ${*} .
+        $DOCKER buildx build ${args} ${*} .
     )
 
-    if [[ ${PUSH} == "true" && $docker == "podman" ]] ; then
+    if [[ ${PUSH} == "true" && $DOCKER == "podman" ]] ; then
         podman push ${image_name}
     fi
 }
@@ -96,17 +91,18 @@ do_build ${ARCH} developer ${cachefrom}
 
 # get the schema file from the developer container
 echo "Getting schema file from developer container ..."
-id=$($docker create ${image_name})
+id=$($DOCKER create ${image_name})
+
 # convention for schema name is module.ibek.ioc.schema.json
 # we get this my removing the ioc- prefix from the module name
 SCHEMA=$(basename ${REPOSITORY} | sed 's/^ioc-//').ibek.ioc.schema.json
-$docker cp $id:/epics/ioc/${SCHEMA} .
-$docker rm -v $id
+$DOCKER cp $id:/epics/ioc/${SCHEMA} .
+$DOCKER rm -v $id
 echo "schema file(s): $(ls *.ibek.ioc.schema.json)"
 
 do_build ${ARCH} runtime ${cachefrom} ${cacheto}
 
-if [[ $docker != "podman" ]] ; then
+if [[ -d ${NEWCACHE} ]] ; then
     # remove old cache to avoid indefinite growth
     rm -rf ${CACHE}
     mv ${NEWCACHE} ${CACHE}

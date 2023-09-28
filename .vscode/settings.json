@@ -3,8 +3,8 @@
         "editor.defaultFormatter": "ms-python.black-formatter"
     },
     "workbench.colorCustomizations": {
-        "activityBar.background": "#729a0421",
-        "titleBar.activeBackground": "#729a0421",
-        "titleBar.activeForeground": "#ffffff"
+        "activityBar.background": "#5F0A0C",
+        "titleBar.activeBackground": "#850E11",
+        "titleBar.activeForeground": "#FFFBFB"
     }
 }
