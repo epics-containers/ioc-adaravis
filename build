@@ -1,25 +1,28 @@
 #!/bin/bash
 
-# set up the environment and run the CI build script locally
-# to test changes before pushing to github
+# pass rtems to build RTEMS on cross-compiler
+TARGET_ARCHITECTURE=${1:-linux}
+
+# local build script for epics-containers ioc
 
 set -xe
 
-THIS_DIR=$(dirname ${0})
+THIS_DIR=$(realpath $(dirname ${0}))
+PROJECT=$(basename ${THIS_DIR})
 
-# this function inferrs the repository from the git remote
-function get_repository() {
-    REPOSITORY=$(git remote -v | tail -1)
+ARGS="
+--build-arg TARGET_ARCHITECTURE=${TARGET_ARCHITECTURE}
+--build-arg TARGETARCH=amd64
+--net host
+"
 
-    echo '
-import re
-repo_only = re.sub(r".*github.com[:/](.*)[.]git.*", r"\1", "'${REPOSITORY}'")
-print(repo_only)
-    ' | python3
-}
+for target in developer runtime ; do
+    TAG=${PROJECT}-${TARGET_ARCHITECTURE}-${target}:local
+    podman buildx build --target ${target} ${ARGS} -t ${TAG} .
+done
 
-export REPOSITORY=$(get_repository)
-export TAG=${TAG:-local}
-export DOCKER=podman
-
-./.github/workflows/build.sh
+# get the schema file from the developer container and save it locally
+# it is called xxxxx.ioc.ibek.schema.json for project ioc-xxxxx
+podman run ghcr.io/epics-containers/ioc-adaravis-linux-developer:local bash -c \
+    'ibek ioc generate-schema /epics/links/ibek/*ibek.support.yaml' > \
+    ${PROJECT#ioc-}.ibek.ioc.schema.json

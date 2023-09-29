@@ -1,13 +1,13 @@
 ##### build stage ##############################################################
 
 ARG TARGET_ARCHITECTURE
-ARG BASE=7.0.7ec1
+ARG BASE=7.0.7ec2
 ARG REGISTRY=ghcr.io/epics-containers
 
 FROM  ${REGISTRY}/epics-base-${TARGET_ARCHITECTURE}-developer:${BASE} AS developer
 
-# During Development get latest ibek - TODO stable version will be in epics-base
-RUN pip install ibek==1.3.0
+# install latest ibek while in development - eventually will come from epics-base
+RUN pip3 install ibek=1.3.1
 
 # the devcontainer mounts the project root to /epics/ioc-adaravis
 WORKDIR /epics/ioc-adaravis/ibek-support
@@ -39,9 +39,6 @@ RUN ibek ioc make-source-template
 # Make the IOC
 RUN ibek ioc generate-makefile
 RUN ibek ioc compile
-
-# create a schema file for the IOC
-RUN bash -c "ibek ioc generate-schema */*ibek.support.yaml --output ${IOC}/adaravis.ibek.ioc.schema.json"
 
 ##### runtime preparation stage ################################################
 
