@@ -1,9 +1,11 @@
 #!/bin/bash
 
-# pass rtems to build RTEMS on cross-compiler
-TARGET_ARCHITECTURE=${1:-linux}
+################################################################################
+# generic local build script for epics-containers ioc repositories                   #
+################################################################################
 
-# local build script for epics-containers ioc
+# pass rtems as first argument to build RTEMS on cross-compiler
+TARGET_ARCHITECTURE=${1:-linux}
 
 set -xe
 
@@ -17,7 +19,7 @@ ARGS="
 "
 
 for target in developer runtime ; do
-    TAG=${PROJECT}-${TARGET_ARCHITECTURE}-${target}:local
+    TAG=ghcr.io/epics-containers/${PROJECT}-${TARGET_ARCHITECTURE}-${target}:local
     podman buildx build --target ${target} ${ARGS} -t ${TAG} .
 done
 
