@@ -9,8 +9,7 @@
         }
     },
     "remoteEnv": {
-        "DISPLAY": "${localEnv:DISPLAY}",
-        "PROJECT_NAME": "${localWorkspaceFolderBasename}"
+        "DISPLAY": "${localEnv:DISPLAY}"
     },
     "customizations": {
         "vscode": {
@@ -31,10 +30,13 @@
     },
     // Make sure the files we are mapping into the container exist on the host
     "initializeCommand": "bash .devcontainer/initializeCommand ${devcontainerId}",
+    "postCreateCommand": "bash .devcontainer/postCreateCommand ${devcontainerId}",
     "runArgs": [
         "--net=host",
         "--security-opt=label=disable"
     ],
+    "workspaceMount": "source=${localWorkspaceFolder},target=/epics/ioc-adaravis,type=bind",
+    "workspaceFolder": "/epics/ioc-adaravis",
     "mounts": [
         // Mount some useful local files from the user's home directory
         "source=${localEnv:HOME}/.bash_eternal_history,target=/root/.bash_eternal_history,type=bind",

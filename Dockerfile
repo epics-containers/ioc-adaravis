@@ -6,11 +6,12 @@ ARG REGISTRY=ghcr.io/epics-containers
 
 FROM  ${REGISTRY}/epics-base-${TARGET_ARCHITECTURE}-developer:${BASE} AS developer
 
-# In a devcontainer this folder is mounted on the host's clone of ioc-adsimdetector
-WORKDIR /workspaces/ioc-adsimdetector/ibek-support
+# the devcontainer mounts the project root to /epics/ioc-adaravis
+WORKDIR /epics/ioc-adaravis/ibek-support
 
 # During Development get latest ibek - TODO stable version will be in epics-base
-RUN pip install --upgrade ibek
+COPY ibek /ibek
+RUN pip install /ibek
 
 # copy the global ibek files
 COPY ibek-support/_global/ _global
@@ -33,8 +34,8 @@ RUN ADCore/install.sh R3-12-1
 COPY ibek-support/ADAravis/ ADAravis/
 RUN ADAravis/install.sh R2-3
 
-# add startup scripts
-COPY ioc ${IOC}
+# create IOC source tree
+RUN ibek ioc make-source-template
 
 # Make the IOC
 RUN ibek ioc generate-makefile
@@ -48,27 +49,17 @@ RUN bash -c "ibek ioc generate-schema */*ibek.support.yaml --output ${IOC}/adara
 FROM developer AS runtime_prep
 
 # get the products from the build stage and reduce to runtime assets only
-WORKDIR /min_files
-RUN bash /epics/scripts/minimize.sh ${IOC} $(ls -d ${SUPPORT}/*/)
+RUN ibek ioc extract-runtime-assets /assets --extras /usr/local/lib/x86_64-linux-gnu
 
 ##### runtime stage ############################################################
 
 FROM ${REGISTRY}/epics-base-${TARGET_ARCHITECTURE}-runtime:${BASE} AS runtime
 
-# get the virtual environment from the developer stage
-COPY --from=developer /venv /venv
-# add products from build stage
-COPY --from=runtime_prep /min_files /
-# get the Aravis library we built
-COPY --from=developer /usr/local/lib/x86_64-linux-gnu/libaravis-0.8.so.0 /usr/local/lib/x86_64-linux-gnu/
-# get the ibek-support folders for accessing the SUPPORT YAML files
-COPY --from=developer /workspaces /workspaces
+# get runtime assets from the preparation stage
+COPY --from=runtime_prep /assets /
 
 # install runtime system dependencies, collected from install.sh scripts
 RUN ibek support apt-install --runtime
-
-# add startup scripts
-COPY ioc ${IOC}
 
 ENV TARGET_ARCHITECTURE ${TARGET_ARCHITECTURE}
 
