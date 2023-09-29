@@ -25,6 +25,6 @@ done
 
 # get the schema file from the developer container and save it locally
 # it is called xxxxx.ioc.ibek.schema.json for project ioc-xxxxx
-podman run ghcr.io/epics-containers/ioc-adaravis-linux-developer:local bash -c \
+podman run --entrypoint bash ${TAG} -c \
     'ibek ioc generate-schema /epics/links/ibek/*ibek.support.yaml' > \
     ${PROJECT#ioc-}.ibek.ioc.schema.json
