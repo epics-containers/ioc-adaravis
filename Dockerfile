@@ -6,12 +6,11 @@ ARG REGISTRY=ghcr.io/epics-containers
 
 FROM  ${REGISTRY}/epics-base-${TARGET_ARCHITECTURE}-developer:${BASE} AS developer
 
+# During Development get latest ibek - TODO stable version will be in epics-base
+RUN pip install ibek==1.3.0
+
 # the devcontainer mounts the project root to /epics/ioc-adaravis
 WORKDIR /epics/ioc-adaravis/ibek-support
-
-# During Development get latest ibek - TODO stable version will be in epics-base
-COPY ibek /ibek
-RUN pip install /ibek
 
 # copy the global ibek files
 COPY ibek-support/_global/ _global
