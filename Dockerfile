@@ -7,7 +7,7 @@ ARG REGISTRY=ghcr.io/epics-containers
 FROM  ${REGISTRY}/epics-base-${TARGET_ARCHITECTURE}-developer:${BASE} AS developer
 
 # Get latest ibek while in development. Will come from epics-base in futre.
-RUN pip install ibek==1.3.4
+RUN pip install ibek
 
 # the devcontainer mounts the project root to /epics/ioc-adaravis
 WORKDIR /epics/ioc-adaravis/ibek-support
