@@ -11,8 +11,12 @@ FROM  ${REGISTRY}/epics-base-${TARGET_ARCHITECTURE}-developer:${BASE} AS develop
 RUN pip install ibek==1.3.5
 =======
 # Get latest ibek while in development. Will come from epics-base in futre.
+<<<<<<< HEAD
 RUN pip install ibek==1.3.4
 >>>>>>> acde3f6 (update ibek)
+=======
+RUN pip install ibek
+>>>>>>> 2db7d7c (switch to latest pypi ibek)
 
 # the devcontainer mounts the project root to /epics/ioc-adaravis
 WORKDIR /epics/ioc-adaravis/ibek-support
