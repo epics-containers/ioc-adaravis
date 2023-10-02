@@ -6,7 +6,11 @@ ARG REGISTRY=ghcr.io/epics-containers
 
 FROM  ${REGISTRY}/epics-base-${TARGET_ARCHITECTURE}-developer:${BASE} AS developer
 
+<<<<<<< HEAD
 # install latest ibek while in development - eventually will come from epics-base
+=======
+# Get latest ibek while in development. Will come from epics-base in futre.
+>>>>>>> f10acd9 (update to ibek 1.3.5)
 RUN pip install ibek==1.3.5
 
 # the devcontainer mounts the project root to /epics/ioc-adaravis
@@ -33,6 +37,7 @@ RUN ADCore/install.sh R3-12-1
 COPY ibek-support/ADAravis/ ADAravis/
 RUN ADAravis/install.sh R2-3
 
+# create IOC source tree, generate Makefile and compile IOC Instance
 RUN ibek ioc compile
 
 ##### runtime preparation stage ################################################
