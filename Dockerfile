@@ -6,8 +6,12 @@ ARG REGISTRY=ghcr.io/epics-containers
 
 FROM  ${REGISTRY}/epics-base-${TARGET_ARCHITECTURE}-developer:${BASE} AS developer
 
-# Get latest ibek while in development. Will come from epics-base in futre.
-RUN pip install ibek==1.3.5
+# TODO TODO getting ibek from the pvi-changes branch Gary and Giles made
+# TODO - god knows why I need to use a requires file but could not work out the
+# raw pip syntax !!
+# Get latest ibek while in development. Will come from epics-base
+RUN echo "ibek -e https://github.com/epics-containers/ibek/suites/16961063083/artifacts/969054908/" > req.txt
+RUN pip install -r req.txt
 
 # the devcontainer mounts the project root to /epics/ioc-adaravis
 WORKDIR /epics/ioc-adaravis/ibek-support

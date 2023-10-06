@@ -12,3 +12,5 @@ ibek
 # repo.
 # Remove from .gitignore if you want to customize the template.
 /ioc/
+
+*workspace
