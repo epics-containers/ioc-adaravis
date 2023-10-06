@@ -1,4 +1,7 @@
-TODO update with correct comment for included support module
+An epics-containers generic IOC source file for ADAravis.
 
-A container image template for creating new generic IOCs
+Generates a Generic IOC for running in a container and 
+creating IOC instances to control Aravis cameras.
+
+See the https://epics-containers.github.io
 
