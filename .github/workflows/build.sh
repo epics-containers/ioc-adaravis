@@ -26,10 +26,10 @@ pip install git+https://github.com/epics-containers/epics-containers-cli@dev
 fi
 
 # add extra cross compilation platforms below if needed  e.g.
-#   ec dev build --buildx --arch rtems ... for RTEMS cross compile
+#   ec dev build  --arch rtems ... for RTEMS cross compile
 
 # build runtime and developer images
-ec --log-level debug dev build --buildx --tag ${TAG} --platform ${PLATFORM} \
+ec --log-level debug dev build  --tag ${TAG} --platform ${PLATFORM} \
 --cache-to ${CACHE} --cache-from ${CACHE} ${PUSH}
 
 # extract the ioc schema from the runtime image
