@@ -18,6 +18,7 @@ PLATFORM=${PLATFORM:-linux/amd64}
 CACHE=${CACHE:-/tmp/ec-cache}
 THIS=$(dirname ${0})
 set -xe
+mkdir -p ${CACHE}
 
 if ! ec --version 2> /dev/null ; then
 # pip install --upgrade -r ${THIS}/../../requirements.txt
