@@ -13,4 +13,5 @@ ibek
 # Remove from .gitignore if you want to customize the template.
 /ioc/
 
+# dont save workspaces as other users will have differing folders
 *workspace
