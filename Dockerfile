@@ -27,11 +27,15 @@ RUN autosave/install.sh R5-10-2
 COPY ibek-support/busy/ busy/
 RUN busy/install.sh R1-7-3
 
+COPY ibek-support/calc/ calc/
+RUN calc/install.sh R3-7-3
+
 COPY ibek-support/ADCore/ ADCore/
 RUN ADCore/install.sh R3-12-1
 
 COPY ibek-support/ADAravis/ ADAravis/
 RUN ADAravis/install.sh R2-3
+
 
 # create IOC source tree, generate Makefile and compile IOC Instance
 RUN ibek ioc build
