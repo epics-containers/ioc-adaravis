@@ -27,6 +27,12 @@ RUN autosave/install.sh R5-10-2
 COPY ibek-support/busy/ busy/
 RUN busy/install.sh R1-7-3
 
+COPY ibek-support/calc/ sscan/
+RUN sscan/install.sh R2-11-6
+
+COPY ibek-support/calc/ calc/
+RUN calc/install.sh 3-1-3
+
 COPY ibek-support/ADCore/ ADCore/
 RUN ADCore/install.sh R3-12-1
 
