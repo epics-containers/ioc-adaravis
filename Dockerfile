@@ -7,8 +7,7 @@ ARG REGISTRY=ghcr.io/epics-containers
 FROM  ${REGISTRY}/epics-base-${TARGET_ARCHITECTURE}-developer:${BASE} AS developer
 
 # Get latest ibek while in development. Will come from epics-base
-# TODO TODO getting ibek from the pvi-changes branch Gary and Giles made
-RUN pip install git+https://github.com/epics-containers/ibek@pvi-changes
+RUN pip install ibek==1.4.2
 
 # the devcontainer mounts the project root to /epics/ioc-adaravis
 WORKDIR /epics/ioc-adaravis/ibek-support
@@ -28,11 +27,23 @@ RUN autosave/install.sh R5-10-2
 COPY ibek-support/busy/ busy/
 RUN busy/install.sh R1-7-3
 
+COPY ibek-support/sscan/ sscan/
+RUN sscan/install.sh R2-11-6
+
+COPY ibek-support/calc/ calc/
+RUN calc/install.sh R3-7-5
+
 COPY ibek-support/ADCore/ ADCore/
 RUN ADCore/install.sh R3-12-1
 
+COPY ibek-support/ADGenICam/ ADGenICam/
+RUN ADGenICam/install.sh R1-9
+
 COPY ibek-support/ADAravis/ ADAravis/
 RUN ADAravis/install.sh R2-3
+
+COPY ibek-support/autosave/ autosave/
+RUN autosave/install.sh R5-11
 
 # create IOC source tree, generate Makefile and compile IOC Instance
 RUN ibek ioc build
