@@ -36,9 +36,14 @@ RUN calc/install.sh R3-7-5
 COPY ibek-support/ADCore/ ADCore/
 RUN ADCore/install.sh R3-12-1
 
+COPY ibek-support/ADGenICam/ ADGenICam/
+RUN ADGenICam/install.sh R1-9
+
 COPY ibek-support/ADAravis/ ADAravis/
 RUN ADAravis/install.sh R2-3
 
+COPY ibek-support/autosave/ autosave/
+RUN autosave/install.sh R5-11
 
 # create IOC source tree, generate Makefile and compile IOC Instance
 RUN ibek ioc build
