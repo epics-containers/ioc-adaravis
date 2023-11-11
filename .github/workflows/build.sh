@@ -22,7 +22,7 @@ set -xe
 mkdir -p ${CACHE}
 
 # get the current version of ec CLI
-pip install -r ${THIS}/../../requirements.txt
+pip install -r ${THIS}/../../requirements_ec.txt
 
 # add cache arguments - local file cache passed by github seems to be most reliable
 export EC_CARGS="
@@ -37,8 +37,7 @@ export EC_CARGS="
 ec -v dev build ${EC_TAG} ${EC_PLATFORM} ${EC_PUSH} ${EC_CARGS}
 
 # extract the ioc schema from the runtime image
-ec dev launch-local ${EC_TAG} --execute \
-'ibek ioc generate-schema --use-defs' > ibek.ioc.schema.json
+ec dev launch-local ${EC_TAG} --execute 'ibek ioc generate-schema' > ibek.ioc.schema.json
 
 # run acceptance tests
 shopt -s nullglob # expand to nothing if no tests are found
