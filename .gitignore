@@ -15,3 +15,7 @@ ibek
 
 # dont save workspaces as other users will have differing folders
 *workspace
+
+
+# opi folder is created to hold generated operator interface files
+/opi/
