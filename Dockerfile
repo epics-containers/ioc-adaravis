@@ -57,7 +57,7 @@ RUN cd ${IOC} && ./install.sh && make
 FROM developer AS runtime_prep
 
 # get the products from the build stage and reduce to runtime assets only
-RUN ibek ioc extract-runtime-assets /assets ${SOURCE_FOLDER}/ibek*
+RUN ibek ioc extract-runtime-assets /assets ${SOURCE_FOLDER}/ibek* /usr/local/lib/x86_64-linux-gnu
 
 ##### runtime stage ############################################################
 
