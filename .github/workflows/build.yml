@@ -15,7 +15,7 @@ jobs:
       fail-fast: false
       matrix:
         target: [developer, runtime]
-        architecture: [linux, rtems]
+        architecture: [linux]
         include:
           - os: ubuntu-latest
             platforms: linux/amd64
