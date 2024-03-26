@@ -5,7 +5,11 @@
         "dockerfile": "../Dockerfile",
         "target": "developer",
         "args": {
-            "TARGET_ARCHITECTURE": "linux"
+            // Native target development settings ==============================
+            "EPICS_TARGET_ARCH": "linux-x86_64"
+            // Local cross compilation settings ================================
+            // "EPICS_TARGET_ARCH": "RTEMS-beatnik",
+            // "IMAGE_EXT": "-rtems-beatnik"
         }
     },
     "remoteEnv": {
