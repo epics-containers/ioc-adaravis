@@ -1,8 +1,9 @@
 # Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
-_commit: 3.2.2
+_commit: 3.4.0b3
 _src_path: gh:epics-containers/ioc-template
 description: The Generic ioc for GigE cameras using the Aravis Library
 git_platform: github.com
 github_org: epics-containers
 name: ioc-adaravis
 repo_uri: git@github.com:epics-containers/ioc-adaravis.git
+rtems: false
