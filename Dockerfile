@@ -72,6 +72,8 @@ COPY --from=runtime_prep /assets /
 # install runtime system dependencies, collected from install.sh scripts
 RUN ibek support apt-install-runtime-packages --skip-non-native
 
+RUN chmod a+rw /epics/pvi-defs
+
 CMD ["bash", "-c", "${IOC}/start.sh"]
 
 
