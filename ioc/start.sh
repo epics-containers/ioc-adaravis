@@ -128,6 +128,12 @@ elif [ -f ${ibek_src} ]; then
     db_src=${RUNTIME_DIR}/ioc.subst
     final_ioc_startup=${RUNTIME_DIR}/st.cmd
 
+    # Auto generate GenICam database
+    instance_id=$(grep -oP "(?<=ID:\s).*" /epics/ioc/config/ioc.yaml)  # https://regex101.com/r/358gq3/1
+    arv-tool-0.8 -a ${instance_id} genicam > /epics/runtime/genicam.xml
+    python /epics/support/ADGenICam/scripts/makeDb.py /epics/runtime/genicam.xml /tmp/genicam.template
+    pvi convert device --template /tmp/genicam.template /epics/pvi-defs/ /epics/support/ADGenICam/include/ADGenICam.h
+
     # get the ibek support yaml files this ioc's support modules
     defs=/epics/ibek-defs/*.ibek.support.yaml
     ibek runtime generate ${ibek_src} ${defs}
