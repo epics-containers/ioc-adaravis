@@ -129,7 +129,7 @@ elif [ -f ${ibek_src} ]; then
     final_ioc_startup=${RUNTIME_DIR}/st.cmd
 
     # Auto generate GenICam database
-    instance_id=$(grep -oP "(?<=ID:\s).*" ${ibek_src})  # https://regex101.com/r/358gq3/1
+    instance_id=$(grep -oP "(?<=ID:\s).*" ${ibek_src}) || true  # https://regex101.com/r/358gq3/1
     if [ -n "$instance_id" ]; then
         arv-tool-0.8 -a ${instance_id} genicam > /epics/runtime/genicam.xml
         python /epics/support/ADGenICam/scripts/makeDb.py /epics/runtime/genicam.xml /tmp/genicam.template
