@@ -128,13 +128,22 @@ elif [ -f ${ibek_src} ]; then
     db_src=${RUNTIME_DIR}/ioc.subst
     final_ioc_startup=${RUNTIME_DIR}/st.cmd
 
-    # Auto generate GenICam database
-    instance_id=$(grep -oP "(?<=ID:\s).*" ${ibek_src}) || true  # https://regex101.com/r/358gq3/1
-    if [ -n "$instance_id" ]; then
-        mkdir -p /tmp/genicam
-        arv-tool-0.8 -a ${instance_id} genicam > /tmp/genicam/genicam.xml
-        python /epics/support/ADGenICam/scripts/makeDb.py /tmp/genicam/genicam.xml /tmp/genicam/genicam.template
-        pvi convert device --template /tmp/genicam/genicam.template /epics/pvi-defs/ /epics/support/ADGenICam/include/ADGenICam.h
+    # Find address (ID) and CLASS of the first camera in the IOC instance yaml.
+    # NOTE this does not support mixed types of cameras in the same IOC
+    # ONE camera per IOC instance is recommended
+    # Multiple cameras of the same type are supported
+    # Mixed cameras will work but may not expose all their GenICam config parameters
+    instance_class=$(grep -m1 -oP "(?<=CLASS:\s).*" ${ibek_src}) || true  # https://regex101.com/r/358gq3/1
+    instance_id=$(grep -m1 -oP "(?<=ID:\s).*" ${ibek_src}) || true  # https://regex101.com/r/358gq3/1
+    if [[ -n $instance_id ]]; then
+        if [[ $instance_class == "AutoADGenICam" ]]; then
+            # Auto generate GenICam database from camera parameters XML
+            arv-tool-0.8 -a ${instance_id} genicam > /tmp/genicam.xml
+            python /epics/support/ADGenICam/scripts/makeDb.py /tmp/genicam.xml /epics/support/ADGenICam/db/AutoADGenICam.template
+        fi
+        # Generate pvi device from the GenICam DB
+        pvi convert device --template /epics/support/ADGenICam/db/$instance_class.template /epics/pvi-defs/ /epics/support/ADGenICam/include/ADGenICam.h
+        mv /epics/pvi-defs/ADGenICam.pvi.device.yaml /epics/pvi-defs/$instance_class.pvi.device.yaml
     fi
 
     # get the ibek support yaml files this ioc's support modules
