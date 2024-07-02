@@ -131,9 +131,10 @@ elif [ -f ${ibek_src} ]; then
     # Auto generate GenICam database
     instance_id=$(grep -oP "(?<=ID:\s).*" ${ibek_src}) || true  # https://regex101.com/r/358gq3/1
     if [ -n "$instance_id" ]; then
-        arv-tool-0.8 -a ${instance_id} genicam > /epics/runtime/genicam.xml
-        python /epics/support/ADGenICam/scripts/makeDb.py /epics/runtime/genicam.xml /tmp/genicam.template
-        pvi convert device --template /tmp/genicam.template /epics/pvi-defs/ /epics/support/ADGenICam/include/ADGenICam.h
+        mkdir -p /tmp/genicam
+        arv-tool-0.8 -a ${instance_id} genicam > /tmp/genicam/genicam.xml
+        python /epics/support/ADGenICam/scripts/makeDb.py /tmp/genicam/genicam.xml /tmp/genicam/genicam.template
+        pvi convert device --template /tmp/genicam/genicam.template /epics/pvi-defs/ /epics/support/ADGenICam/include/ADGenICam.h
     fi
 
     # get the ibek support yaml files this ioc's support modules
