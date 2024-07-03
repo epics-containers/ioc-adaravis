@@ -73,7 +73,8 @@ COPY --from=runtime_prep /assets /
 RUN ibek support apt-install-runtime-packages --skip-non-native
 
 # allow generated genicam files to be written for non root runtime user id
-RUN chmod a+rw /epics/pvi-defs /epics/support/ADGenICam/db
+RUN chmod a+rw -R /epics/pvi-defs /epics/support/ADGenICam/db \
+    /epics/generic-source/ibek-support
 
 CMD ["bash", "-c", "${IOC}/start.sh"]
 
