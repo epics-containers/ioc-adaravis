@@ -144,7 +144,14 @@ elif [ -f ${ibek_src} ]; then
         # Generate pvi device from the GenICam DB
         pvi convert device --template /epics/support/ADGenICam/db/$instance_class.template /epics/pvi-defs/ /epics/support/ADGenICam/include/ADGenICam.h
         mv /epics/pvi-defs/ADGenICam.pvi.device.yaml /epics/pvi-defs/$instance_class.pvi.device.yaml
+        # change the title of the pvi device to match the camera ID
+        sed -i "s/arvFeature/Aravis $instance_id/g" /epics/pvi-defs/ADAravis.pvi.device.yaml
+        sed -i "s/label: ADGenICam/label: GenICam $instance_id/g" /epics/pvi-defs/$instance_class.pvi.device.yaml
+        # remove ADDriver from GenICam device
+        sed -i "/ADDriver//d" /epics/pvi-defs/$instance_class.pvi.device.yaml
     fi
+    # TODO: pvi changes should allow us to remove the last 3 sed lines above
+    # a) you will be able to specify no paretn, b) you will be able to specify the label
 
     # get the ibek support yaml files this ioc's support modules
     defs=/epics/ibek-defs/*.ibek.support.yaml
