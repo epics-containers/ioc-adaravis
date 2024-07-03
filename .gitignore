@@ -21,5 +21,3 @@ ioc/config
 # TODO this entry does not work - why on earth not?
 ioc/configure/CONFIG_SITE.Common.linux-x86_64
 
-# external generated bob folder TODO probalby will replace this with compose
-.generated-bobs
