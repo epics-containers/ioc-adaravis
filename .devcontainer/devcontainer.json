@@ -60,8 +60,6 @@
         // we also mount the project folder into a know location in the container
         // this is where the ibek-support and ioc folders reside in the container build
         // in this way the devcontainer and runtime look very similar
-        "source=${localWorkspaceFolder},target=/epics/generic-source,type=bind",
-        // mounting this helps with running phoebus outside the container
-        "source=${localWorkspaceFolder}/.generated-bobs,target=/epics/opi,type=bind"
+        "source=${localWorkspaceFolder},target=/epics/generic-source,type=bind"
     ]
 }
