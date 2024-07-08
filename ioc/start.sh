@@ -141,7 +141,7 @@ elif [ -f ${ibek_src} ]; then
             if [[ $instance_class == "AutoADGenICam" ]]; then
                 # Auto generate GenICam database from camera parameters XML
                 arv-tool-0.8 -a ${instance_id} genicam > /tmp/${instance_id}-genicam.xml
-                python /epics/support/ADGenICam/scripts/makeDb.py /tmp/${instance_id}-genicam.xml /epics/support/ADGenICam/db/AutoADGenICam.template  # "${READ_ID}-AutoADGenICam.template" when ibek fixed
+                python /epics/support/ADGenICam/scripts/makeDb.py /tmp/${instance_id}-genicam.xml /epics/support/ADGenICam/db/AutoADGenICam.template  # "${instance_id}-AutoADGenICam.template" when ibek fixed
             fi
             # Generate pvi device from the GenICam DB
             pvi convert device --template /epics/support/ADGenICam/db/$instance_class.template /epics/pvi-defs/ /epics/support/ADGenICam/include/ADGenICam.h
