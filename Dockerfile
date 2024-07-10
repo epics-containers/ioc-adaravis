@@ -8,6 +8,9 @@ ARG DEVELOPER=${REGISTRY}/epics-base${IMAGE_EXT}-developer:${BASE}
 ##### build stage ##############################################################
 FROM  ${DEVELOPER} AS developer
 
+# Add missing dependancies
+RUN curl -o /usr/bin/yq -L https://github.com/mikefarah/yq/releases/download/v4.44.2/yq_linux_amd64 && chmod +x /usr/bin/yq
+
 # The devcontainer mounts the project root to /epics/generic-source
 # Using the same location here makes devcontainer/runtime differences transparent.
 ENV SOURCE_FOLDER=/epics/generic-source
@@ -68,6 +71,7 @@ FROM ${RUNTIME} AS runtime
 
 # get runtime assets from the preparation stage
 COPY --from=runtime_prep /assets /
+COPY --from=runtime_prep /usr/bin/yq /usr/bin/yq
 
 # install runtime system dependencies, collected from install.sh scripts
 RUN ibek support apt-install-runtime-packages --skip-non-native

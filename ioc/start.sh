@@ -128,30 +128,32 @@ elif [ -f ${ibek_src} ]; then
     db_src=${RUNTIME_DIR}/ioc.subst
     final_ioc_startup=${RUNTIME_DIR}/st.cmd
 
-    # Find address (ID) and CLASS of the first camera in the IOC instance yaml.
-    # NOTE this does not support mixed types of cameras in the same IOC
-    # ONE camera per IOC instance is recommended
-    # Multiple cameras of the same type are supported
-    # Mixed cameras will work but may not expose all their GenICam config parameters
-    instance_class=$(grep -m1 -oP "(?<=CLASS:\s).*" ${ibek_src}) || true  # https://regex101.com/r/358gq3/1
-    instance_id=$(grep -m1 -oP "(?<=ID:\s).*" ${ibek_src}) || true  # https://regex101.com/r/358gq3/1
-    if [[ -n $instance_id ]]; then
-        if [[ $instance_class == "AutoADGenICam" ]]; then
-            # Auto generate GenICam database from camera parameters XML
-            arv-tool-0.8 -a ${instance_id} genicam > /tmp/genicam.xml
-            python /epics/support/ADGenICam/scripts/makeDb.py /tmp/genicam.xml /epics/support/ADGenICam/db/AutoADGenICam.template
+    readarray entities < <(yq -o=j -I=0 '.entities[]' ${ibek_src})
+    for ((count = 0 ; count < ${#entities[@]} ; count++ ))  # Interate over each entity
+    do
+        instance_type=$(yq .entities[${count}].type ${ibek_src})
+        if [ $instance_type = "ADAravis.aravisCamera" ]
+        then
+            instance_class=$(yq .entities[${count}].CLASS ${ibek_src})
+            instance_id=$(yq .entities[${count}].ID ${ibek_src})
+
+            if [[ $instance_class == "AutoADGenICam" ]]; then
+                instance_class=${instance_id}-${instance_class}
+                # Auto generate GenICam database from camera parameters XML
+                arv-tool-0.8 -a ${instance_id} genicam > /tmp/${instance_id}-genicam.xml
+                python /epics/support/ADGenICam/scripts/makeDb.py /tmp/${instance_id}-genicam.xml /epics/support/ADGenICam/db/${instance_class}.template
+            fi
+            # Generate pvi device from the GenICam DB
+            pvi convert device --template /epics/support/ADGenICam/db/$instance_class.template /epics/pvi-defs/ /epics/support/ADGenICam/include/ADGenICam.h
+            mv /epics/pvi-defs/ADGenICam.pvi.device.yaml /epics/pvi-defs/$instance_class.pvi.device.yaml
+            # change the title of the pvi device to match the camera ID
+            sed -i "s/label: ADGenICam/label: GenICam $instance_id/g" /epics/pvi-defs/$instance_class.pvi.device.yaml
+            # remove ADDriver from GenICam device
+            sed -i "s/ADDriver//" /epics/pvi-defs/$instance_class.pvi.device.yaml
+            # TODO: pvi changes should allow us to remove the last 2 sed lines above
+            # a) you will be able to specify no parent, b) you will be able to specify the label
         fi
-        # Generate pvi device from the GenICam DB
-        pvi convert device --template /epics/support/ADGenICam/db/$instance_class.template /epics/pvi-defs/ /epics/support/ADGenICam/include/ADGenICam.h
-        mv /epics/pvi-defs/ADGenICam.pvi.device.yaml /epics/pvi-defs/$instance_class.pvi.device.yaml
-        # change the title of the pvi device to match the camera ID
-        sed -i "s/arvFeature/Aravis $instance_id/g" /epics/pvi-defs/ADAravis.pvi.device.yaml
-        sed -i "s/label: ADGenICam/label: GenICam $instance_id/g" /epics/pvi-defs/$instance_class.pvi.device.yaml
-        # remove ADDriver from GenICam device
-        sed -i "s/ADDriver//" /epics/pvi-defs/$instance_class.pvi.device.yaml
-    fi
-    # TODO: pvi changes should allow us to remove the last 3 sed lines above
-    # a) you will be able to specify no paretn, b) you will be able to specify the label
+    done
 
     # get the ibek support yaml files this ioc's support modules
     defs=/epics/ibek-defs/*.ibek.support.yaml
