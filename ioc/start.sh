@@ -144,14 +144,8 @@ elif [ -f ${ibek_src} ]; then
                 python /epics/support/ADGenICam/scripts/makeDb.py /tmp/${instance_id}-genicam.xml /epics/support/ADGenICam/db/${instance_class}.template
             fi
             # Generate pvi device from the GenICam DB
-            pvi convert device --template /epics/support/ADGenICam/db/$instance_class.template /epics/pvi-defs/ /epics/support/ADGenICam/include/ADGenICam.h
-            mv /epics/pvi-defs/ADGenICam.pvi.device.yaml /epics/pvi-defs/$instance_class.pvi.device.yaml
-            # change the title of the pvi device to match the camera ID
-            sed -i "s/label: ADGenICam/label: GenICam $instance_id/g" /epics/pvi-defs/$instance_class.pvi.device.yaml
-            # remove ADDriver from GenICam device
-            sed -i "s/ADDriver//" /epics/pvi-defs/$instance_class.pvi.device.yaml
-            # TODO: pvi changes should allow us to remove the last 2 sed lines above
-            # a) you will be able to specify no parent, b) you will be able to specify the label
+            template=/epics/support/ADGenICam/db/$instance_class.template
+            pvi convert device --template $template --name $instance_class --label "GenICam $instance_id" /epics/pvi-defs/
         fi
     done
 
