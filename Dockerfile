@@ -62,8 +62,8 @@ RUN cd ${IOC} && ./install.sh && make
 
 # install runtime proxy for non-native builds
 RUN bash ${IOC}/install_proxy.sh
-# make sure that start.sh can write its generated files
-RUN chmod a+rw /epics/*
+# make sure that start.sh can write its generated files TODO - improve on this
+RUN chmod -R a+rw /epics
 
 ##### runtime preparation stage ################################################
 FROM developer AS runtime_prep
