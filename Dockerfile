@@ -26,6 +26,9 @@ WORKDIR ${SOURCE_FOLDER}/ibek-support
 # copy the global ibek files
 COPY ibek-support/_global/ _global
 
+COPY ibek-support/pvxs/ pvxs/
+RUN pvxs/install.sh 1.3.1
+
 COPY ibek-support/iocStats/ iocStats
 RUN iocStats/install.sh 3.2.0
 
@@ -59,6 +62,8 @@ RUN cd ${IOC} && ./install.sh && make
 
 # install runtime proxy for non-native builds
 RUN bash ${IOC}/install_proxy.sh
+# make sure that start.sh can write its generated files
+RUN chmod a+rw /epics/*
 
 ##### runtime preparation stage ################################################
 FROM developer AS runtime_prep
