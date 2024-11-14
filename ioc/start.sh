@@ -143,6 +143,7 @@ elif [ -f ${ibek_src} ]; then
                 arv-tool-0.8 -a ${instance_id} genicam > /tmp/${instance_id}-genicam.xml
                 if [[ ! -s /tmp/${instance_id}-genicam.xml ]]; then
                     # can't contact the camera - make an empty template
+                    echo "Can't connect to camera ${instance_id}"
                     touch /epics/support/ADGenICam/db/${instance_class}.template
                 else
                     # make a db file from the GenICam XML
