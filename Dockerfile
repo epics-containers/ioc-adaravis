@@ -53,6 +53,9 @@ RUN ADGenICam/install.sh R1-9
 COPY ibek-support/ADAravis/ ADAravis/
 RUN ADAravis/install.sh R2-3
 
+COPY ibek-support/ffmpegServer/ ffmpegServer/
+RUN ffmpegServer/install.sh R3-2
+
 # get the ioc source and build it
 COPY ioc ${SOURCE_FOLDER}/ioc
 RUN cd ${IOC} && ./install.sh && make
