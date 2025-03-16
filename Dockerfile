@@ -47,22 +47,20 @@ RUN ansible.sh calc
 COPY ibek-support/ADCore/ ADCore
 RUN ansible.sh ADCore
 
-# COPY ibek-support/ADGenICam/ ADGenICam/
-# RUN ADGenICam/install.sh R1-9
+COPY ibek-support/ADGenICam/ ADGenICam/
+RUN ansible.sh ADGenICam
 
-# COPY ibek-support/ADAravis/ ADAravis/
-# RUN ADAravis/install.sh R2-3
+COPY ibek-support/ADAravis/ ADAravis/
+RUN ansible.sh ADAravis
 
-# COPY ibek-support/ffmpegServer/ ffmpegServer
-# RUN ansible.sh ffmpegServer
+COPY ibek-support/ffmpegServer/ ffmpegServer
+RUN ansible.sh ffmpegServer
 
 # get the ioc source and build it
 COPY ioc ${SOURCE_FOLDER}/ioc
-RUN cd ${IOC} && ./install.sh && make
+RUN ansible.sh ioc
 
-# install runtime proxy for non-native builds
-RUN bash ${IOC}/install_proxy.sh
-# make sure that start.sh can write its generated files
+# make sure that start.sh can write its generated files (TODO need to get rid of this)
 RUN chmod a+rw /epics/*
 
 ##### runtime preparation stage ################################################
