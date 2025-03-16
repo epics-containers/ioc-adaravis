@@ -1,6 +1,6 @@
 ARG IMAGE_EXT
 
-ARG BASE=7.0.8ec2
+ARG BASE=7.0.8ad3
 ARG REGISTRY=ghcr.io/epics-containers
 ARG RUNTIME=${REGISTRY}/epics-base${IMAGE_EXT}-runtime:${BASE}
 ARG DEVELOPER=${REGISTRY}/epics-base${IMAGE_EXT}-developer:${BASE}
@@ -23,38 +23,38 @@ RUN pip install --upgrade -r requirements.txt
 
 WORKDIR ${SOURCE_FOLDER}/ibek-support
 
-# copy the global ibek files
-COPY ibek-support/_global/ _global
+COPY ibek-support/_ansible _ansible
+ENV PATH=$PATH:${SOURCE_FOLDER}/ibek-support/_ansible
 
 COPY ibek-support/iocStats/ iocStats
-RUN iocStats/install.sh 3.2.0
+RUN ansible.sh iocStats
 
-COPY ibek-support/asyn/ asyn/
-RUN asyn/install.sh R4-42
+COPY ibek-support/asyn/ asyn
+RUN ansible.sh asyn
 
-COPY ibek-support/autosave/ autosave/
-RUN autosave/install.sh R5-11
+COPY ibek-support/busy/ busy
+RUN ansible.sh busy
 
-COPY ibek-support/busy/ busy/
-RUN busy/install.sh R1-7-3
+COPY ibek-support/autosave/ autosave
+RUN ansible.sh autosave
 
-COPY ibek-support/sscan/ sscan/
-RUN sscan/install.sh R2-11-6
+COPY ibek-support/sscan/ sscan
+RUN ansible.sh sscan
 
-COPY ibek-support/calc/ calc/
-RUN calc/install.sh R3-7-5
+COPY ibek-support/calc/ calc
+RUN ansible.sh calc
 
-COPY ibek-support/ADCore/ ADCore/
-RUN ADCore/install.sh R3-12-1
+COPY ibek-support/ADCore/ ADCore
+RUN ansible.sh ADCore
 
-COPY ibek-support/ADGenICam/ ADGenICam/
-RUN ADGenICam/install.sh R1-9
+# COPY ibek-support/ADGenICam/ ADGenICam/
+# RUN ADGenICam/install.sh R1-9
 
-COPY ibek-support/ADAravis/ ADAravis/
-RUN ADAravis/install.sh R2-3
+# COPY ibek-support/ADAravis/ ADAravis/
+# RUN ADAravis/install.sh R2-3
 
-COPY ibek-support/ffmpegServer/ ffmpegServer/
-RUN ffmpegServer/install.sh R3-2
+# COPY ibek-support/ffmpegServer/ ffmpegServer
+# RUN ansible.sh ffmpegServer
 
 # get the ioc source and build it
 COPY ioc ${SOURCE_FOLDER}/ioc
