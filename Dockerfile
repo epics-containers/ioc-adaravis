@@ -35,6 +35,9 @@ RUN ansible.sh asyn
 COPY ibek-support/busy/ busy
 RUN ansible.sh busy
 
+COPY ibek-support/pvlogging/ pvlogging/
+RUN ansible.sh pvlogging
+
 COPY ibek-support/autosave/ autosave
 RUN ansible.sh autosave
 
@@ -43,6 +46,9 @@ RUN ansible.sh sscan
 
 COPY ibek-support/calc/ calc
 RUN ansible.sh calc
+
+COPY ibek-support/autosave/ autosave
+RUN ansible.sh autosave
 
 COPY ibek-support/ADCore/ ADCore
 RUN ansible.sh ADCore
@@ -60,8 +66,9 @@ RUN ansible.sh ffmpegServer
 COPY ioc ${SOURCE_FOLDER}/ioc
 RUN ansible.sh ioc
 
-# make sure that start.sh can write its generated files (TODO need to get rid of this)
-RUN chmod a+rw /epics/*
+# allow generated genicam files to be written for non root runtime user id
+RUN chmod a+rw -R /epics/pvi-defs /epics/support/ADGenICam/db \
+    /epics/generic-source/ibek-support
 
 ##### runtime preparation stage ################################################
 FROM developer AS runtime_prep
@@ -78,10 +85,6 @@ COPY --from=runtime_prep /usr/bin/yq /usr/bin/yq
 
 # install runtime system dependencies, collected from install.sh scripts
 RUN ibek support apt-install-runtime-packages --skip-non-native
-
-# allow generated genicam files to be written for non root runtime user id
-RUN chmod a+rw -R /epics/pvi-defs /epics/support/ADGenICam/db \
-    /epics/generic-source/ibek-support
 
 CMD ["bash", "-c", "${IOC}/start.sh"]
 
