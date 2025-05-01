@@ -79,6 +79,17 @@ RUN ibek ioc extract-runtime-assets /assets /usr/local/lib/x86_64-linux-gnu
 ##### runtime stage ############################################################
 FROM ${RUNTIME} AS runtime
 
+# temporary setup for ec attach ------------------------------------------------
+# TODO these changes go in epics-base
+# TODO the start.sh call to `ibek runtime expose-stdio` goes in ioc-template
+# TODO update requirements.txt to ibek 3.2.1
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    socat \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN echo 'socat UNIX-CONNECT:/tmp/stdio.sock -,raw,echo=0' > /usr/local/bin/ioc-attach \
+    && chmod +x /usr/local/bin/ioc-attach
+
 # get runtime assets from the preparation stage
 COPY --from=runtime_prep /assets /
 COPY --from=runtime_prep /usr/bin/yq /usr/bin/yq
