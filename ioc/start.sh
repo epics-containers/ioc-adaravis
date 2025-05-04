@@ -116,7 +116,7 @@ fi
 
 # 1. start.sh override script **************************************************
 if [ -f ${override} ]; then
-    exec bash ${override}
+    bash ${override}
 # 2. ioc.yaml ******************************************************************
 elif [ -f ${ibek_src} ]; then
 
@@ -196,7 +196,7 @@ fi
 
 if [[ ${EPICS_TARGET_ARCH} == "linux-x86_64" ]] ; then
     # Execute the IOC binary and pass the startup script as an argument
-    exec ${IOC}/bin/linux-x86_64/ioc ${final_ioc_startup}
+    ${IOC}/bin/linux-x86_64/ioc ${final_ioc_startup}
 else
     # for not native architectures use the appropriate python package
     if [[ -f ${CONFIG_DIR}/proxy-start.sh ]]; then
