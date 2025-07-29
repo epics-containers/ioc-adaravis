@@ -1,6 +1,6 @@
 ARG IMAGE_EXT
 
-ARG BASE=7.0.8ad3
+ARG BASE=7.0.9ec4
 ARG REGISTRY=ghcr.io/epics-containers
 ARG RUNTIME=${REGISTRY}/epics-base${IMAGE_EXT}-runtime:${BASE}
 ARG DEVELOPER=${REGISTRY}/epics-base${IMAGE_EXT}-developer:${BASE}
@@ -19,7 +19,7 @@ RUN ln -s ${SOURCE_FOLDER}/ioc ${IOC}
 
 # Get the current version of ibek
 COPY requirements.txt requirements.txt
-RUN pip install --upgrade -r requirements.txt
+RUN uv pip install --upgrade -r requirements.txt
 
 WORKDIR ${SOURCE_FOLDER}/ibek-support
 
@@ -74,7 +74,8 @@ RUN chmod a+rw -R /epics/pvi-defs /epics/support/ADGenICam/db \
 FROM developer AS runtime_prep
 
 # get the products from the build stage and reduce to runtime assets only
-RUN ibek ioc extract-runtime-assets /assets /usr/local/lib/x86_64-linux-gnu
+# TODO /python is created by uv - add to apt-install-runtime-packages' defaults
+RUN ibek ioc extract-runtime-assets /assets /python /usr/local/lib/x86_64-linux-gnu
 
 ##### runtime stage ############################################################
 FROM ${RUNTIME} AS runtime
