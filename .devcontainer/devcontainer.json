@@ -6,18 +6,20 @@
         "target": "developer",
         "args": {
             // Native target development settings ==============================
-            "EPICS_TARGET_ARCH": "linux-x86_64",
+            "EPICS_TARGET_ARCH": "linux-x86_64"
             // Local cross compilation settings ================================
             // "EPICS_TARGET_ARCH": "RTEMS-beatnik",
             // "IMAGE_EXT": "-rtems-beatnik"
-            // We put venv on a different volume to cache so have to copy
-            "UV_LINK_MODE": "copy"
         }
     },
     "containerEnv": {
         // provides a name for epics-containers to use in bash prompt etc.
         "EC_PROJECT": "${localWorkspaceFolderBasename}",
-        "IOC_NAME": "DEV_TEST_IOC"
+        "IOC_NAME": "DEV_TEST_IOC",
+        // fixes this error: Ansible could not initialize the preferred locale: unsupported locale setting
+        "LC_ALL": "C.UTF-8",
+        // We put venv on a different volume to cache so have to copy
+        "UV_LINK_MODE": "copy"
     },
     // outside of the container setup
     "initializeCommand": "bash .devcontainer/initializeCommand ${devcontainerId}",
