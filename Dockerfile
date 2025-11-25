@@ -1,9 +1,10 @@
 ARG IMAGE_EXT
 
-ARG BASE=7.0.9ec4
 ARG REGISTRY=ghcr.io/epics-containers
-ARG RUNTIME=${REGISTRY}/epics-base${IMAGE_EXT}-runtime:${BASE}
-ARG DEVELOPER=${REGISTRY}/epics-base${IMAGE_EXT}-developer:${BASE}
+ARG RUNTIME=${REGISTRY}/epics-base${IMAGE_EXT}-runtime:7.0.9ec5
+ARG DEVELOPER=${REGISTRY}/epics-base${IMAGE_EXT}-developer::7.0.9ec5
+# for pre-built common support change above to￼
+# DEVELOPER=${REGISTRY}/ioc-asyn${IMAGE_EXT}-developer:4.45ec1
 
 ##### build stage ##############################################################
 FROM  ${DEVELOPER} AS developer
