@@ -44,7 +44,7 @@ RUN chmod a+rw -R /epics/pvi-defs /epics/support/ADGenICam/db \
 FROM developer AS runtime_prep
 
 # get the products from the build stage and reduce to runtime assets only
-# TODO /python is created by uv - add to apt-install-runtime-packages' defaults
+# /python is created by uv linux-gnu is added aravis library build
 RUN ibek ioc extract-runtime-assets /assets /python /usr/local/lib/x86_64-linux-gnu
 
 ##### runtime stage ############################################################
