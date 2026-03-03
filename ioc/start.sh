@@ -99,8 +99,10 @@ fi
 
 # generate EPICS runtime assets ************************************************
 
-ibek runtime generate2 ${CONFIG_DIR}
-ibek runtime generate-autosave
+if [[ -f ${CONFIG_DIR}/ioc.yaml ]] ; then
+    ibek runtime generate2 ${CONFIG_DIR}
+    ibek runtime generate-autosave
+fi
 
 # build expanded database using msi
 if [ -f ${RUNTIME_DIR}/ioc.subst ]; then
