@@ -1,8 +1,8 @@
 ARG IMAGE_EXT
 
 ARG REGISTRY=ghcr.io/epics-containers
-ARG RUNTIME=${REGISTRY}/epics-base${IMAGE_EXT}-runtime:7.0.9ec5
-ARG DEVELOPER=${REGISTRY}/ioc-areadetector${IMAGE_EXT}-developer:3.14ec1
+ARG RUNTIME=${REGISTRY}/epics-base${IMAGE_EXT}-runtime:7.0.10ec1
+ARG DEVELOPER=${REGISTRY}/ioc-areadetector${IMAGE_EXT}-developer:3.14ec2
 
 ##### build stage ##############################################################
 FROM  ${DEVELOPER} AS developer
@@ -15,6 +15,9 @@ RUN curl -o /usr/bin/yq -L https://github.com/mikefarah/yq/releases/download/v4.
 ENV SOURCE_FOLDER=/epics/generic-source
 # connect ioc source folder to its know location
 RUN ln -s ${SOURCE_FOLDER}/ioc ${IOC}
+
+# Update the apt cache
+RUN apt update -y
 
 # Update the version of ibek if needed
 # COPY requirements.txt requirements.txt
