@@ -13,13 +13,9 @@ if [[ -f ${override} && ${override} != ${THIS_SCRIPT} ]]; then
     exec bash ${override}
 fi
 
-if [[ ${K8S_IOC_LIVENESS_ENABLED} != 'true' ]]; then
-    exit 0
-fi
-
 # use devIOCStats UPTIME as the default liveness PV
 # but allow override from the environment
-K8S_IOC_PV=${K8S_IOC_PV:-"${IOC_PREFIX}:UPTIME"}
+K8S_IOC_PV=${K8S_IOC_PV:-"${IOC_PREFIX^^}:UPTIME"}
 
 # use default CA PORT or override from the environment
 K8S_IOC_PORT=${K8S_IOC_PORT:-5064}
