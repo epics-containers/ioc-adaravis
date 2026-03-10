@@ -1,7 +1,78 @@
 #!/bin/env python
-import os, sys, re
-from xml.dom.minidom import parseString
+import sys
+sys.path.ap
+from xml.dom.minidom import parseString, parse
 from optparse import OptionParser
+
+from pvi.device import Device
+
+# Huy: add
+def map_signal_type(node):
+
+    t = node.nodeName
+
+    if t in ["Integer", "Float"]:
+        return "number"
+
+    if t == "Boolean":
+        return "boolean"
+
+    if t == "Enumeration":
+        return "enum"
+
+    if t == "Command":
+        return "command"
+
+    return "string"
+
+
+# Huy: add
+def build_device(device_name, category_trees):
+    device = Device(name=device_name)
+
+    def add_group(device_or_parent, cat):
+        group = device_or_parent.add_group(cat["name"])
+        # add signals
+        for fnode in cat["features"]:
+            fname = fnode.getAttribute("Name")
+            ftype = map_signal_type(fnode)
+            group.add_signal(fname, ftype)
+        # recursively add subcategories
+        for subcat in cat["subcategories"]:
+            add_group(group, subcat)
+
+    for cat in category_trees:
+        add_group(device, cat)
+
+    return device
+
+
+# Huy: add
+def main(xml_file, yaml_file):
+    doc = parse(xml_file)
+    root = doc.documentElement
+    lookup = build_lookup(root)
+
+    categories = [name for name, node in lookup.items() if node.nodeName == "Category"]
+    category_trees = [build_category_tree(c, lookup) for c in categories]
+
+    device = build_device("GenICamDevice", category_trees)
+
+    # write YAML
+    device.write_yaml(yaml_file)
+
+
+# Huy: add
+if __name__ == "__main__":
+    if len(sys.argv) != 3:
+        print("Usage: python makePvi.py <GenICam XML> <output YAML>")
+        sys.exit(1)
+
+    xml_file = sys.argv[1]
+    yaml_file = sys.argv[2]
+
+    main(xml_file, yaml_file)
+
 
 # parse args
 parser = OptionParser("""%prog <xmlFile> <templateFile>
@@ -31,14 +102,17 @@ except:
     print("".join(genicam_lines[:2]))
     sys.exit(1)
 
+# Huy: keep: creates the DOM tree
 # parse xml file to dom object
 xml_root = parseString("".join(genicam_lines[start_line:]).lstrip())
 db_filename = args[1]
 
+# Huy: keep: return only XML element node
 # function to read element children of a node
 def elements(node):
     return [n for n in node.childNodes if n.nodeType == n.ELEMENT_NODE]  
 
+# Huy: keep: extract text from XML nodes like
 # a function to read the text children of a node
 def getText(node):
     return ''.join([n.data for n in node.childNodes if n.nodeType == n.TEXT_NODE])
@@ -49,6 +123,7 @@ lookup = {}
 records = {}
 categories = []
 
+# Huy: modify
 # function to create a lookup table of nodes
 def handle_node(node):
     if node.nodeName == "Group":
@@ -59,6 +134,7 @@ def handle_node(node):
         lookup[name] = node
         # Add a leading GC_ to the name to prevent identical record names to those in ADBase.template
         recordName = "GC_" + name
+        """
         if len(recordName) > 20:
             words=re.findall('[a-zA-Z][^A-Z]*', recordName)
             for i in range(len(words)):
@@ -75,6 +151,7 @@ def handle_node(node):
         while recordName in records.values():
             recordName = recordName[:-len(str(i))] + str(i)
             i += 1
+        """
         records[name] = recordName
         if node.nodeName == "Category":
             categories.append(name)
@@ -88,6 +165,32 @@ for node in elements(elements(xml_root)[0]):
 # Now make structure, [(title, [features...]), ...]
 structure = []
 doneNodes = []
+
+# << Huy: add
+def build_category_tree(category):
+    node = lookup[category]
+
+    features = []
+    subcategories = []
+
+    for feature in elements(node):
+        if feature.nodeName == "pFeature":
+            featureName = str(getText(feature))
+            featureNode = lookup[featureName]
+
+            if featureNode.nodeName == "Category":
+                subcategories.append(build_category_tree(featureName))
+            else:
+                features.append(featureNode)
+
+    return {
+        "name": category,
+        "features": features,
+        "subcategories": subcategories,
+    }
+# >>
+
+"""
 def handle_category(category):
     # making flat structure, so if its already there then don't do anything
     if category in [x[0] for x in structure]:
@@ -117,10 +220,20 @@ def handle_category(category):
             structure.append((category, features))
     for category in cgs:
         handle_category(category)
+"""
+
+# << Huy: add
+categoryTrees = []
 
 for category in categories:
+    categoryTrees.append(build_category_tree(category))
+# >>
+
+"""
+for category in categories:
     handle_category(category)
-    
+"""
+
 # Spit out a database file
 db_file = open(db_filename, "w")
 stdout = sys.stdout
@@ -143,6 +256,7 @@ for node in doneNodes:
         if str(n.nodeName) == "AccessMode" and getText(n) == "RO":
             ro = True
     if node.nodeName in ["Integer", "IntConverter", "IntSwissKnife"]:
+        """
         print('record(%s, "$(P)$(R)%s_RBV") {' % (GCIntegerInputRecordType, records[nodeName]))
         print('  field(DTYP, "asynInt64")')
         print('  field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))GC_I_%s")' % nodeName)
@@ -150,15 +264,19 @@ for node in doneNodes:
         print('  field(DISA, "0")')
         print('}')
         print()
+        """
         if ro:
-            continue        
+            continue
+        """        
         print('record(%s, "$(P)$(R)%s") {' % (GCIntegerOutputRecordType, records[nodeName]))
         print('  field(DTYP, "asynInt64")')
         print('  field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))GC_I_%s")' % nodeName)
         print('  field(DISA, "0")')
         print('}')
         print()
+        """
     elif node.nodeName in ["Boolean"]:
+        """
         print('record(bi, "$(P)$(R)%s_RBV") {' % records[nodeName])
         print('  field(DTYP, "asynInt32")')
         print('  field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))GC_B_%s")' % nodeName)
@@ -168,8 +286,10 @@ for node in doneNodes:
         print('  field(DISA, "0")')
         print('}')
         print()
+        """
         if ro:
-            continue        
+            continue
+        """        
         print('record(bo, "$(P)$(R)%s") {' % records[nodeName])
         print('  field(DTYP, "asynInt32")')
         print('  field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))GC_B_%s")' % nodeName)
@@ -178,7 +298,9 @@ for node in doneNodes:
         print('  field(DISA, "0")')
         print('}')
         print()
+        """
     elif node.nodeName in ["Float", "Converter", "SwissKnife"]:
+        """
         print('record(ai, "$(P)$(R)%s_RBV") {' % records[nodeName])
         print('  field(DTYP, "asynFloat64")')
         print('  field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))GC_D_%s")' % nodeName)
@@ -187,8 +309,10 @@ for node in doneNodes:
         print('  field(DISA, "0")')
         print('}')
         print()
+        """
         if ro:
-            continue    
+            continue
+        """   
         print('record(ao, "$(P)$(R)%s") {' % records[nodeName])
         print('  field(DTYP, "asynFloat64")')
         print('  field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))GC_D_%s")' % nodeName)
@@ -196,7 +320,10 @@ for node in doneNodes:
         print('  field(DISA, "0")')
         print('}')
         print()
+        """
     elif node.nodeName in ["StringReg"]:
+        pass
+        """
         print('record(stringin, "$(P)$(R)%s_RBV") {' % records[nodeName])
         print('  field(DTYP, "asynOctetRead")')
         print('  field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))GC_S_%s")' % nodeName)
@@ -204,13 +331,17 @@ for node in doneNodes:
         print('  field(DISA, "0")')
         print('}')
         print()
+        """
     elif node.nodeName in ["Command"]:
+        pass
+        """
         print('record(longout, "$(P)$(R)%s") {' % records[nodeName])
         print('  field(DTYP, "asynInt32")')
         print('  field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))GC_C_%s")' % nodeName)
         print('  field(DISA, "0")')
         print('}')
         print()
+        """
     elif node.nodeName in ["Enumeration"]:
         enumerations = ""
         i = 0
@@ -230,6 +361,7 @@ for node in doneNodes:
                     defaultVal = getText(value[0])
                 enumerations += '  field(%sVL, "%s")\n' %(epicsId[i], getText(value[0]))
                 i += 1                
+        """
         print('record(mbbi, "$(P)$(R)%s_RBV") {' % records[nodeName])
         print('  field(DTYP, "asynInt32")')
         print('  field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))GC_E_%s")' % nodeName)
@@ -238,8 +370,10 @@ for node in doneNodes:
         print('  field(DISA, "0")')
         print('}')
         print()
+        """
         if ro:
-            continue        
+            continue
+        """       
         print('record(mbbo, "$(P)$(R)%s") {' % records[nodeName])
         print('  field(DTYP, "asynInt32")')
         print('  field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))GC_E_%s")' % nodeName)
@@ -248,6 +382,7 @@ for node in doneNodes:
         print('  field(DISA, "0")')
         print('}')
         print()
+        """
     else:
         print("Don't know what to do with %s" % node.nodeName, file=sys.stderr)
     
