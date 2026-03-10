@@ -19,7 +19,7 @@ RUN ln -s ${SOURCE_FOLDER}/ioc ${IOC}
 # Update the apt cache
 RUN apt update -y
 
-Update the version of ibek if needed
+# Update the version of ibek if needed
 COPY requirements.txt requirements.txt
 RUN uv pip install --upgrade -r requirements.txt
 
