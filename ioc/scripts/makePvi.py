@@ -1,10 +1,334 @@
 #!/bin/env python
 import sys
 sys.path.ap
-from xml.dom.minidom import parseString, parse
+from xml.dom.minidom import Element, parseString
 from optparse import OptionParser
 
 from pvi.device import Device
+from typing import Dict, List, Optional
+
+# Huy: add
+class Node:
+    def __init__(self, xml_element: Element) -> None:
+        """
+        Wrap a GenICam XML element into a Python Node object.
+        Note the differentiation: "element" refers to XML,
+        "node" refers to GenICam logical node
+
+        Args:
+            xml_element: an xml.dom.minidom.Element representing a 
+                         <Category>, <Float>, <Int>, <Enumeration>, etc.
+        """
+        # Original XML element
+        self.xml_element: Element = xml_element
+
+        # Basic metadata
+        self.name: str = xml_element.getAttribute("Name")
+        self.node_type: str = xml_element.nodeName  # Category, Float, Int, Enumeration
+        self.description: str = self._extract_description()
+
+        # Children Node objects (from <pFeature> references)
+        self.children: List["Node"] = []
+        self.references_resolved: bool = False
+
+        # Enumerations
+        self.choices: Optional[List[str]] = \
+            self._extract_enum_choices() if self.node_type == "Enumeration" else None
+
+    def _extract_description(self) -> str:
+        desc_nodes = self.xml_element.getElementsByTagName("Description")
+        if desc_nodes and desc_nodes[0].firstChild:
+            return desc_nodes[0].firstChild.nodeValue.strip()
+        return ""
+
+    def _extract_enum_choices(self) -> List[str]:
+        choices: List[str] = []
+        for enum_entry in self.xml_element.getElementsByTagName("EnumEntry"):
+            choices.append(enum_entry.getAttribute("Name"))
+        return choices
+
+    def is_category(self) -> bool:
+        return self.node_type == "Category"
+
+    def is_leaf(self) -> bool:
+        if not self.references_resolved:
+            raise RuntimeError(f"References not yet resolved for node {self.name}")
+        return len(self.children) == 0
+
+    def is_group(self) -> bool:
+        """
+        A group is a category that contains at least one leaf feature.
+        """
+        if not self.references_resolved:
+            raise RuntimeError(f"References not yet resolved for node {self.name}")
+        return self.is_category() and any(child.is_leaf() for child in self.children)
+
+    def __repr__(self) -> str:
+            return f"Node({self.name}, {self.node_type})"    
+
+
+# Huy: add
+def build_definition_nodes_lookup(root_element: Element) -> Dict[str, Node]:
+    """
+    Extract all GenICam definition nodes, wrap them as Node objects and
+    add them to a dictionary.
+    Definition nodes are xml elements that look like this, we take them:
+    <NodeType Name="My name" ...>
+    Nodes that look like below are reference nodes, we don't process them here:
+    <pFeature>My name</pFeature> 
+    """
+    definition_nodes_lookup: Dict[str, Node] = {}
+
+    for xml_element in root_element.getElementsByTagName("*"):
+        if xml_element.hasAttribute("Name"):
+            name = xml_element.getAttribute("Name")
+            definition_nodes_lookup[name] = Node(xml_element)
+
+    return definition_nodes_lookup
+
+
+# Huy: add
+def resolve_references(definition_nodes_lookup: Dict[str, Node]) -> None:
+    """
+    Populate each Node.children in definition_nodes_lookup by resolving <pFeature> references.
+    <pFeature> references are inside <Category > like this:
+    <Category Name="EventID">
+        <pFeature>EventAcquisitionStart</pFeature>
+        <pFeature>EventAcquisitionEnd</pFeature>
+    </Category>
+    ...
+    <Integer Name="EventAcquisitionStart">
+    Note on syntax: If we have <pFeature>EventAcquisitionStart</pFeature> then
+    feature_ref_element.firstChild is the DOM node/element containing the string EventAcquisitionStart
+    and feature_ref.firstChild.nodeValue is the string EventAcquisitionStart
+    """
+    for definition_node in definition_nodes_lookup.values():
+        if definition_node.is_category():
+            # Process the pFeature in the next level down (don't recurse down).
+            for child_element in definition_node.xml_element.childNodes:
+                if child_element.nodeName == "pFeature" and child_element.firstChild:
+                    feature_name = child_element.firstChild.nodeValue.strip()
+                    referenced_definition_node = definition_nodes_lookup.get(feature_name)
+                    if referenced_definition_node:
+                        definition_node.children.append(referenced_definition_node)
+
+        definition_node.references_resolved = True
+
+
+# Huy: add
+def print_pvi_groups(definition_nodes_lookup: Dict[str, Node]) -> None:
+    """
+    Print all two-level groups and their leaf signals.
+    """
+    for definition_node in definition_nodes_lookup.values():
+        if definition_node.is_group():
+            print(f"PVI GROUP: {definition_node.name}")
+            for child in definition_node.children:
+                if child.is_leaf():
+                    print(f"  SIGNAL: {child.name} [{child.node_type}]")
+
+
+#Huy: add
+def build_pvi_device(device_name: str, definition_nodes_lookup: Dict[str, Node]) -> Device:
+    device = Device(device_name)
+
+    for definition_node in definition_nodes_lookup.values():
+        if definition_node.is_group():
+            group_name = definition_node.name
+            # Create a group in PVI
+            device.add_group(group_name)
+            # Add leaf signals in this group
+            for child in definition_node.children:
+                if child.is_leaf():
+                    # Use name, type, description from XML attributes
+                    desc = child.xml_element.getAttribute("Description") or ""
+                    device.add_signal(
+                        group_name=group_name,
+                        signal_name=child.name,
+                        signal_type=child.node_type,
+                        description=desc
+                    )
+
+    return device
+
+
+# -------------------------
+# Main script entry
+# -------------------------
+def main(xml_path: str, device_name: str, yaml_out_path: str) -> None:
+    dom = parse(xml_path)
+    root = dom.documentElement
+
+    # Build GenICam nodes
+    definition_nodes_lookup = build_definition_nodes_lookup(root)
+
+    # Resolve <pFeature> references
+    resolve_references(definition_nodes_lookup)
+
+    # Create PVI device
+    device = build_pvi_device(device_name, definition_nodes_lookup)
+
+    # Serialize to YAML
+    device.to_yaml(yaml_out_path)
+    print(f"PVI YAML written to {yaml_out_path}")
+
+
+
+# Huy: add
+def debug_print_pvi_mapping(definition_node: Node,
+                            indent: int = 0,
+                            visited: set[str] | None = None) -> None:
+    if visited is None:
+        visited = set()
+    if definition_node.name in visited:
+        return
+    visited.add(definition_node.name)
+    if definition_node.is_category():
+        leaf_children = [c for c in definition_node.children if not c.is_category()]
+        marker = "[GROUP]" if leaf_children else "[SKIP]"
+    else:
+        marker = "[SIGNAL]"
+    print("  " * indent + f"{marker} {definition_node.name} ({definition_node.node_type})")
+    for child in definition_node.children:
+        debug_print_pvi_mapping(child, indent + 1, visited)
+
+
+# Huy: add
+def debug_print_all_pvi_mappings(definition_nodes_lookup: Dict[str, Node]) -> None:
+    for definition_node in definition_nodes_lookup.values():
+        if definition_node.is_category():
+            debug_print_pvi_mapping(definition_node)
+            print()
+
+
+def debug_print_final_pvi(definition_nodes_lookup: Dict[str, Node]) -> None:
+    """
+    Print the final PVI groups and signals exactly as they will appear in YAML.
+    """
+    printed_signals: set[str] = set()
+    for definition_node in definition_nodes_lookup.values():
+        if not definition_node.is_category():
+            continue
+        # collect leaf features under this category
+        leaf_features = []
+
+        for child_node in definition_node.children:
+            if not child_node.is_category():
+                if child_node.name not in printed_signals:
+                    leaf_features.append(child_node)
+
+        if not leaf_features:
+            continue
+
+        print(f"\nGROUP: {definition_node.name}")
+
+        for feature in leaf_features:
+            printed_signals.add(feature.name)
+            print(
+                f"  SIGNAL: {feature.name} "
+                f"[{feature.node_type}] "
+                f"{'- ' + feature.description if feature.description else ''}"
+            )
+
+# Huy: keep?: return only XML element node
+# function to read element children of a node
+def elements(node):
+    return [n for n in node.childNodes if n.nodeType == n.ELEMENT_NODE]  
+
+
+# Huy: keep?: extract text from XML nodes like
+# a function to read the text children of a node
+def getText(node):
+    return ''.join([n.data for n in node.childNodes if n.nodeType == n.TEXT_NODE])
+
+
+
+
+
+# Huy: add get metadata
+def get_description(node):
+    for child in elements(node):
+        if child.nodeName == "Description":
+            return getText(child)
+    return ""
+
+
+# Huy: add get metadata
+def get_enum_values(node):
+    values = []
+    for child in elements(node):
+        if child.nodeName == "EnumEntry":
+            name = child.getAttribute("Name")
+            values.append(name)
+    return values
+
+
+# Huy: add build hierarchical groups recursively using Device API
+def build_group(device, category_name, lookup, done):
+    """
+    Build PVI groups for a GenICam XML category such that:
+    - Only the lowest-level features (non-category nodes) become signals.
+    - Only the immediate parent category of these leaf features becomes a group.
+    - Ancestor categories containing only other categories are skipped.
+    - Higher-level categories are skipped.
+    
+    Args:
+        device: The root Device object or parent Group.
+        category_name: Name of the current Category to process.
+        lookup: Dict mapping feature/category names to XML nodes.
+        done: Set of nodes already processed to avoid duplicates.
+
+    Recursive traversal via <pFeature> references:
+        If a <pFeature> points to another Category, recurse into it to find leaf features.
+        Leaf <pFeatures> become PVI signals.
+    """
+    node = lookup.get(category_name)
+    if node is None:
+        return
+
+    # Collect leaf features directly under this category
+    leaf_features = []
+
+    child_nodes = elements(node)
+    for child_node in child_nodes:
+        if child_node.nodeName != "pFeature":
+            continue
+
+        feature_name = getText(child_node)
+        feature_node = lookup.get(feature_name)
+        if feature_node is None or feature_node in done:
+            continue
+
+        # If this pFeature references a Category, recurse into it
+        if feature_node.nodeName == "Category":
+            build_group(device, feature_name, lookup, done)
+        else:
+            # Leaf feature
+            leaf_features.append(feature_node)
+
+    # Only create a group if this category has leaf features directly under it
+    if leaf_features:
+        group = device.add_group(category_name)
+        for leaf in leaf_features:
+            desc = get_description(leaf)
+            node_type = leaf.nodeName
+
+            if node_type == "Enumeration":
+                choices = get_enum_values(leaf)
+                group.add_signal(
+                    name=leaf.getAttribute("Name"),
+                    dtype="enum",
+                    description=desc,
+                    choices=choices
+                )
+            else:
+                group.add_signal(
+                    name=leaf.getAttribute("Name"),
+                    dtype="float" if node_type == "Float" else "int",
+                    description=desc
+                )
+            done.add(leaf)
+
 
 # Huy: add
 def map_signal_type(node):
@@ -49,9 +373,25 @@ def build_device(device_name, category_trees):
 
 # Huy: add
 def main(xml_file, yaml_file):
+    # Check the first two lines of the feature xml file to see if arv-tool left
+    # the camera id there, thus creating an unparsable file
+    # Throw it away if it doesn't look like valid xml
+    # A valid first line of an xml file will be optional whitespace followed by '<'
+    genicam_lines = open(xml_file).readlines()
+    try:
+        start_line = min(i for i in range(2) if genicam_lines[i].lstrip().startswith("<"))
+    except:
+        print("Neither of these lines looks like valid XML:")
+        print("".join(genicam_lines[:2]))
+        sys.exit(1)
+
+    # parse xml file to dom object
+    xml_root = parseString("".join(genicam_lines[start_line:]).lstrip())
+
+
     doc = parse(xml_file)
     root = doc.documentElement
-    lookup = build_lookup(root)
+    lookup = build_definition_nodes_lookup(root)
 
     categories = [name for name, node in lookup.items() if node.nodeName == "Category"]
     category_trees = [build_category_tree(c, lookup) for c in categories]
@@ -107,16 +447,6 @@ except:
 xml_root = parseString("".join(genicam_lines[start_line:]).lstrip())
 db_filename = args[1]
 
-# Huy: keep: return only XML element node
-# function to read element children of a node
-def elements(node):
-    return [n for n in node.childNodes if n.nodeType == n.ELEMENT_NODE]  
-
-# Huy: keep: extract text from XML nodes like
-# a function to read the text children of a node
-def getText(node):
-    return ''.join([n.data for n in node.childNodes if n.nodeType == n.TEXT_NODE])
-
 # node lookup from nodeName -> node
 lookup = {}
 # lookup from nodeName -> recordName
@@ -166,29 +496,6 @@ for node in elements(elements(xml_root)[0]):
 structure = []
 doneNodes = []
 
-# << Huy: add
-def build_category_tree(category):
-    node = lookup[category]
-
-    features = []
-    subcategories = []
-
-    for feature in elements(node):
-        if feature.nodeName == "pFeature":
-            featureName = str(getText(feature))
-            featureNode = lookup[featureName]
-
-            if featureNode.nodeName == "Category":
-                subcategories.append(build_category_tree(featureName))
-            else:
-                features.append(featureNode)
-
-    return {
-        "name": category,
-        "features": features,
-        "subcategories": subcategories,
-    }
-# >>
 
 """
 def handle_category(category):
