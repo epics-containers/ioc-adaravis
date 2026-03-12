@@ -8,7 +8,8 @@ from pathlib import Path
 from pvi.device import Device
 from typing import Dict, List, Optional, Tuple
 
-# Huy: add
+DEBUG = False
+
 class Node:
     def __init__(self, xml_element: Element) -> None:
         """
@@ -58,6 +59,7 @@ class Node:
                 name = child.getAttribute("Name")
                 if name:
                     choices.append(name)
+        return choices
 
     def is_category(self) -> bool:
         return self.node_type == "Category"
@@ -111,7 +113,6 @@ class Node:
             return f"Node({self.name}, {self.node_type})"    
 
 
-# Huy: add
 def build_definition_nodes_lookup(root_element: Element) -> Dict[str, Node]:
     """
     Extract all GenICam definition nodes, wrap them as Node objects and
@@ -131,7 +132,6 @@ def build_definition_nodes_lookup(root_element: Element) -> Dict[str, Node]:
     return lookup
 
 
-# Huy: add
 def resolve_references(definition_nodes_lookup: Dict[str, Node]) -> None:
     """
     Populate each node's children in definition_nodes_lookup by resolving <pFeature> references.
@@ -140,7 +140,6 @@ def resolve_references(definition_nodes_lookup: Dict[str, Node]) -> None:
         definition_node.resolve_children(definition_nodes_lookup)
 
 
-# Huy: add
 def build_pvi_groups(definition_nodes_lookup: Dict[str, Node]) -> List[Tuple[str, List[Node]]]:
     """
     Determine two-level PVI groups and their signals.
@@ -151,13 +150,12 @@ def build_pvi_groups(definition_nodes_lookup: Dict[str, Node]) -> List[Tuple[str
     for node in definition_nodes_lookup.values():
         if not node.is_group():
             continue
-        leaf_children: List[Node] = [child for child in node.children if child.is_leaf()]
+        leaf_children: List[Node] = [child for child in node.children if not child.is_category()]
         if leaf_children:
             groups.append((node.name, leaf_children))
     return groups
 
 
-# Huy: add
 def sanitize_genicam_xml(xml_text: str) -> str:
     """
     A valid first line of an xml file will be optional whitespace followed by '<',
@@ -172,7 +170,7 @@ def sanitize_genicam_xml(xml_text: str) -> str:
     try:
         # Look at first 2 lines, locate the first one that looks like xml
         start_line = min(
-            line_number for line_number in range(2) if lines[line_number].lstrip().startswith("<")
+            line_number for line_number in range(min(2, len(lines))) if lines[line_number].lstrip().startswith("<")
         )
     except ValueError:
         raise RuntimeError(
@@ -182,7 +180,6 @@ def sanitize_genicam_xml(xml_text: str) -> str:
     return "".join(lines[start_line:]).lstrip()
 
 
-# Huy: add
 def convert_genicam_xml_to_pvi(xml_text: str, instance_class: str, label: str) -> str:
     """
     Convert GenICam XML text into PVI YAML text.
@@ -248,38 +245,7 @@ def get_cli_params() -> Tuple[Values, List[str]]:
     return options, args
 
 
-def main() -> None:
-    # Type hint doesn't like options, args: Tuple[Values, List[str]] = parser.parse_args()
-    # so do as below
-    options: Values
-    args: List[str]
-    options, args = get_cli_params()
-
-    genicam_input_file: Path = Path(args[0])
-    # Path.read_text closes file automatically
-    xml_text: str = genicam_input_file.read_text()
-    yaml_text: str = convert_genicam_xml_to_pvi(
-        xml_text,
-        instance_class=options.instance_class,
-        label=options.label
-    )
-
-    output_folder: Path = Path(args[1])
-    output_folder.mkdir(parents=True, exist_ok=True)
-
-    # Path.write_text closes file automatically
-    yaml_file: Path = output_folder / f"{options.instance_class}.yaml"
-    yaml_file.write_text(yaml_text)
-    print(f"Generated PVI YAML: {yaml_file}")
-
-
-if __name__ == "__main__":
-    main()
-
-
-
-# Huy: add
-def print_pvi_groups(definition_nodes_lookup: Dict[str, Node]) -> None:
+def debug_print_pvi_groups(definition_nodes_lookup: Dict[str, Node]) -> None:
     """
     Print all two-level groups and their leaf signals.
     """
@@ -290,10 +256,10 @@ def print_pvi_groups(definition_nodes_lookup: Dict[str, Node]) -> None:
                 if child.is_leaf():
                     print(f"  SIGNAL: {child.name} [{child.node_type}]")
 
-# Huy: add
+
 def debug_print_pvi_mapping(definition_node: Node,
                             indent: int = 0,
-                            visited: set[str] | None = None) -> None:
+                            visited: Optional[set[str]] = None) -> None:
     if visited is None:
         visited = set()
     if definition_node.name in visited:
@@ -309,7 +275,6 @@ def debug_print_pvi_mapping(definition_node: Node,
         debug_print_pvi_mapping(child, indent + 1, visited)
 
 
-# Huy: add
 def debug_print_all_pvi_mappings(definition_nodes_lookup: Dict[str, Node]) -> None:
     for definition_node in definition_nodes_lookup.values():
         if definition_node.is_category():
@@ -346,419 +311,35 @@ def debug_print_final_pvi(definition_nodes_lookup: Dict[str, Node]) -> None:
                 f"{'- ' + feature.description if feature.description else ''}"
             )
 
-"""
-# Huy: keep?: return only XML element node
-# function to read element children of a node
-def elements(node):
-    return [n for n in node.childNodes if n.nodeType == n.ELEMENT_NODE]  
-"""
 
-"""
-# Huy: keep?: extract text from XML nodes like
-# a function to read the text children of a node
-def getText(node):
-    return ''.join([n.data for n in node.childNodes if n.nodeType == n.TEXT_NODE])
-"""
+def main() -> None:
+    # Get parameters
+    # Type hint doesn't like options, args: Tuple[Values, List[str]] = parser.parse_args()
+    # so do as below
+    options: Values
+    args: List[str]
+    options, args = get_cli_params()
 
-"""
-# Huy: add get metadata
-def get_description(node):
-    for child in elements(node):
-        if child.nodeName == "Description":
-            return getText(child)
-    return ""
-"""
+    # Read input file
+    genicam_input_file: Path = Path(args[0])
+    # Path.read_text closes file automatically
+    xml_text: str = genicam_input_file.read_text()
+ 
+    # Convert
+    yaml_text: str = convert_genicam_xml_to_pvi(
+        xml_text,
+        instance_class=options.instance_class,
+        label=options.label
+    )
 
-"""
-# Huy: add get metadata
-def get_enum_values(node):
-    values = []
-    for child in elements(node):
-        if child.nodeName == "EnumEntry":
-            name = child.getAttribute("Name")
-            values.append(name)
-    return values
-"""
+    # Write output file
+    output_folder: Path = Path(args[1])
+    output_folder.mkdir(parents=True, exist_ok=True)
+    # Path.write_text closes file automatically
+    yaml_file: Path = output_folder / f"{options.instance_class}.yaml"
+    yaml_file.write_text(yaml_text)
+    print(f"Generated PVI YAML: {yaml_file}")
 
 
-"""
-# Huy: add build hierarchical groups recursively using Device API
-def build_group(device, category_name, lookup, done):
-
-    Build PVI groups for a GenICam XML category such that:
-    - Only the lowest-level features (non-category nodes) become signals.
-    - Only the immediate parent category of these leaf features becomes a group.
-    - Ancestor categories containing only other categories are skipped.
-    - Higher-level categories are skipped.
-    
-    Args:
-        device: The root Device object or parent Group.
-        category_name: Name of the current Category to process.
-        lookup: Dict mapping feature/category names to XML nodes.
-        done: Set of nodes already processed to avoid duplicates.
-
-    Recursive traversal via <pFeature> references:
-        If a <pFeature> points to another Category, recurse into it to find leaf features.
-        Leaf <pFeatures> become PVI signals.
-
-    node = lookup.get(category_name)
-    if node is None:
-        return
-
-    # Collect leaf features directly under this category
-    leaf_features = []
-
-    child_nodes = elements(node)
-    for child_node in child_nodes:
-        if child_node.nodeName != "pFeature":
-            continue
-
-        feature_name = getText(child_node)
-        feature_node = lookup.get(feature_name)
-        if feature_node is None or feature_node in done:
-            continue
-
-        # If this pFeature references a Category, recurse into it
-        if feature_node.nodeName == "Category":
-            build_group(device, feature_name, lookup, done)
-        else:
-            # Leaf feature
-            leaf_features.append(feature_node)
-
-    # Only create a group if this category has leaf features directly under it
-    if leaf_features:
-        group = device.add_group(category_name)
-        for leaf in leaf_features:
-            desc = get_description(leaf)
-            node_type = leaf.nodeName
-
-            if node_type == "Enumeration":
-                choices = get_enum_values(leaf)
-                group.add_signal(
-                    name=leaf.getAttribute("Name"),
-                    dtype="enum",
-                    description=desc,
-                    choices=choices
-                )
-            else:
-                group.add_signal(
-                    name=leaf.getAttribute("Name"),
-                    dtype="float" if node_type == "Float" else "int",
-                    description=desc
-                )
-            done.add(leaf)
-"""
-
-"""
-# Huy: add
-def map_signal_type(node):
-
-    t = node.nodeName
-
-    if t in ["Integer", "Float"]:
-        return "number"
-
-    if t == "Boolean":
-        return "boolean"
-
-    if t == "Enumeration":
-        return "enum"
-
-    if t == "Command":
-        return "command"
-
-    return "string"
-"""
-
-
-
-
-
-
-######################################################################
-# Original code 
-######################################################################
-parser = OptionParser("""%prog <xmlFile> <templateFile>
-This script parses a GenICam xml file and creates an EPICS database template""")
-parser.add_option("", "--devInt64",
-                  action="store_true", dest="devInt64", default=False,
-                  help="use int64in and int64out records. Requires at least EPICS base 3.16.1 or EPICS 7.")
-options, args = parser.parse_args()
-if len(args) != 2:
-    parser.error("Incorrect number of arguments")
-if (options.devInt64):
-  GCIntegerInputRecordType = "int64in"
-  GCIntegerOutputRecordType = "int64out"
-else:
-  GCIntegerInputRecordType = "ai"
-  GCIntegerOutputRecordType = "ao"
-
-# Check the first two lines of the feature xml file to see if arv-tool left
-# the camera id there, thus creating an unparsable file
-# Throw it away if it doesn't look like valid xml
-# A valid first line of an xml file will be optional whitespace followed by '<'
-genicam_lines = open(args[0]).readlines()
-try:
-    start_line = min(i for i in range(2) if genicam_lines[i].lstrip().startswith("<"))
-except:
-    print("Neither of these lines looks like valid XML:")
-    print("".join(genicam_lines[:2]))
-    sys.exit(1)
-
-# Huy: keep: creates the DOM tree
-# parse xml file to dom object
-xml_root = parseString("".join(genicam_lines[start_line:]).lstrip())
-db_filename = args[1]
-
-# node lookup from nodeName -> node
-lookup = {}
-# lookup from nodeName -> recordName
-records = {}
-categories = []
-
-# Huy: modify
-# function to create a lookup table of nodes
-def handle_node(node):
-    if node.nodeName == "Group":
-        for n in elements(node):
-            handle_node(n)
-    elif node.hasAttribute("Name"):
-        name = str(node.getAttribute("Name"))
-        lookup[name] = node
-        # Add a leading GC_ to the name to prevent identical record names to those in ADBase.template
-        recordName = "GC_" + name
-        """
-        if len(recordName) > 20:
-            words=re.findall('[a-zA-Z][^A-Z]*', recordName)
-            for i in range(len(words)):
-                word = words[i]
-                if (len(word) > 3):
-                    word = word[:3]
-                    words[i] = word
-                    s = ''
-                    recordName = s.join(words)
-                    if (len(recordName) <= 20): break
-        if len(recordName) > 20:                    
-            recordName = recordName[:20]
-        i = 0
-        while recordName in records.values():
-            recordName = recordName[:-len(str(i))] + str(i)
-            i += 1
-        """
-        records[name] = recordName
-        if node.nodeName == "Category":
-            categories.append(name)
-    elif node.nodeName != "StructReg":
-        print("Node has no Name attribute", node)
-
-# list of all nodes    
-for node in elements(elements(xml_root)[0]):
-    handle_node(node)
-
-# Now make structure, [(title, [features...]), ...]
-structure = []
-doneNodes = []
-
-
-"""
-def handle_category(category):
-    # making flat structure, so if its already there then don't do anything
-    if category in [x[0] for x in structure]:
-        return
-    node = lookup[category]
-    # for each child feature of this node
-    features = []
-    cgs = []
-    for feature in elements(node):        
-        if feature.nodeName == "pFeature":
-            featureName = str(getText(feature))
-            featureNode = lookup[featureName]
-            if str(featureNode.nodeName) == "Category":
-                cgs.append(featureName)
-            else:
-                if featureNode not in doneNodes:
-                    features.append(featureNode)   
-                    doneNodes.append(featureNode)
-    if features:
-        if len(features) > 32:
-            i = 1
-            while features:
-                structure.append((category+str(i), features[:32]))
-                i += 1
-                features = features[32:]
-        else:            
-            structure.append((category, features))
-    for category in cgs:
-        handle_category(category)
-"""
-
-# << Huy: add
-categoryTrees = []
-
-for category in categories:
-    categoryTrees.append(build_category_tree(category))
-# >>
-
-"""
-for category in categories:
-    handle_category(category)
-"""
-
-# Spit out a database file
-db_file = open(db_filename, "w")
-stdout = sys.stdout
-sys.stdout = db_file
-
-# print(a header
-print('# Macros:')
-print('#% macro, P, Device Prefix')
-print('#% macro, R, Device Suffix')
-print('#% macro, PORT, Asyn Port name')
-print('#% macro, TIMEOUT, Timeout, default=1')
-print('#% macro, ADDR, Asyn Port address, default=0')
-print()
-
-# for each node
-for node in doneNodes:
-    nodeName = str(node.getAttribute("Name"))
-    ro = False
-    for n in elements(node):
-        if str(n.nodeName) == "AccessMode" and getText(n) == "RO":
-            ro = True
-    if node.nodeName in ["Integer", "IntConverter", "IntSwissKnife"]:
-        """
-        print('record(%s, "$(P)$(R)%s_RBV") {' % (GCIntegerInputRecordType, records[nodeName]))
-        print('  field(DTYP, "asynInt64")')
-        print('  field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))GC_I_%s")' % nodeName)
-        print('  field(SCAN, "I/O Intr")')
-        print('  field(DISA, "0")')
-        print('}')
-        print()
-        """
-        if ro:
-            continue
-        """        
-        print('record(%s, "$(P)$(R)%s") {' % (GCIntegerOutputRecordType, records[nodeName]))
-        print('  field(DTYP, "asynInt64")')
-        print('  field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))GC_I_%s")' % nodeName)
-        print('  field(DISA, "0")')
-        print('}')
-        print()
-        """
-    elif node.nodeName in ["Boolean"]:
-        """
-        print('record(bi, "$(P)$(R)%s_RBV") {' % records[nodeName])
-        print('  field(DTYP, "asynInt32")')
-        print('  field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))GC_B_%s")' % nodeName)
-        print('  field(SCAN, "I/O Intr")')
-        print('  field(ZNAM, "No")')
-        print('  field(ONAM, "Yes")'                        )
-        print('  field(DISA, "0")')
-        print('}')
-        print()
-        """
-        if ro:
-            continue
-        """        
-        print('record(bo, "$(P)$(R)%s") {' % records[nodeName])
-        print('  field(DTYP, "asynInt32")')
-        print('  field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))GC_B_%s")' % nodeName)
-        print('  field(ZNAM, "No")')
-        print('  field(ONAM, "Yes")'                                )
-        print('  field(DISA, "0")')
-        print('}')
-        print()
-        """
-    elif node.nodeName in ["Float", "Converter", "SwissKnife"]:
-        """
-        print('record(ai, "$(P)$(R)%s_RBV") {' % records[nodeName])
-        print('  field(DTYP, "asynFloat64")')
-        print('  field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))GC_D_%s")' % nodeName)
-        print('  field(PREC, "3")'        )
-        print('  field(SCAN, "I/O Intr")')
-        print('  field(DISA, "0")')
-        print('}')
-        print()
-        """
-        if ro:
-            continue
-        """   
-        print('record(ao, "$(P)$(R)%s") {' % records[nodeName])
-        print('  field(DTYP, "asynFloat64")')
-        print('  field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))GC_D_%s")' % nodeName)
-        print('  field(PREC, "3")')
-        print('  field(DISA, "0")')
-        print('}')
-        print()
-        """
-    elif node.nodeName in ["StringReg"]:
-        pass
-        """
-        print('record(stringin, "$(P)$(R)%s_RBV") {' % records[nodeName])
-        print('  field(DTYP, "asynOctetRead")')
-        print('  field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))GC_S_%s")' % nodeName)
-        print('  field(SCAN, "I/O Intr")')
-        print('  field(DISA, "0")')
-        print('}')
-        print()
-        """
-    elif node.nodeName in ["Command"]:
-        pass
-        """
-        print('record(longout, "$(P)$(R)%s") {' % records[nodeName])
-        print('  field(DTYP, "asynInt32")')
-        print('  field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))GC_C_%s")' % nodeName)
-        print('  field(DISA, "0")')
-        print('}')
-        print()
-        """
-    elif node.nodeName in ["Enumeration"]:
-        enumerations = ""
-        i = 0
-        defaultVal = "0"
-        epicsId = ["ZR", "ON", "TW", "TH", "FR", "FV", "SX", "SV", "EI", "NI", "TE", "EL", "TV", "TT", "FT", "FF"]
-        for n in elements(node):
-            if str(n.nodeName) == "EnumEntry":
-                if i >= len(epicsId):
-                    print("More than 16 enum entries for %s mbbi record, discarding additional options." % nodeName, file=sys.stderr)
-                    print("   If needed, edit the Enumeration tag for %s to select the 16 you want." % nodeName, file=sys.stderr)
-                    break
-                name = str(n.getAttribute("Name"))
-                enumerations += '  field(%sST, "%s")\n' %(epicsId[i], name[:16])
-                value = [x for x in elements(n) if str(x.nodeName) == "Value"]
-                assert value, "EnumEntry %s in node %s doesn't have a value" %(name, nodeName)                
-                if i == 0:
-                    defaultVal = getText(value[0])
-                enumerations += '  field(%sVL, "%s")\n' %(epicsId[i], getText(value[0]))
-                i += 1                
-        """
-        print('record(mbbi, "$(P)$(R)%s_RBV") {' % records[nodeName])
-        print('  field(DTYP, "asynInt32")')
-        print('  field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))GC_E_%s")' % nodeName)
-        print(enumerations, end="")
-        print('  field(SCAN, "I/O Intr")')
-        print('  field(DISA, "0")')
-        print('}')
-        print()
-        """
-        if ro:
-            continue
-        """       
-        print('record(mbbo, "$(P)$(R)%s") {' % records[nodeName])
-        print('  field(DTYP, "asynInt32")')
-        print('  field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))GC_E_%s")' % nodeName)
-        print('  field(DOL,  "%s")' % defaultVal)
-        print(enumerations, end="")
-        print('  field(DISA, "0")')
-        print('}')
-        print()
-        """
-    else:
-        print("Don't know what to do with %s" % node.nodeName, file=sys.stderr)
-    
-# tidy up
-db_file.close()     
-sys.stdout = stdout
-
-#endObjectProperties""" % globals() )
-
+if __name__ == "__main__":
+    main()
