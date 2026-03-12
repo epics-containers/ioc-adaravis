@@ -256,6 +256,7 @@ def main() -> None:
     options, args = get_cli_params()
 
     genicam_input_file: Path = Path(args[0])
+    # Path.read_text closes file automatically
     xml_text: str = genicam_input_file.read_text()
     yaml_text: str = convert_genicam_xml_to_pvi(
         xml_text,
@@ -266,6 +267,7 @@ def main() -> None:
     output_folder: Path = Path(args[1])
     output_folder.mkdir(parents=True, exist_ok=True)
 
+    # Path.write_text closes file automatically
     yaml_file: Path = output_folder / f"{options.instance_class}.yaml"
     yaml_file.write_text(yaml_text)
     print(f"Generated PVI YAML: {yaml_file}")
@@ -273,39 +275,6 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
-
-
-# Huy: add
-def main(xml_file, yaml_file):
-    # Check the first two lines of the feature xml file to see if arv-tool left
-    # the camera id there, thus creating an unparsable file
-    # Throw it away if it doesn't look like valid xml
-    # A valid first line of an xml file will be optional whitespace followed by '<'
-    genicam_lines = open(xml_file).readlines()
-    try:
-        start_line = min(i for i in range(2) if genicam_lines[i].lstrip().startswith("<"))
-    except:
-        print("Neither of these lines looks like valid XML:")
-        print("".join(genicam_lines[:2]))
-        sys.exit(1)
-
-    # parse xml file to dom object
-    xml_root = parseString("".join(genicam_lines[start_line:]).lstrip())
-
-
-    doc = parse(xml_file)
-    root = doc.documentElement
-    lookup = build_definition_nodes_lookup(root)
-
-    categories = [name for name, node in lookup.items() if node.nodeName == "Category"]
-    category_trees = [build_category_tree(c, lookup) for c in categories]
-
-    device = build_device("GenICamDevice", category_trees)
-
-    # write YAML
-    device.write_yaml(yaml_file)
-
 
 
 
@@ -480,6 +449,7 @@ def build_group(device, category_name, lookup, done):
             done.add(leaf)
 """
 
+"""
 # Huy: add
 def map_signal_type(node):
 
@@ -498,51 +468,16 @@ def map_signal_type(node):
         return "command"
 
     return "string"
-
-
-# Huy: add
-def build_device(device_name, category_trees):
-    device = Device(name=device_name)
-
-    def add_group(device_or_parent, cat):
-        group = device_or_parent.add_group(cat["name"])
-        # add signals
-        for fnode in cat["features"]:
-            fname = fnode.getAttribute("Name")
-            ftype = map_signal_type(fnode)
-            group.add_signal(fname, ftype)
-        # recursively add subcategories
-        for subcat in cat["subcategories"]:
-            add_group(group, subcat)
-
-    for cat in category_trees:
-        add_group(device, cat)
-
-    return device
+"""
 
 
 
 
 
-# Huy: add
-if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print("Usage: python makePvi.py <GenICam XML> <output YAML>")
-        sys.exit(1)
-
-    xml_file = sys.argv[1]
-    yaml_file = sys.argv[2]
-
-    main(xml_file, yaml_file)
 
 ######################################################################
 # Original code 
 ######################################################################
-# parse args
-# Huy: invoked with
-# python /epics/support/ADGenICam/scripts/makeDb.py
-#   /tmp/${instance_id}-genicam.xml
-#   /epics/support/ADGenICam/db/${instance_class}.template
 parser = OptionParser("""%prog <xmlFile> <templateFile>
 This script parses a GenICam xml file and creates an EPICS database template""")
 parser.add_option("", "--devInt64",
