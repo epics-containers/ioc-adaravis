@@ -13,3 +13,6 @@ if [[ $(id -u) != "0" ]] ; then
     sudo chown -R ${USER}:${USER} /epics/ibek-defs /epics/pvi-defs /epics/support/configure /venv
     sudo chown -h ${USER}:${USER} /epics /epics/ioc /epics/support
 fi
+
+# Install Python development dependencies (pytest etc.)
+uv pip install -r /workspaces/ioc-adaravis/requirements-dev.txt
