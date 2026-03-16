@@ -82,8 +82,9 @@ do
             fi
         fi
         # Generate pvi device from the GenICam DB
-        template=/epics/support/ADGenICam/db/$instance_class.template
-        pvi convert device --template $template --name $instance_class --label "GenICam $instance_id" /epics/pvi-defs/
+        python /epics/support/ADGenICam/scripts/makePvi.py /tmp/${instance_id}-genicam.xml /epics/pvi-defs/
+            --name $instance_class # device class
+            --label "GenICam $instance_id" # instance ID
     fi
 done
 
