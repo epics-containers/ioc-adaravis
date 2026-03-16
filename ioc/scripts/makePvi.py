@@ -1,6 +1,5 @@
 #!/bin/env python
 import sys
-sys.path.ap
 from xml.dom.minidom import Document, Element, parseString
 from optparse import OptionParser, Values
 from pathlib import Path
