@@ -1,11 +1,10 @@
 #!/bin/env python
-import sys
-from xml.dom.minidom import Document, Element, parseString
 from optparse import OptionParser, Values
 from pathlib import Path
-
-from pvi.device import Device
+from pvi.device import Device, enforce_pascal_case, Row, Group, SignalRW
 from typing import Dict, List, Optional, Tuple
+from xml.dom.minidom import Document, Element, parseString
+import yaml
 
 DEBUG = False
 
@@ -127,7 +126,6 @@ def build_definition_nodes_lookup(root_element: Element) -> Dict[str, Node]:
         name: str = xml_element.getAttribute("Name")
         if name:
             lookup[name] = Node(xml_element)
-
     return lookup
 
 
@@ -138,13 +136,11 @@ def resolve_references(definition_nodes_lookup: Dict[str, Node]) -> None:
     for definition_node in definition_nodes_lookup.values():
         definition_node.resolve_children(definition_nodes_lookup)
 
-
+"""
 def build_pvi_groups(definition_nodes_lookup: Dict[str, Node]) -> List[Tuple[str, List[Node]]]:
-    """
-    Determine two-level PVI groups and their signals.
-    Returns:
-        List of tuples: (group_name, list of leaf Nodes in group)
-    """
+    #Determine two-level PVI groups and their signals.
+    #Returns:
+    #    List of tuples: (group_name, list of leaf Nodes in group)
     groups: List[Tuple[str, List[Node]]] = []
     for node in definition_nodes_lookup.values():
         if not node.is_group():
@@ -152,6 +148,34 @@ def build_pvi_groups(definition_nodes_lookup: Dict[str, Node]) -> List[Tuple[str
         leaf_children: List[Node] = [child for child in node.children if not child.is_category()]
         if leaf_children:
             groups.append((node.name, leaf_children))
+    return groups
+"""
+def build_pvi_groups(definition_nodes_lookup: Dict[str, Node]) -> List[Group]:
+    groups: List[Group] = []
+
+    for node in definition_nodes_lookup.values():
+        # Select group nodes
+        if not node.is_group():
+            continue
+
+        # Select group's children that are not category, these are leaves
+        non_category_children = [child for child in node.children if not child.is_category()]
+        if not non_category_children:
+            continue
+
+        # Create signals from leaves
+        signals: List[SignalRW] = [
+            SignalRW(
+                name=enforce_pascal_case(leaf.name),
+                write_pv=leaf.name,
+                read_pv=f"{leaf.name}_RBV",
+            )
+            for leaf in non_category_children
+        ]
+
+        group_name = enforce_pascal_case(node.name)
+        groups.append(Group(name= group_name, children=signals, layout=Row()))
+
     return groups
 
 
@@ -197,26 +221,31 @@ def convert_genicam_xml_to_pvi(xml_text: str, instance_class: str, label: str) -
     # Build Node graph and resolve references
     definition_nodes_lookup: Dict[str, Node] = build_definition_nodes_lookup(root_element)
     resolve_references(definition_nodes_lookup)
+    groups: List[Group] = build_pvi_groups(definition_nodes_lookup)
 
-    # Build Device then populate groups/signals
-    device: Device = Device(name=instance_class, class_=instance_class, label=label)
+    # Just in case no categories produced groups
+    if not groups:
+        signals: List[SignalRW] = []
+        for node in definition_nodes_lookup.values():
+            if node.node_type != "Category":
+                signals.append(
+                    SignalRW(
+                        name=enforce_pascal_case(node.name),
+                        write_pv=node.name,
+                        read_pv=f"{node.name}_RBV",
+                    )
+                )
+        if signals:
+            groups = [Group(
+                name=enforce_pascal_case(instance_class),
+                children=signals,
+                layout=Row())]
 
-    # Build PVI groups (two-level: group + signals)
-    groups = build_pvi_groups(definition_nodes_lookup)
-
-    for group_name, leaf_nodes in groups:
-        device.add_group(group_name)
-
-        for leaf_node in leaf_nodes:
-            device.add_signal(
-                group_name=group_name,
-                signal_name=leaf_node.name,
-                signal_type=leaf_node.node_type,
-                description=leaf_node.description
-            )
+    # Build Device
+    device: Device = Device(label=label, children=groups)
 
     # Return YAML as string
-    return device.to_yaml()
+    return yaml.safe_dump(device.model_dump(), sort_keys=False)
 
 
 def get_cli_params() -> Tuple[Values, List[str]]:
