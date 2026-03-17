@@ -1,1 +1,3 @@
+pvi>=0.12.0
 pytest
+PyYAML>=6.0
