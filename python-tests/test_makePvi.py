@@ -10,7 +10,7 @@ import yaml
 SCRIPT_DIR = Path(__file__).resolve().parents[1] / "ioc" / "scripts"
 sys.path.insert(0, str(SCRIPT_DIR))
 import makePvi
-from makePvi import GenICamModel, GenICamNode
+from makePvi import GenICamModel, GenICamNode, PviModel
 
 
 @pytest.fixture
@@ -75,108 +75,106 @@ def genicam_model(example_xml: str) -> GenICamModel:
     
 
 @pytest.fixture
-def definition_nodes(genicam_model: GenICamModel) -> Dict[str, GenICamNode]:
-    return genicam_model.definition_nodes
-
-
-@pytest.fixture
-def definition_nodes_with_references_resolved(definition_nodes: Dict[str, GenICamNode]) -> Dict[str, GenICamNode]:
-    makePvi.resolve_references(definition_nodes)
-    return definition_nodes
-
-
-def test_sanitize_genicam_xml_with_non_xml_header():
-    XML_WITH_CAMERA_ID = """CAMERA123
-    <Root>
-      <Whatever Name="Hello"/>
-    </Root>
-    """
-    cleaned = makePvi.sanitize_genicam_xml(XML_WITH_CAMERA_ID)
-    assert cleaned.startswith("<Root>")
-
-
-def test_sanitize_genicam_xml_without_non_xml_header():
-    XML_WITH_CAMERA_ID = """
-    <Root>
-      <Whatever Name="Hello"/>
-    </Root>
-    """
-    cleaned = makePvi.sanitize_genicam_xml(XML_WITH_CAMERA_ID)
-    assert cleaned.startswith("<Root>")
-
-
-def test_node_extract_description(xml_doc: Document):
-    category_element = xml_doc.getElementsByTagName("Category")[1]
-    node = makePvi.GenICamNode(category_element)
-    assert node.description == "AcquisitionCategory description"
-
-
-def test_node_extract_enum_choices(xml_doc: Document):
-      enum_element = xml_doc.getElementsByTagName("Enumeration")[0]
-      node = makePvi.GenICamNode(enum_element)
-      assert node.choices == ["Off", "On"]
-
-
-def test_build_definition_nodes_lookup(definition_nodes: Dict[str, GenICamNode]):
-    assert "AcquisitionCategory" in definition_nodes
-    assert "ExposureTimeFeature" in definition_nodes
-
-
-def test_resolve_references(definition_nodes_with_references_resolved: Dict[str, GenICamNode]):
-    acquisitionCategoryNode: GenICamNode = \
-      definition_nodes_with_references_resolved["AcquisitionCategory"]
-    assert len(acquisitionCategoryNode.children) == 5
-    assert acquisitionCategoryNode.children[0].name == "ExposureTimeFeature"
-    assert acquisitionCategoryNode.children[1].name == "GainFeature"
-    assert acquisitionCategoryNode.children[2].name == "OffsetFeature"
-    assert acquisitionCategoryNode.children[3].name == "EmptyCategoryIgnored"
-    assert acquisitionCategoryNode.children[4].name == "ChildCategoryWithLeaf"
-
-    childCategoryWithLeafNode: GenICamNode = \
-      definition_nodes_with_references_resolved["ChildCategoryWithLeaf"]
-    assert len(childCategoryWithLeafNode.children) == 1
-    assert childCategoryWithLeafNode.children[0].name == "NestedFeature"
-
-
-def test_build_pvi_groups(definition_nodes_with_references_resolved: Dict[str, GenICamNode]):
+def pvi_model(genicam_model: GenICamModel) -> PviModel:
     instance_class: str ="Camera instance class"
-    groups: List[Group] = makePvi.build_pvi_groups(definition_nodes_with_references_resolved, instance_class)
-    # Check groups
-    group_names = [g.name for g in groups]
-    assert "AcquisitionCategory" in group_names
-    assert "ChildCategoryWithLeaf" in group_names
-    assert "EmptyCategory" not in group_names
-
-    # Check signals are generated
-    acquisitionGroup = next(g for g in groups if g.name == "AcquisitionCategory")
-    signal_names = [s.name for s in acquisitionGroup.children]
-    assert set(signal_names) == \
-        {"ExposureTimeFeature", "GainFeature", "OffsetFeature"}
-    for signal in acquisitionGroup.children:
-        assert signal.write_pv in ["$(P)$(R)ExposureTimeFeature", "$(P)$(R)GainFeature", "$(P)$(R)OffsetFeature"]
-        assert signal.read_pv in ["$(P)$(R)ExposureTimeFeature_RBV", "$(P)$(R)GainFeature_RBV", "$(P)$(R)OffsetFeature_RBV"]
+    return PviModel(genicam_model, instance_class)
 
 
-def test_convert_genicam_xml_to_pvi_generates_yaml(example_xml: str):
-    yaml_text = makePvi.convert_genicam_xml_to_pvi(
-        example_xml,
-        instance_class="Camera instance class",
-        label="Camera test label"
-    )
-    print(yaml_text)
-    # Load YAML to dict
-    data = yaml.safe_load(yaml_text)
-    assert isinstance(data, dict)
-    # Top-level device label
-    assert data["label"] == "Camera test label"
-    # Device should contain one group
-    children = data["children"]
-    assert len(children) == 2
-    FirstGroup = children[0]
-    assert FirstGroup["name"] == "AcquisitionCategory"
-    # Signals inside group
-    signal_names = [s["name"] for s in FirstGroup["children"]]
-    assert set(signal_names) == {
-        "ExposureTimeFeature",
-        "GainFeature",
-        "OffsetFeature"}
+class TestUtilities:
+    def test_sanitize_genicam_xml_with_non_xml_header(self):
+        XML_WITH_CAMERA_ID = """CAMERA123
+        <Root>
+          <Whatever Name="Hello"/>
+        </Root>
+        """
+        cleaned = makePvi.sanitize_genicam_xml(XML_WITH_CAMERA_ID)
+        assert cleaned.startswith("<Root>")
+
+
+    def test_sanitize_genicam_xml_without_non_xml_header(self):
+        XML_WITH_CAMERA_ID = """
+        <Root>
+          <Whatever Name="Hello"/>
+        </Root>
+        """
+        cleaned = makePvi.sanitize_genicam_xml(XML_WITH_CAMERA_ID)
+        assert cleaned.startswith("<Root>")
+
+
+class TestGenICamNode:
+    def test_node_extract_description(self, xml_doc: Document):
+        category_element = xml_doc.getElementsByTagName("Category")[1]
+        node = GenICamNode(category_element)
+        assert node.description == "AcquisitionCategory description"
+
+
+    def test_node_extract_enum_choices(self, xml_doc: Document):
+          enum_element = xml_doc.getElementsByTagName("Enumeration")[0]
+          node = GenICamNode(enum_element)
+          assert node.choices == ["Off", "On"]
+
+
+class TestGenICamModel:
+    def test_definition_nodes(self, genicam_model: GenICamModel):
+        assert "AcquisitionCategory" in genicam_model.definition_nodes
+        assert "ExposureTimeFeature" in genicam_model.definition_nodes
+
+
+    def test_resolve_references(self, genicam_model: GenICamModel):
+        acquisitionCategoryNode: GenICamNode = \
+            genicam_model.definition_nodes["AcquisitionCategory"]
+        assert len(acquisitionCategoryNode.children) == 5
+        assert acquisitionCategoryNode.children[0].name == "ExposureTimeFeature"
+        assert acquisitionCategoryNode.children[1].name == "GainFeature"
+        assert acquisitionCategoryNode.children[2].name == "OffsetFeature"
+        assert acquisitionCategoryNode.children[3].name == "EmptyCategoryIgnored"
+        assert acquisitionCategoryNode.children[4].name == "ChildCategoryWithLeaf"
+
+        childCategoryWithLeafNode: GenICamNode = \
+            genicam_model.definition_nodes["ChildCategoryWithLeaf"]
+        assert len(childCategoryWithLeafNode.children) == 1
+        assert childCategoryWithLeafNode.children[0].name == "NestedFeature"
+
+
+class TestPviModel:
+    def test_pvi_model(self, pvi_model: PviModel):
+        groups: List[Group] = pvi_model.groups
+        # Check groups
+        group_names = [g.name for g in groups]
+        assert "AcquisitionCategory" in group_names
+        assert "ChildCategoryWithLeaf" in group_names
+        assert "EmptyCategory" not in group_names
+
+        # Check signals are generated
+        acquisitionGroup = next(g for g in groups if g.name == "AcquisitionCategory")
+        signal_names = [s.name for s in acquisitionGroup.children]
+        assert set(signal_names) == \
+            {"ExposureTimeFeature", "GainFeature", "OffsetFeature"}
+        for signal in acquisitionGroup.children:
+            assert signal.write_pv in ["$(P)$(R)ExposureTimeFeature", "$(P)$(R)GainFeature", "$(P)$(R)OffsetFeature"]
+            assert signal.read_pv in ["$(P)$(R)ExposureTimeFeature_RBV", "$(P)$(R)GainFeature_RBV", "$(P)$(R)OffsetFeature_RBV"]
+
+
+    def test_convert_genicam_xml_to_pvi_generates_yaml(self, example_xml: str):
+        yaml_text = makePvi.convert_genicam_xml_to_pvi(
+            example_xml,
+            instance_class="Camera instance class",
+            label="Camera test label"
+        )
+        print(yaml_text)
+        # Load YAML to dict
+        data = yaml.safe_load(yaml_text)
+        assert isinstance(data, dict)
+        # Top-level device label
+        assert data["label"] == "Camera test label"
+        # Device should contain one group
+        children = data["children"]
+        assert len(children) == 2
+        FirstGroup = children[0]
+        assert FirstGroup["name"] == "AcquisitionCategory"
+        # Signals inside group
+        signal_names = [s["name"] for s in FirstGroup["children"]]
+        assert set(signal_names) == {
+            "ExposureTimeFeature",
+            "GainFeature",
+            "OffsetFeature"}
