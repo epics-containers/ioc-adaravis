@@ -23,7 +23,7 @@ def main():
     file_contents: str = genicam_input_file.read_text()
     xml_text: str = sanitize_genicam_xml(file_contents)
 
-    # Convert
+    # Convert to PVI yaml
     yaml_text: str = convert_genicam_xml_to_pvi(
         xml_text,
         instance_class=options.instance_class,
@@ -359,73 +359,6 @@ class PviModel:
                     children=signals,
                     layout=Grid())]
         return groups
-
-
-def debug_print_pvi_groups(definition_nodes_lookup: Dict[str, GenICamNode]) -> None:
-    """
-    Print all two-level groups and their leaf signals.
-    """
-    for definition_node in definition_nodes_lookup.values():
-        if definition_node.is_group():
-            print(f"PVI GROUP: {definition_node.name}")
-            for child in definition_node.children:
-                if child.is_leaf():
-                    print(f"  SIGNAL: {child.name} [{child.node_type}]")
-
-
-def debug_print_pvi_mapping(definition_node: GenICamNode,
-                            indent: int = 0,
-                            visited: Optional[set[str]] = None) -> None:
-    if visited is None:
-        visited = set()
-    if definition_node.name in visited:
-        return
-    visited.add(definition_node.name)
-    if definition_node.is_category():
-        leaf_children = [c for c in definition_node.children if not c.is_category()]
-        marker = "[GROUP]" if leaf_children else "[SKIP]"
-    else:
-        marker = "[SIGNAL]"
-    print("  " * indent + f"{marker} {definition_node.name} ({definition_node.node_type})")
-    for child in definition_node.children:
-        debug_print_pvi_mapping(child, indent + 1, visited)
-
-
-def debug_print_all_pvi_mappings(definition_nodes_lookup: Dict[str, GenICamNode]) -> None:
-    for definition_node in definition_nodes_lookup.values():
-        if definition_node.is_category():
-            debug_print_pvi_mapping(definition_node)
-            print()
-
-
-def debug_print_final_pvi(definition_nodes_lookup: Dict[str, GenICamNode]) -> None:
-    """
-    Print the final PVI groups and signals exactly as they will appear in YAML.
-    """
-    printed_signals: set[str] = set()
-    for definition_node in definition_nodes_lookup.values():
-        if not definition_node.is_category():
-            continue
-        # collect leaf features under this category
-        leaf_features = []
-
-        for child_node in definition_node.children:
-            if not child_node.is_category():
-                if child_node.name not in printed_signals:
-                    leaf_features.append(child_node)
-
-        if not leaf_features:
-            continue
-
-        print(f"\nGROUP: {definition_node.name}")
-
-        for feature in leaf_features:
-            printed_signals.add(feature.name)
-            print(
-                f"  SIGNAL: {feature.name} "
-                f"[{feature.node_type}] "
-                f"{'- ' + feature.description if feature.description else ''}"
-            )
 
 
 if __name__ == "__main__":
