@@ -1,16 +1,18 @@
-from pathlib import Path
-from pvi.device import Group
-import pytest
-import sys
-from typing import Dict, List, Tuple
-from xml.dom.minidom import Document, Element, parseString
-import yaml
+#from pathlib import Path
+#import sys
 
 # Allow importing MakePvi.py from ioc/scripts
-SCRIPT_DIR = Path(__file__).resolve().parents[1] / "ioc" / "scripts"
-sys.path.insert(0, str(SCRIPT_DIR))
-import makePvi
-from makePvi import GenICamModel, GenICamNode, PviModel
+#SCRIPT_DIR = Path(__file__).resolve().parents[1] / "ioc" / "scripts"
+#sys.path.insert(0, str(SCRIPT_DIR))
+
+from pvi.device import Group
+import pytest
+from typing import List
+from xml.dom.minidom import Document, parseString
+import yaml
+
+from ioc.scripts import makePvi
+from ioc.scripts.makePvi import GenICamModel, GenICamNode, PviModel
 
 
 @pytest.fixture
@@ -22,7 +24,7 @@ def example_xml() -> str:
       </Category>
 
       <Category Name="AcquisitionCategory">
-        <Description>AcquisitionCategory description</Description>
+        <Description>AcquisitionCategory description</Descriptiontouch io>
         <pFeature>ExposureTimeFeature</pFeature>
         <pFeature>GainFeature</pFeature>
         <pFeature>OffsetFeature</pFeature>
@@ -165,7 +167,7 @@ class TestPviModel:
         # Load YAML to dict
         data = yaml.safe_load(yaml_text)
         assert isinstance(data, dict)
-        # Top-level device label
+        # Device label
         assert data["label"] == "Camera test label"
         # Device should contain one group
         children = data["children"]
