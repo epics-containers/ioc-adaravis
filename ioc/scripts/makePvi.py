@@ -1,7 +1,7 @@
 #!/bin/env python
 from optparse import OptionParser, Values
 from pathlib import Path
-from pvi.device import Device, enforce_pascal_case, Grid, Group, Row, SignalR, SignalRW, SignalW
+from pvi.device import Device, enforce_pascal_case, Grid, Group, SignalR, SignalRW, SignalW
 from typing import Dict, List, Optional, Tuple
 from xml.dom.minidom import Document, Element, parseString
 import yaml
@@ -107,7 +107,7 @@ def convert_genicam_xml_to_pvi(xml_text: str, instance_class: str, label: str) -
     pvi_model: PviModel = PviModel(genicam_model, instance_class)
 
     # Build Device
-    device: Device = Device(label=label, parent=instance_class, children=pvi_model.groups)
+    device: Device = Device(label=label, parent=instance_class, children=[pvi_model.tree])
 
     # Return YAML from Device
     return yaml.safe_dump(device.model_dump(), sort_keys=False)
@@ -261,6 +261,12 @@ class PviModel:
     def __init__(self, genicam_model: GenICamModel, instance_class: str):
         self.groups: List[Group] = \
             PviModel._build_pvi_groups(genicam_model.definition_nodes, instance_class)
+        # tree is just all the groups nested in a top group
+        self.tree: Group = Group(
+            name=enforce_pascal_case(instance_class),
+            layout=Grid(),
+            children=self.groups
+        )
     
     @staticmethod
     def make_pv(name: str, suffix: str = "") -> str:

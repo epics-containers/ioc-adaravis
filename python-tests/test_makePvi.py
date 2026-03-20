@@ -24,7 +24,7 @@ def example_xml() -> str:
       </Category>
 
       <Category Name="AcquisitionCategory">
-        <Description>AcquisitionCategory description</Descriptiontouch io>
+        <Description>AcquisitionCategory description</Description>
         <pFeature>ExposureTimeFeature</pFeature>
         <pFeature>GainFeature</pFeature>
         <pFeature>OffsetFeature</pFeature>
@@ -169,10 +169,20 @@ class TestPviModel:
         assert isinstance(data, dict)
         # Device label
         assert data["label"] == "Camera test label"
-        # Device should contain one group
+
         children = data["children"]
-        assert len(children) == 2
-        FirstGroup = children[0]
+        assert len(children) == 1
+
+        root = children[0]
+        groups = root["children"]
+        assert len(groups) == 2
+
+        group_names = [g["name"] for g in groups]
+        assert "AcquisitionCategory" in group_names
+        assert "ChildCategoryWithLeaf" in group_names
+
+        FirstGroup = next(g for g in groups if g["name"] == "AcquisitionCategory")
+
         assert FirstGroup["name"] == "AcquisitionCategory"
         # Signals inside group
         signal_names = [s["name"] for s in FirstGroup["children"]]
@@ -180,3 +190,4 @@ class TestPviModel:
             "ExposureTimeFeature",
             "GainFeature",
             "OffsetFeature"}
+
