@@ -3,16 +3,49 @@
 # Custom initialization goes here if needed.
 # Runs inside the dev container after the container is created
 
+# Exit immediately if any command fails
+set -e
+
 ################################################################################
 # When using docker we will not be root inside the container
 # the following steps are then required
 ################################################################################
-
 if [[ $(id -u) != "0" ]] ; then
     # make sure the non-root user can build iocs and (mounted in) support modules
     sudo chown -R ${USER}:${USER} /epics/ibek-defs /epics/pvi-defs /epics/support/configure /venv
     sudo chown -h ${USER}:${USER} /epics /epics/ioc /epics/support
 fi
 
-# Install Python development dependencies (pytest etc.)
-uv pip install -r /workspaces/ioc-adaravis/requirements-dev.txt
+cd /workspaces/ioc-adaravis
+
+# Ensure clean environment
+unset PYTHONPATH
+export PYTHONNOUSERSITE=1  # ignore user site dirs
+
+# Make sure we have pip in venv
+/venv/bin/python -m ensurepip --upgrade
+/venv/bin/python -m pip install --upgrade pip setuptools wheel
+
+# Use our pvi fork
+PVI_REPO="https://github.com/epics-containers/pvi.git"
+LATEST_PVI_RELEASE_TAG=$(curl -s https://api.github.com/repos/epics-containers/pvi/releases/latest \
+    | grep -Po '"tag_name": "\K.*?(?=")')
+echo "Latest pvi release tag: $LATEST_PVI_RELEASE_TAG"
+
+TMP_WHEEL_DIR=$(mktemp -d)
+
+# Clone pvi
+git clone --depth 1 --branch "$LATEST_PVI_RELEASE_TAG" "$PVI_REPO" /tmp/pvi
+cd /tmp/pvi
+
+# Build wheel
+/venv/bin/python -m pip wheel . -w "$TMP_WHEEL_DIR"
+# Install wheel into venv
+/venv/bin/python -m pip install "$TMP_WHEEL_DIR"/pvi-*.whl
+
+# Install ioc-adaravis and dev dependencies
+cd /workspaces/ioc-adaravis
+/venv/bin/python -m pip install -e ".[dev]"
+
+# Clean up
+rm -rf "$TMP_WHEEL_DIR" /tmp/pvi

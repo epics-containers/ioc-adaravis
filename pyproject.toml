@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=65.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ioc-adaravis"
+version = "0.1.0"
+description = "ioc-adaravis"
+
+dependencies = [
+    "pydantic>=2.5",
+    "ruamel.yaml>=0.18.0",
+    "PyYAML>=6.0",
+    # Use pvi from epics-containers fork
+    # Use main for now, but should use a specific tag?
+    "pvi @ git+https://github.com/epics-containers/pvi.git@main"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9.0"
+]
+
+# Explicitly find packages
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ioc*"]
