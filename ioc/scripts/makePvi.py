@@ -34,7 +34,7 @@ def main():
     output_folder: Path = Path(args[1])
     output_folder.mkdir(parents=True, exist_ok=True)
     # Path.write_text closes file automatically
-    yaml_file: Path = output_folder / f"{options.instance_class}.yaml"
+    yaml_file: Path = output_folder / f"{options.instance_class}.pvi.device.yaml"
     yaml_file.write_text(yaml_text)
     print(f"Generated PVI YAML: {yaml_file}")
 

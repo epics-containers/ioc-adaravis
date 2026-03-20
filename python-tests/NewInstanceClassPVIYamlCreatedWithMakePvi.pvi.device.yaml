@@ -1,0 +1,3109 @@
+label: NewInstance
+parent: NewInstanceClassPVIYamlCreatedWithMakePvi
+children:
+- name: NewInstanceClassPVIYamlCreatedWithMakePvi
+  label: null
+  description: null
+  layout:
+    labelled: true
+    type: Grid
+  children:
+  - name: Acquisition
+    label: null
+    description: ''
+    layout:
+      labelled: true
+      type: Grid
+    children:
+    - name: AcquisitionStart
+      label: null
+      description: ''
+      write_pv: $(P)$(R)AcquisitionStart
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)AcquisitionStart_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: AcquisitionStop
+      label: null
+      description: Stop acquisition. Acquisition will stop after acquisition of the
+        current frame is complete.
+      write_pv: $(P)$(R)AcquisitionStop
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      type: SignalW
+    - name: AcquisitionAbort
+      label: null
+      description: Abort acquisition. Acquisition will stop immediately, but a partially
+        transferred image will be completed.
+      write_pv: $(P)$(R)AcquisitionAbort
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      type: SignalW
+    - name: AcquisitionMode
+      label: null
+      description: 'The acquisition mode determines the behavior of the camera when
+        acquisition start is triggered. "Continuous" mode: the camera will acquire
+        images until acquisition stop is triggered. "SingleFrame" mode: the camera
+        will acquire a single image. "MultiFrame" mode: the camera will acquire the
+        number of images specified by AcquisitionFrameCount. "Recorder" mode: the
+        camera will run continuously, and when the recorder event is triggered, send
+        pre-trigger and post-trigger images to the host.'
+      write_pv: $(P)$(R)AcquisitionMode
+      write_widget:
+        choices:
+        - Continuous
+        - SingleFrame
+        - MultiFrame
+        - Recorder
+        type: ComboBox
+      read_pv: $(P)$(R)AcquisitionMode_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: AcquisitionFrameCount
+      label: null
+      description: This is the number of images to acquire when in MultiFrame and
+        Recorder acquisition modes.
+      write_pv: $(P)$(R)AcquisitionFrameCount
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)AcquisitionFrameCount_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: AcquisitionFrameRateAbs
+      label: null
+      description: Frame rate, in frames per second. This is applicable when either
+        the FrameStart trigger mode is disabled, or the FrameStart trigger source
+        is FixedRate. Depending on the exposure duration, the camera may not achieve
+        the frame rate set here.
+      write_pv: $(P)$(R)AcquisitionFrameRateAbs
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)AcquisitionFrameRateAbs_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: AcquisitionFrameRateLimit
+      label: null
+      description: This is the maximum frame rate possible for the current exposure
+        duration and image format.
+      write_pv: $(P)$(R)AcquisitionFrameRateLimit
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)AcquisitionFrameRateLimit_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: RecorderPreEventCount
+      label: null
+      description: This is the number of pre-event images to acquire in the Recorder
+        acquisition mode. This must be less than or equal to AcquisitionFrameCount.
+      write_pv: $(P)$(R)RecorderPreEventCount
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)RecorderPreEventCount_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    type: Group
+  - name: BalanceWhiteAutoControl
+    label: null
+    description: ''
+    layout:
+      labelled: true
+      type: Grid
+    children:
+    - name: BalanceWhiteAutoRate
+      label: null
+      description: Rate of white balance adjustments, from 1 (slowest) to 100 (fastest).
+        Use this control to slow down the auto-whitebalance adjustments.
+      write_pv: $(P)$(R)BalanceWhiteAutoRate
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)BalanceWhiteAutoRate_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: BalanceWhiteAutoAdjustTol
+      label: null
+      description: Tolerance, in percent, allowed from the ideal whitebalance values,
+        within which the auto-whitebalance does not run. This prevents needless small
+        adjustments from occurring each image.
+      write_pv: $(P)$(R)BalanceWhiteAutoAdjustTol
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)BalanceWhiteAutoAdjustTol_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    type: Group
+  - name: BlackLevelControl
+    label: null
+    description: ''
+    layout:
+      labelled: true
+      type: Grid
+    children:
+    - name: BlackLevelSelector
+      label: null
+      description: Selects which Black Level is controlled by the various Black Level
+        features.
+      write_pv: $(P)$(R)BlackLevelSelector
+      write_widget:
+        choices:
+        - All
+        type: ComboBox
+      read_pv: $(P)$(R)BlackLevelSelector_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: BlackLevel
+      label: null
+      description: Black level (offset) value.
+      write_pv: $(P)$(R)BlackLevel
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)BlackLevel_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    type: Group
+  - name: ColorTransformationControl
+    label: null
+    description: Category that contains the Color Transformation control features.
+    layout:
+      labelled: true
+      type: Grid
+    children:
+    - name: ColorTransformationSelector
+      label: null
+      description: Selects which Color Transformation module is controlled by the
+        various Color Transformation features.
+      write_pv: $(P)$(R)ColorTransformationSelector
+      write_widget:
+        choices:
+        - RGBtoRGB
+        type: ComboBox
+      read_pv: $(P)$(R)ColorTransformationSelector_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: ColorTransformationMode
+      label: null
+      description: Selects the mode for the color transformation.
+      write_pv: $(P)$(R)ColorTransformationMode
+      write_widget:
+        choices:
+        - 'Off'
+        - Manual
+        - Temp6500K
+        type: ComboBox
+      read_pv: $(P)$(R)ColorTransformationMode_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: ColorTransformationValueSelector
+      label: null
+      description: Selects the Gain factor or Offset of the Transformation matrix
+        to access in the selected Color Transformation module.
+      write_pv: $(P)$(R)ColorTransformationValueSelector
+      write_widget:
+        choices:
+        - Gain00
+        - Gain01
+        - Gain02
+        - Gain10
+        - Gain11
+        - Gain12
+        - Gain20
+        - Gain21
+        - Gain22
+        type: ComboBox
+      read_pv: $(P)$(R)ColorTransformationValueSelector_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: ColorTransformationValue
+      label: null
+      description: Represents the value of the selected Gain factor or Offset inside
+        the Transformation matrix.
+      write_pv: $(P)$(R)ColorTransformationValue
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)ColorTransformationValue_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    type: Group
+  - name: Controls
+    label: null
+    description: ''
+    layout:
+      labelled: true
+      type: Grid
+    children:
+    - name: Gamma
+      label: null
+      description: Applies gamma value to the raw sensor signal.
+      write_pv: $(P)$(R)Gamma
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)Gamma_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: DefectMaskEnable
+      label: null
+      description: Enable masking of defective pixel clusters. Defective pixels are
+        detected and recorded at the factory.
+      write_pv: $(P)$(R)DefectMaskEnable
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)DefectMaskEnable_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: Hue
+      label: null
+      description: Hue turns the color vectors in the U/V plane. It is 1 degree per
+        step.
+      write_pv: $(P)$(R)Hue
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)Hue_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: Saturation
+      label: null
+      description: Saturation puts gain to the color vectors in the U/V plane.
+      write_pv: $(P)$(R)Saturation
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)Saturation_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    type: Group
+  - name: DSPSubregion
+    label: null
+    description: ''
+    layout:
+      labelled: true
+      type: Grid
+    children:
+    - name: DSPSubregionLeft
+      label: null
+      description: The DSP subregion is the area of the image used for measurements
+        in "auto-" functions such as auto-exposure and auto-gain. DSPSubregionLeft
+        is the left column, relative to the current image region.
+      write_pv: $(P)$(R)DSPSubregionLeft
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)DSPSubregionLeft_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: DSPSubregionTop
+      label: null
+      description: The DSP subregion is the area of the image used for measurements
+        in "auto-" functions such as auto-exposure and auto-gain. DSPSubregionTop
+        is the top row, relative to the current image region.
+      write_pv: $(P)$(R)DSPSubregionTop
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)DSPSubregionTop_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: DSPSubregionRight
+      label: null
+      description: The DSP subregion is the area of the image used for measurements
+        in "auto-" functions such as auto-exposure and auto-gain. DSPSubregionRight
+        is the right column, relative to the current image region. For convenience,
+        this value may be higher than the maximum Width.
+      write_pv: $(P)$(R)DSPSubregionRight
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)DSPSubregionRight_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: DSPSubregionBottom
+      label: null
+      description: The DSP subregion is the area of the image used for measurements
+        in "auto-" functions such as auto-exposure and auto-gain. DSPSubregionBottom
+        is the bottom row, relative to the current image region. For convenience,
+        this value may be higher than the maximum Height.
+      write_pv: $(P)$(R)DSPSubregionBottom
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)DSPSubregionBottom_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    type: Group
+  - name: DefectMask
+    label: null
+    description: ''
+    layout:
+      labelled: true
+      type: Grid
+    children:
+    - name: DefectMaskColumnEnable
+      label: null
+      description: Enable masking of defective columns. Defective columns are detected
+        and recorded at the factory.
+      write_pv: $(P)$(R)DefectMaskColumnEnable
+      write_widget:
+        choices:
+        - Disabled
+        - Enabled
+        type: ComboBox
+      read_pv: $(P)$(R)DefectMaskColumnEnable_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    type: Group
+  - name: DeviceStatus
+    label: null
+    description: ''
+    layout:
+      labelled: true
+      type: Grid
+    children:
+    - name: DeviceTemperatureSelector
+      label: null
+      description: ''
+      write_pv: $(P)$(R)DeviceTemperatureSelector
+      write_widget:
+        choices:
+        - Sensor
+        - Main
+        - Power
+        type: ComboBox
+      read_pv: $(P)$(R)DeviceTemperatureSelector_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: DeviceTemperature
+      label: null
+      description: ''
+      write_pv: $(P)$(R)DeviceTemperature
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)DeviceTemperature_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    type: Group
+  - name: EventControl
+    label: null
+    description: ''
+    layout:
+      labelled: true
+      type: Grid
+    children:
+    - name: EventSelector
+      label: null
+      description: Activate event-notification on the GigE Vision message channel.
+      write_pv: $(P)$(R)EventSelector
+      write_widget:
+        choices:
+        - AcquisitionStart
+        - AcquisitionEnd
+        - FrameTrigger
+        - ExposureEnd
+        - AcquisitionRecordTrigger
+        - Line1RisingEdge
+        - Line1FallingEdge
+        - Line2RisingEdge
+        - Line2FallingEdge
+        - Line3RisingEdge
+        - Line3FallingEdge
+        - Line4RisingEdge
+        - Line4FallingEdge
+        - FrameTriggerReady
+        - ExposureStart
+        type: ComboBox
+      read_pv: $(P)$(R)EventSelector_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: EventNotification
+      label: null
+      description: Activate event-notification on the GigE Vision message channel.
+      write_pv: $(P)$(R)EventNotification
+      write_widget:
+        choices:
+        - 'Off'
+        - 'On'
+        type: ComboBox
+      read_pv: $(P)$(R)EventNotification_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: EventsEnable1
+      label: null
+      description: Activate event-notification on the GigE Vision message channel.
+        For programmers. See register documentation.
+      write_pv: $(P)$(R)EventsEnable1
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)EventsEnable1_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    type: Group
+  - name: EventID
+    label: null
+    description: ''
+    layout:
+      labelled: true
+      type: Grid
+    children:
+    - name: EventAcquisitionStart
+      label: null
+      description: ID value of event.
+      write_pv: $(P)$(R)EventAcquisitionStart
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)EventAcquisitionStart_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: EventAcquisitionEnd
+      label: null
+      description: ID value of event.
+      write_pv: $(P)$(R)EventAcquisitionEnd
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)EventAcquisitionEnd_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: EventFrameTrigger
+      label: null
+      description: ID value of event.
+      write_pv: $(P)$(R)EventFrameTrigger
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)EventFrameTrigger_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: EventExposureEnd
+      label: null
+      description: ID value of event.
+      write_pv: $(P)$(R)EventExposureEnd
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)EventExposureEnd_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: EventAcquisitionRecordTrigger
+      label: null
+      description: ID value of event.
+      write_pv: $(P)$(R)EventAcquisitionRecordTrigger
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)EventAcquisitionRecordTrigger_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: EventLine1RisingEdge
+      label: null
+      description: ID value of event.
+      write_pv: $(P)$(R)EventLine1RisingEdge
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)EventLine1RisingEdge_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: EventLine1FallingEdge
+      label: null
+      description: ID value of event.
+      write_pv: $(P)$(R)EventLine1FallingEdge
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)EventLine1FallingEdge_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: EventLine2RisingEdge
+      label: null
+      description: ID value of event.
+      write_pv: $(P)$(R)EventLine2RisingEdge
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)EventLine2RisingEdge_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: EventLine2FallingEdge
+      label: null
+      description: ID value of event.
+      write_pv: $(P)$(R)EventLine2FallingEdge
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)EventLine2FallingEdge_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: EventFrameTriggerReady
+      label: null
+      description: ID value of Frame Trigger Ready event. The Frame Trigger event
+        occurs when the camera is ready for another frame aquisition
+      write_pv: $(P)$(R)EventFrameTriggerReady
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)EventFrameTriggerReady_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: EventExposureStart
+      label: null
+      description: ''
+      write_pv: $(P)$(R)EventExposureStart
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)EventExposureStart_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: EventOverflow
+      label: null
+      description: ID value of overflow event. The overflow event occurs when one
+        or more notification events are lost on the camera. If you use the message
+        channel for event notification, you are always subscribed to this event.
+      write_pv: $(P)$(R)EventOverflow
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)EventOverflow_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: EventError
+      label: null
+      description: ID value of error event. The error event occurs if there is a problem
+        on the camera; this event should be reported to technical support. If you
+        use the message channel for event notification, you are always subscribed
+        to this event.
+      write_pv: $(P)$(R)EventError
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)EventError_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    type: Group
+  - name: Exposure
+    label: null
+    description: ''
+    layout:
+      labelled: true
+      type: Grid
+    children:
+    - name: ExposureAuto
+      label: null
+      description: 'Method used to set exposure duration, ExposureTimeAbs in Timed
+        mode. Off: automatic mode is off. Once: auto-exposure occurs until target
+        is achieved, then ExposureAuto returns to Off. Continuous: auto-exposure always
+        runs.'
+      write_pv: $(P)$(R)ExposureAuto
+      write_widget:
+        choices:
+        - 'Off'
+        - Once
+        - Continuous
+        type: ComboBox
+      read_pv: $(P)$(R)ExposureAuto_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: ExposureMode
+      label: null
+      description: 'Method of control for exposure duration. Timed: exposure duration
+        is set by ExposureTimeAbs. TriggerWidth: exposure controlled by external trigger
+        pulse.'
+      write_pv: $(P)$(R)ExposureMode
+      write_widget:
+        choices:
+        - Timed
+        - TriggerWidth
+        type: ComboBox
+      read_pv: $(P)$(R)ExposureMode_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: ExposureTimeAbs
+      label: null
+      description: 'Exposure duration in microseconds. Timed: Sensor integration time.
+        TriggerWidth: Ignored.'
+      write_pv: $(P)$(R)ExposureTimeAbs
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)ExposureTimeAbs_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: ExposureTimeIncrement
+      label: null
+      description: Increment of the exposure time in microseconds.
+      write_pv: $(P)$(R)ExposureTimeIncrement
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)ExposureTimeIncrement_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    type: Group
+  - name: ExposureAutoControl
+    label: null
+    description: ''
+    layout:
+      labelled: true
+      type: Grid
+    children:
+    - name: ExposureAutoTarget
+      label: null
+      description: When ExposureAutoAlg is Mean, this is the target image mean value,
+        in percent. Higher values result in brighter images.
+      write_pv: $(P)$(R)ExposureAutoTarget
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)ExposureAutoTarget_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: ExposureAutoAlg
+      label: null
+      description: 'Algorithm used for auto-exposure. Mean: target a particular mean
+        value of all measured pixels in the image. FitRange: adjust the maximum pixel
+        value to fit the sensor range.'
+      write_pv: $(P)$(R)ExposureAutoAlg
+      write_widget:
+        choices:
+        - Mean
+        - FitRange
+        type: ComboBox
+      read_pv: $(P)$(R)ExposureAutoAlg_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: ExposureAutoMin
+      label: null
+      description: Minimum auto-exposure value, in microseconds.
+      write_pv: $(P)$(R)ExposureAutoMin
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)ExposureAutoMin_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: ExposureAutoMax
+      label: null
+      description: Maximum auto-exposure value, in microseconds.
+      write_pv: $(P)$(R)ExposureAutoMax
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)ExposureAutoMax_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: ExposureAutoRate
+      label: null
+      description: Rate of exposure adjustments, from 1 (slowest) to 100 (fastest).
+        Use this control to slow down the auto-exposure adjustments.
+      write_pv: $(P)$(R)ExposureAutoRate
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)ExposureAutoRate_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: ExposureAutoOutliers
+      label: null
+      description: Number of upper outliers to discard before calculating exposure
+        adjustments. This is in ten-thousandths of the number pixels in the image.
+      write_pv: $(P)$(R)ExposureAutoOutliers
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)ExposureAutoOutliers_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: ExposureAutoAdjustTol
+      label: null
+      description: Tolerance, in percent, allowed from the ideal exposure value, within
+        which the auto-exposure does not run. This prevents needless small adjustments
+        from occurring each image.
+      write_pv: $(P)$(R)ExposureAutoAdjustTol
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)ExposureAutoAdjustTol_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    type: Group
+  - name: GainAutoControl
+    label: null
+    description: ''
+    layout:
+      labelled: true
+      type: Grid
+    children:
+    - name: GainAutoTarget
+      label: null
+      description: This is the target image mean value, in percent.
+      write_pv: $(P)$(R)GainAutoTarget
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)GainAutoTarget_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: GainAutoMin
+      label: null
+      description: ''
+      write_pv: $(P)$(R)GainAutoMin
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)GainAutoMin_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: GainAutoMax
+      label: null
+      description: ''
+      write_pv: $(P)$(R)GainAutoMax
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)GainAutoMax_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: GainAutoRate
+      label: null
+      description: Rate of gain adjustments, from 1 (slowest) to 100 (fastest). Use
+        this control to slow down the auto-gain adjustments.
+      write_pv: $(P)$(R)GainAutoRate
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)GainAutoRate_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: GainAutoOutliers
+      label: null
+      description: Number of upper outliers to discard before calculating gain adjustments.
+        This is in ten-thousandths of the number pixels in the image.
+      write_pv: $(P)$(R)GainAutoOutliers
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)GainAutoOutliers_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: GainAutoAdjustTol
+      label: null
+      description: Tolerance, in percent, allowed from the ideal gain value, within
+        which the auto-gain does not run. This prevents needless small adjustments
+        from occurring each image.
+      write_pv: $(P)$(R)GainAutoAdjustTol
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)GainAutoAdjustTol_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    type: Group
+  - name: GainControl
+    label: null
+    description: ''
+    layout:
+      labelled: true
+      type: Grid
+    children:
+    - name: GainSelector
+      label: null
+      description: (GenICam boilerplate. Always All.)
+      write_pv: $(P)$(R)GainSelector
+      write_widget:
+        choices:
+        - All
+        type: ComboBox
+      read_pv: $(P)$(R)GainSelector_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: Gain
+      label: null
+      description: Gain value of analog A/D stage. Units are usually in dB.
+      write_pv: $(P)$(R)Gain
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)Gain_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: GainRaw
+      label: null
+      description: Gain value of analog A/D stage. Units are usually in dB.
+      write_pv: $(P)$(R)GainRaw
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)GainRaw_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: GainAuto
+      label: null
+      description: 'Method used to set Gain. Off: automatic mode is off. Once: auto-gain
+        occurs until target is achieved, then GainAuto returns to Off. Continuous:
+        auto-gain always runs.'
+      write_pv: $(P)$(R)GainAuto
+      write_widget:
+        choices:
+        - 'Off'
+        - Once
+        - Continuous
+        type: ComboBox
+      read_pv: $(P)$(R)GainAuto_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    type: Group
+  - name: GigE
+    label: null
+    description: ''
+    layout:
+      labelled: true
+      type: Grid
+    children:
+    - name: StreamBytesPerSecond
+      label: null
+      description: ''
+      write_pv: $(P)$(R)StreamBytesPerSecond
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)StreamBytesPerSecond_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: BandwidthControlMode
+      label: null
+      description: Bandwidth allocation can be controlled by StreamBytesPerSecond,
+        or by register SCPD0. If you do not understand SCPD0 and how this driver uses
+        this register, leave this set to "StreamBytesPerSecond".
+      write_pv: $(P)$(R)BandwidthControlMode
+      write_widget:
+        choices:
+        - StreamBytesPerSecond
+        - SCPD
+        - Both
+        type: ComboBox
+      read_pv: $(P)$(R)BandwidthControlMode_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: GevSCPSPacketSize
+      label: null
+      description: ''
+      write_pv: $(P)$(R)GevSCPSPacketSize
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)GevSCPSPacketSize_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: ChunkModeActive
+      label: null
+      description: ''
+      write_pv: $(P)$(R)ChunkModeActive
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)ChunkModeActive_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: PayloadSize
+      label: null
+      description: Maximum size of image block payload.
+      write_pv: $(P)$(R)PayloadSize
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)PayloadSize_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: NonImagePayloadSize
+      label: null
+      description: Maximum size of chunk data, not including the image chunk, in the
+        image block payload.
+      write_pv: $(P)$(R)NonImagePayloadSize
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)NonImagePayloadSize_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: StreamFrameRateConstrain
+      label: null
+      description: When enabled, the frame rate of the camera is constrained by available
+        bandwidth. When disabled, the camera can image faster than it can send data.
+      write_pv: $(P)$(R)StreamFrameRateConstrain
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)StreamFrameRateConstrain_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    type: Group
+  - name: ImageFormat
+    label: null
+    description: ''
+    layout:
+      labelled: true
+      type: Grid
+    children:
+    - name: WidthMax
+      label: null
+      description: Maximum image width for the current image mode. Horizontal binning,
+        for example, will change this value.
+      write_pv: $(P)$(R)WidthMax
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)WidthMax_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: HeightMax
+      label: null
+      description: Maximum image height for the current image mode. Vertical binning,
+        for example, will change this value.
+      write_pv: $(P)$(R)HeightMax
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)HeightMax_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: PixelFormat
+      label: null
+      description: Format of the image data.
+      write_pv: $(P)$(R)PixelFormat
+      write_widget:
+        choices:
+        - Mono8
+        - Mono10
+        - Mono12
+        - Mono12Packed
+        - Mono14
+        - BayerGR8
+        - BayerRG8
+        - BayerGB8
+        - BayerBG8
+        - BayerBG10
+        - BayerGR12
+        - BayerRG12
+        - BayerGB12
+        - BayerGR12Packed
+        - BayerRG12Packed
+        - BayerGB12Packed
+        - RGB8Packed
+        - BGR8Packed
+        - RGBA8Packed
+        - BGRA8Packed
+        - RGB10Packed
+        - RGB12Packed
+        - YUV411Packed
+        - YUV422Packed
+        - YUV444Packed
+        type: ComboBox
+      read_pv: $(P)$(R)PixelFormat_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: SensorReadoutMode
+      label: null
+      description: Readout Mode of the sensor.
+      write_pv: $(P)$(R)SensorReadoutMode
+      write_widget:
+        choices:
+        - Readout12Bits
+        - Readout10Bits
+        type: ComboBox
+      read_pv: $(P)$(R)SensorReadoutMode_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: Width
+      label: null
+      description: Width of image, in pixels.
+      write_pv: $(P)$(R)Width
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)Width_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: Height
+      label: null
+      description: Height of image, in pixels.
+      write_pv: $(P)$(R)Height
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)Height_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: OffsetX
+      label: null
+      description: Starting column of the readout region (relative to the first column
+        of the sensor) in pixels.
+      write_pv: $(P)$(R)OffsetX
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)OffsetX_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: OffsetY
+      label: null
+      description: Starting row of the readout region (relative to the first row of
+        the sensor) in pixels.
+      write_pv: $(P)$(R)OffsetY
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)OffsetY_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: ImageSize
+      label: null
+      description: Size of images, in bytes, for the current format and size.
+      write_pv: $(P)$(R)ImageSize
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)ImageSize_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    type: Group
+  - name: ImageMode
+    label: null
+    description: ''
+    layout:
+      labelled: true
+      type: Grid
+    children:
+    - name: SensorWidth
+      label: null
+      description: Full width of image sensor.
+      write_pv: $(P)$(R)SensorWidth
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)SensorWidth_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: SensorHeight
+      label: null
+      description: Full height of image sensor.
+      write_pv: $(P)$(R)SensorHeight
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)SensorHeight_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: SensorTaps
+      label: null
+      description: Number of taps of the camera sensor.
+      write_pv: $(P)$(R)SensorTaps
+      write_widget:
+        choices:
+        - One
+        - Two
+        - Four
+        type: ComboBox
+      read_pv: $(P)$(R)SensorTaps_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: SensorDigitizationTaps
+      label: null
+      description: Number of digitized samples outputted simultaneously by the camera
+        A/D conversion stage.
+      write_pv: $(P)$(R)SensorDigitizationTaps
+      write_widget:
+        choices:
+        - One
+        - Two
+        - Four
+        type: ComboBox
+      read_pv: $(P)$(R)SensorDigitizationTaps_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: BinningHorizontal
+      label: null
+      description: Binning in horizontal direction. Binning is the summing of charge
+        of adjacent pixels.
+      write_pv: $(P)$(R)BinningHorizontal
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)BinningHorizontal_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: BinningVertical
+      label: null
+      description: Binning in vertical direction. Binning is the summing of charge
+        of adjacent pixels.
+      write_pv: $(P)$(R)BinningVertical
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)BinningVertical_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: DecimationHorizontal
+      label: null
+      description: Horizontal decimation (sub-sampling) of the image.
+      write_pv: $(P)$(R)DecimationHorizontal
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)DecimationHorizontal_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: DecimationVertical
+      label: null
+      description: Vertical decimation (sub-sampling) of the image.
+      write_pv: $(P)$(R)DecimationVertical
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)DecimationVertical_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: ReverseX
+      label: null
+      description: ReverseX is used to flip horizontally the image sent by the device.
+        The AOI is applied after the flipping.
+      write_pv: $(P)$(R)ReverseX
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)ReverseX_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: ReverseY
+      label: null
+      description: ReverseY is used to flip vertically the image sent by the device.
+        The AOI is applied after the flipping.
+      write_pv: $(P)$(R)ReverseY
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)ReverseY_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    type: Group
+  - name: Info
+    label: null
+    description: ''
+    layout:
+      labelled: true
+      type: Grid
+    children:
+    - name: FirmwareVerMajor
+      label: null
+      description: ''
+      write_pv: $(P)$(R)FirmwareVerMajor
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)FirmwareVerMajor_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: FirmwareVerMinor
+      label: null
+      description: ''
+      write_pv: $(P)$(R)FirmwareVerMinor
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)FirmwareVerMinor_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: FirmwareVerBuild
+      label: null
+      description: ''
+      write_pv: $(P)$(R)FirmwareVerBuild
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)FirmwareVerBuild_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: SensorType
+      label: null
+      description: Type of image sensor.
+      write_pv: $(P)$(R)SensorType
+      write_widget:
+        choices:
+        - Mono
+        - Bayer
+        type: ComboBox
+      read_pv: $(P)$(R)SensorType_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: SensorBits
+      label: null
+      description: Maximum bit depth of sensor.
+      write_pv: $(P)$(R)SensorBits
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)SensorBits_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: DeviceVendorName
+      label: null
+      description: ''
+      read_pv: $(P)$(R)DeviceVendorName
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalR
+    - name: DeviceModelName
+      label: null
+      description: Camera model name.
+      read_pv: $(P)$(R)DeviceModelName
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalR
+    - name: DeviceFirmwareVersion
+      label: null
+      description: Firmware version of this AVT GigE camera.
+      read_pv: $(P)$(R)DeviceFirmwareVersion
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalR
+    - name: DeviceID
+      label: null
+      description: Serial number.
+      read_pv: $(P)$(R)DeviceID
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalR
+    - name: DeviceUserID
+      label: null
+      description: User-programmable Device Identifier.
+      write_pv: $(P)$(R)DeviceUserID
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)DeviceUserID_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: DevicePartNumber
+      label: null
+      description: Device part number.
+      read_pv: $(P)$(R)DevicePartNumber
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalR
+    - name: DeviceScanType
+      label: null
+      description: ''
+      write_pv: $(P)$(R)DeviceScanType
+      write_widget:
+        choices:
+        - Areascan
+        type: ComboBox
+      read_pv: $(P)$(R)DeviceScanType_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    type: Group
+  - name: Iris
+    label: null
+    description: ''
+    layout:
+      labelled: true
+      type: Grid
+    children:
+    - name: IrisMode
+      label: null
+      description: 'Set the iris mode. Disabled: no iris control. Video: enable video
+        iris. VideoOpen: fully open a video iris. VideoClose: fully close a video
+        iris.'
+      write_pv: $(P)$(R)IrisMode
+      write_widget:
+        choices:
+        - Disabled
+        - Video
+        - VideoOpen
+        - VideoClose
+        - PIrisAuto
+        - PIrisManual
+        - DCIris
+        type: ComboBox
+      read_pv: $(P)$(R)IrisMode_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: IrisAutoTarget
+      label: null
+      description: This is the target image mean value, in percent.
+      write_pv: $(P)$(R)IrisAutoTarget
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)IrisAutoTarget_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: IrisVideoLevel
+      label: null
+      description: Current video-iris level, in approximately mV pp; read only. When
+        calibrating a video lens, this value should fall between IrisVideoLevelMin
+        and IrisVideoLevelMax.
+      write_pv: $(P)$(R)IrisVideoLevel
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)IrisVideoLevel_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: IrisVideoLevelMin
+      label: null
+      description: Minimum video iris level output by the camera, in approximately
+        mV pp. A higher minimum value slows the adjustment time but prevents excessive
+        overshoot.
+      write_pv: $(P)$(R)IrisVideoLevelMin
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)IrisVideoLevelMin_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: IrisVideoLevelMax
+      label: null
+      description: Maximum video iris level output by the camera, in approximately
+        mV pp. A lower minimum value slows the adjustment time but prevents excessive
+        overshoot.
+      write_pv: $(P)$(R)IrisVideoLevelMax
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)IrisVideoLevelMax_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    type: Group
+  - name: LUTControl
+    label: null
+    description: Category that includes the LUT control features.
+    layout:
+      labelled: true
+      type: Grid
+    children:
+    - name: LUTSelector
+      label: null
+      description: Selects which look up table is used.
+      write_pv: $(P)$(R)LUTSelector
+      write_widget:
+        choices:
+        - LUT1
+        - LUT2
+        - LUT3
+        - LUT4
+        - LUT5
+        type: ComboBox
+      read_pv: $(P)$(R)LUTSelector_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: LUTMode
+      label: null
+      description: Selects which mode is used for the selected look up table.
+      write_pv: $(P)$(R)LUTMode
+      write_widget:
+        choices:
+        - Luminance
+        - Red
+        - Green
+        - Blue
+        type: ComboBox
+      read_pv: $(P)$(R)LUTMode_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: LUTEnable
+      label: null
+      description: Activates the selected LUT.
+      write_pv: $(P)$(R)LUTEnable
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)LUTEnable_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: LUTIndex
+      label: null
+      description: Control the index of the coefficient to access in the selected
+        look up table.
+      write_pv: $(P)$(R)LUTIndex
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)LUTIndex_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: LUTValue
+      label: null
+      description: Returns the Value at entry LUTIndex of the selected look up table
+      write_pv: $(P)$(R)LUTValue
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)LUTValue_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: LUTLoadAll
+      label: null
+      description: Load all look up tables from Flash.
+      write_pv: $(P)$(R)LUTLoadAll
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      type: SignalW
+    - name: LUTSaveAll
+      label: null
+      description: Save all look up tables in Flash.
+      write_pv: $(P)$(R)LUTSaveAll
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      type: SignalW
+    type: Group
+  - name: LUTInfo
+    label: null
+    description: Category that includes the LUT info features for the look up table.
+    layout:
+      labelled: true
+      type: Grid
+    children:
+    - name: LUTBitDepthIn
+      label: null
+      description: Bit length of the input value of the look up table block
+      write_pv: $(P)$(R)LUTBitDepthIn
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)LUTBitDepthIn_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: LUTBitDepthOut
+      label: null
+      description: Bit length of the output value of the look up table block
+      write_pv: $(P)$(R)LUTBitDepthOut
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)LUTBitDepthOut_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: LUTAddress
+      label: null
+      description: Address of the memory area where the selected LUT is located (for
+        raw memory transfer)
+      write_pv: $(P)$(R)LUTAddress
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)LUTAddress_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: LUTSizeBytes
+      label: null
+      description: Size of the memory area where the LUT is located
+      write_pv: $(P)$(R)LUTSizeBytes
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)LUTSizeBytes_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    type: Group
+  - name: LensDCIris
+    label: null
+    description: ''
+    layout:
+      labelled: true
+      type: Grid
+    children:
+    - name: LensDCDriveStrength
+      label: null
+      description: ''
+      write_pv: $(P)$(R)LensDCDriveStrength
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)LensDCDriveStrength_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    type: Group
+  - name: LensPIris
+    label: null
+    description: ''
+    layout:
+      labelled: true
+      type: Grid
+    children:
+    - name: LensPIrisFrequency
+      label: null
+      description: ''
+      write_pv: $(P)$(R)LensPIrisFrequency
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)LensPIrisFrequency_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: LensPIrisNumSteps
+      label: null
+      description: ''
+      write_pv: $(P)$(R)LensPIrisNumSteps
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)LensPIrisNumSteps_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: LensPIrisPosition
+      label: null
+      description: ''
+      write_pv: $(P)$(R)LensPIrisPosition
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)LensPIrisPosition_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    type: Group
+  - name: PvApi
+    label: null
+    description: ''
+    layout:
+      labelled: true
+      type: Grid
+    children:
+    - name: PvDummyTriggerSelector
+      label: null
+      description: ''
+      write_pv: $(P)$(R)PvDummyTriggerSelector
+      write_widget:
+        choices:
+        - FrameStart
+        - AcquisitionStart
+        - AcquisitionEnd
+        - AcquisitionRecord
+        type: ComboBox
+      read_pv: $(P)$(R)PvDummyTriggerSelector_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: PvDummyFrameStartTriggerMode
+      label: null
+      description: ''
+      write_pv: $(P)$(R)PvDummyFrameStartTriggerMode
+      write_widget:
+        choices:
+        - Freerun
+        - SyncIn1
+        - SyncIn2
+        - SyncIn3
+        - SyncIn4
+        - FixedRate
+        - Software
+        type: ComboBox
+      read_pv: $(P)$(R)PvDummyFrameStartTriggerMode_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: PvDummyTriggerMode
+      label: null
+      description: ''
+      write_pv: $(P)$(R)PvDummyTriggerMode
+      write_widget:
+        choices:
+        - Disabled
+        - SyncIn1
+        - SyncIn2
+        - SyncIn3
+        - SyncIn4
+        - FixedRate
+        - Software
+        type: ComboBox
+      read_pv: $(P)$(R)PvDummyTriggerMode_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: FrameStartTriggerDelay
+      label: null
+      description: ''
+      write_pv: $(P)$(R)FrameStartTriggerDelay
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)FrameStartTriggerDelay_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: ExposureModeValue
+      label: null
+      description: 'Method of control for exposure duration. Timed: exposure duration
+        is set by ExposureValue. AutoOnce: auto-exposure occurs until target is achieved,
+        then ExposureMode returns to Timed. Auto: auto-exposure always runs. TriggerWidth:
+        exposure controlled by external trigger pulse.'
+      write_pv: $(P)$(R)ExposureModeValue
+      write_widget:
+        choices:
+        - Timed
+        - AutoOnce
+        - Auto
+        - TriggerWidth
+        type: ComboBox
+      read_pv: $(P)$(R)ExposureModeValue_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: ExposureValue
+      label: null
+      description: 'Exposure duration, in microseconds. Timed: Sensor integration
+        time. TriggerWidth: Ignored.'
+      write_pv: $(P)$(R)ExposureValue
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)ExposureValue_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: TimeStampValueLo
+      label: null
+      description: Low-word value of timestamp, when latched by GevTimestampControlLatch.
+      write_pv: $(P)$(R)TimeStampValueLo
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)TimeStampValueLo_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: TimeStampValueHi
+      label: null
+      description: High-word value of timestamp, when latched by GevTimestampControlLatch.
+      write_pv: $(P)$(R)TimeStampValueHi
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)TimeStampValueHi_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: WhitebalValueRed
+      label: null
+      description: ''
+      write_pv: $(P)$(R)WhitebalValueRed
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)WhitebalValueRed_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: WhitebalValueBlue
+      label: null
+      description: ''
+      write_pv: $(P)$(R)WhitebalValueBlue
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)WhitebalValueBlue_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: ModelName
+      label: null
+      description: ''
+      read_pv: $(P)$(R)ModelName
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalR
+    - name: PvGainRaw
+      label: null
+      description: Gain value of analog A/D stage. Units are usually in dB.
+      write_pv: $(P)$(R)PvGainRaw
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)PvGainRaw_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: PvGainAutoMin
+      label: null
+      description: Minimum auto-gain value.
+      write_pv: $(P)$(R)PvGainAutoMin
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)PvGainAutoMin_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: PvGainAutoMax
+      label: null
+      description: Maximum auto-gain value.
+      write_pv: $(P)$(R)PvGainAutoMax
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)PvGainAutoMax_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: OffsetValue
+      label: null
+      description: Black level (offset) value.
+      write_pv: $(P)$(R)OffsetValue
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)OffsetValue_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    type: Group
+  - name: SavedUserSets
+    label: null
+    description: ''
+    layout:
+      labelled: true
+      type: Grid
+    children:
+    - name: UserSetSelector
+      label: null
+      description: Select a user set, for loading or saving camera parameters.
+      write_pv: $(P)$(R)UserSetSelector
+      write_widget:
+        choices:
+        - Default
+        - UserSet1
+        - UserSet2
+        - UserSet3
+        - UserSet4
+        - UserSet5
+        type: ComboBox
+      read_pv: $(P)$(R)UserSetSelector_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: UserSetLoad
+      label: null
+      description: Load camera parameters from the user set specified by UserSetSelector.
+      write_pv: $(P)$(R)UserSetLoad
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      type: SignalW
+    - name: UserSetSave
+      label: null
+      description: Save camera parameters to the user set specified by UserSetSelector.
+      write_pv: $(P)$(R)UserSetSave
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      type: SignalW
+    - name: UserSetDefaultSelector
+      label: null
+      description: On power-up or reset, this user set is loaded.
+      write_pv: $(P)$(R)UserSetDefaultSelector
+      write_widget:
+        choices:
+        - Default
+        - UserSet1
+        - UserSet2
+        - UserSet3
+        - UserSet4
+        - UserSet5
+        type: ComboBox
+      read_pv: $(P)$(R)UserSetDefaultSelector_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    type: Group
+  - name: StreamHold
+    label: null
+    description: ''
+    layout:
+      labelled: true
+      type: Grid
+    children:
+    - name: StreamHoldEnable
+      label: null
+      description: Control on-camera image storage; this control is like a "pause"
+        button for the image stream. When enabled, images remain stored on the camera,
+        and are not transmitted to the host. When disabled, the image stream resumes,
+        and any stored images are sent to the host.
+      write_pv: $(P)$(R)StreamHoldEnable
+      write_widget:
+        choices:
+        - 'Off'
+        - 'On'
+        type: ComboBox
+      read_pv: $(P)$(R)StreamHoldEnable_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: StreamHoldCapacity
+      label: null
+      description: Maximum number of images (for the current size and format) which
+        can be stored on the camera when StreamHold is enabled.
+      write_pv: $(P)$(R)StreamHoldCapacity
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)StreamHoldCapacity_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    type: Group
+  - name: Strobe
+    label: null
+    description: ''
+    layout:
+      labelled: true
+      type: Grid
+    children:
+    - name: StrobeSource
+      label: null
+      description: Signal source of the strobe timing unit. See SyncOutSource for
+        descriptions.
+      write_pv: $(P)$(R)StrobeSource
+      write_widget:
+        choices:
+        - AcquisitionTriggerReady
+        - FrameTriggerReady
+        - FrameTrigger
+        - Exposing
+        - FrameReadout
+        - Acquiring
+        - LineIn1
+        - LineIn2
+        type: ComboBox
+      read_pv: $(P)$(R)StrobeSource_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: StrobeDurationMode
+      label: null
+      description: 'Mode of the strobe timing unit. Source: strobe duration is the
+        same as source duration. Controlled: strobe duration is set by StrobeDuration.'
+      write_pv: $(P)$(R)StrobeDurationMode
+      write_widget:
+        choices:
+        - Source
+        - Controlled
+        type: ComboBox
+      read_pv: $(P)$(R)StrobeDurationMode_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: StrobeDelay
+      label: null
+      description: Delay from strobe trigger to strobe output, in microseconds.
+      write_pv: $(P)$(R)StrobeDelay
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)StrobeDelay_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: StrobeDuration
+      label: null
+      description: Duration of strobe, in microseconds.
+      write_pv: $(P)$(R)StrobeDuration
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)StrobeDuration_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    type: Group
+  - name: SubstrateVoltage
+    label: null
+    description: ''
+    layout:
+      labelled: true
+      type: Grid
+    children:
+    - name: VsubValue
+      label: null
+      description: Substrate voltage in mV.
+      write_pv: $(P)$(R)VsubValue
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)VsubValue_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    type: Group
+  - name: SyncIn
+    label: null
+    description: ''
+    layout:
+      labelled: true
+      type: Grid
+    children:
+    - name: SyncInLevels
+      label: null
+      description: Momentary logic levels of the hardware line inputs.
+      write_pv: $(P)$(R)SyncInLevels
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)SyncInLevels_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: SyncInSelector
+      label: null
+      description: Select the sync-in line to control with {SyncInGlitchFilter}.
+      write_pv: $(P)$(R)SyncInSelector
+      write_widget:
+        choices:
+        - SyncIn1
+        - SyncIn2
+        - SyncIn3
+        - SyncIn4
+        type: ComboBox
+      read_pv: $(P)$(R)SyncInSelector_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: SyncInGlitchFilter
+      label: null
+      description: Glitch filter on sync-in line, in nanoseconds.
+      write_pv: $(P)$(R)SyncInGlitchFilter
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)SyncInGlitchFilter_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    type: Group
+  - name: SyncOut
+    label: null
+    description: ''
+    layout:
+      labelled: true
+      type: Grid
+    children:
+    - name: SyncOutLevels
+      label: null
+      description: 'Output levels of hardware sync outputs, for output(s) in GPO mode.
+        (Note: SyncOutPolarity can invert these values.)'
+      write_pv: $(P)$(R)SyncOutLevels
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)SyncOutLevels_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: SyncOutSelector
+      label: null
+      description: Select the sync-out line to control with {SyncOutSource, SyncOutPolarity}.
+      write_pv: $(P)$(R)SyncOutSelector
+      write_widget:
+        choices:
+        - SyncOut1
+        - SyncOut2
+        - SyncOut3
+        - SyncOut4
+        type: ComboBox
+      read_pv: $(P)$(R)SyncOutSelector_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: SyncOutSource
+      label: null
+      description: 'Signal source of the sync-out line specified by SyncOutSelector.
+        GPO: general purpose output. AcquisitionTriggerReady: acquisition trigger
+        may occur. FrameTriggerReady: frame trigger may occur. Exposing: exposure
+        in progress. FrameReadout: image readout in progress. Imaging: exposure or
+        frame readout in progress. Acquiring: acquisition is running. LineIn: external
+        line input. Strobe: source is strobe timing unit.'
+      write_pv: $(P)$(R)SyncOutSource
+      write_widget:
+        choices:
+        - GPO
+        - AcquisitionTriggerReady
+        - FrameTriggerReady
+        - Exposing
+        - FrameReadout
+        - Imaging
+        - Acquiring
+        - LineIn1
+        - LineIn2
+        - Strobe1
+        type: ComboBox
+      read_pv: $(P)$(R)SyncOutSource_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: SyncOutPolarity
+      label: null
+      description: Polarity applied to the sync-out line specified by SyncOutSelector.
+      write_pv: $(P)$(R)SyncOutPolarity
+      write_widget:
+        choices:
+        - Normal
+        - Invert
+        type: ComboBox
+      read_pv: $(P)$(R)SyncOutPolarity_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    type: Group
+  - name: Timestamp
+    label: null
+    description: ''
+    layout:
+      labelled: true
+      type: Grid
+    children:
+    - name: GevTimestampTickFrequency
+      label: null
+      description: Frequency of image timestamp, in Hertz.
+      write_pv: $(P)$(R)GevTimestampTickFrequency
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)GevTimestampTickFrequency_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: GevTimestampControlLatch
+      label: null
+      description: Capture timestamp and store in GevTimestampValue.
+      write_pv: $(P)$(R)GevTimestampControlLatch
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      type: SignalW
+    - name: GevTimestampControlReset
+      label: null
+      description: Reset the timestamp.
+      write_pv: $(P)$(R)GevTimestampControlReset
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      type: SignalW
+    - name: GevTimestampValue
+      label: null
+      description: Value of timestamp, when latched by GevTimestampControlLatch.
+      write_pv: $(P)$(R)GevTimestampValue
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)GevTimestampValue_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    type: Group
+  - name: Trigger
+    label: null
+    description: ''
+    layout:
+      labelled: true
+      type: Grid
+    children:
+    - name: TriggerSelector
+      label: null
+      description: Select a trigger here, then use the controls {TriggerMode, TriggerSoftware,
+        TriggerSource, TriggerActivation, TriggerOverlap, TriggerDelayAbs} to setup
+        and read the trigger attributes. FrameStart is the trigger which starts each
+        image (when acquisition is running). AcquisitionStart is the trigger which
+        starts the acquisition process.
+      write_pv: $(P)$(R)TriggerSelector
+      write_widget:
+        choices:
+        - FrameStart
+        - AcquisitionStart
+        - AcquisitionEnd
+        - AcquisitionRecord
+        type: ComboBox
+      read_pv: $(P)$(R)TriggerSelector_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: TriggerMode
+      label: null
+      description: 'Enable or disable this trigger. Note: when the FrameStart trigger
+        is disabled, images are triggered at a fixed rate specified by AcquisitionFrameRateAbs.'
+      write_pv: $(P)$(R)TriggerMode
+      write_widget:
+        choices:
+        - 'Off'
+        - 'On'
+        type: ComboBox
+      read_pv: $(P)$(R)TriggerMode_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: TriggerSoftware
+      label: null
+      description: This software command effects a trigger.
+      write_pv: $(P)$(R)TriggerSoftware
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      type: SignalW
+    - name: TriggerSource
+      label: null
+      description: Source of trigger, when TriggerMode is On. This might be an hardware
+        trigger, a fixed rate generator, or software trigger only.
+      write_pv: $(P)$(R)TriggerSource
+      write_widget:
+        choices:
+        - Freerun
+        - Line1
+        - Line2
+        - Line3
+        - Line4
+        - FixedRate
+        - Software
+        type: ComboBox
+      read_pv: $(P)$(R)TriggerSource_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: TriggerActivation
+      label: null
+      description: Type of activation, for hardware triggers. This controls edge/level
+        and polarity sensitivities.
+      write_pv: $(P)$(R)TriggerActivation
+      write_widget:
+        choices:
+        - RisingEdge
+        - FallingEdge
+        - AnyEdge
+        - LevelHigh
+        - LevelLow
+        type: ComboBox
+      read_pv: $(P)$(R)TriggerActivation_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: TriggerOverlap
+      label: null
+      description: Permitted window of trigger activation, relative to previous frame.
+      write_pv: $(P)$(R)TriggerOverlap
+      write_widget:
+        choices:
+        - 'Off'
+        - ReadOut
+        - PreviousFrame
+        type: ComboBox
+      read_pv: $(P)$(R)TriggerOverlap_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: TriggerDelayAbs
+      label: null
+      description: Delay from hardware trigger activation to trigger effect, in microseconds.
+      write_pv: $(P)$(R)TriggerDelayAbs
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)TriggerDelayAbs_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    type: Group
+  - name: Whitebalance
+    label: null
+    description: ''
+    layout:
+      labelled: true
+      type: Grid
+    children:
+    - name: BalanceRatioSelector
+      label: null
+      description: Select the Red or Blue channel to adjust with BalanceRatioAbs.
+      write_pv: $(P)$(R)BalanceRatioSelector
+      write_widget:
+        choices:
+        - Red
+        - Blue
+        type: ComboBox
+      read_pv: $(P)$(R)BalanceRatioSelector_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: BalanceRatioAbs
+      label: null
+      description: Adjust the gain of the red or blue channel (see BalanceRatioSelector).
+        The green channel gain is always 1.00.
+      write_pv: $(P)$(R)BalanceRatioAbs
+      write_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextWrite
+      read_pv: $(P)$(R)BalanceRatioAbs_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    - name: BalanceWhiteAuto
+      label: null
+      description: 'Method used to set White Balance values. Off: automatic mode is
+        off. Once: auto-whitebalance occurs until target is achieved, then BalanceWhiteAuto
+        returns to Off. Continuous: auto-whitebalance always runs.'
+      write_pv: $(P)$(R)BalanceWhiteAuto
+      write_widget:
+        choices:
+        - 'Off'
+        - Once
+        - Continuous
+        type: ComboBox
+      read_pv: $(P)$(R)BalanceWhiteAuto_RBV
+      read_widget:
+        lines: null
+        format: null
+        precision: null
+        type: TextRead
+      type: SignalRW
+    type: Group
+  type: Group
+type: Device
