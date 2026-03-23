@@ -2,6 +2,7 @@
 from optparse import OptionParser, Values
 from pathlib import Path
 from pvi.device import Device, enforce_pascal_case, Grid, Group, SignalR, SignalRW, SignalW, SignalX
+from pvi._yaml_utils import type_first
 from typing import Dict, List, Optional, Tuple
 from xml.dom.minidom import Document, Element, parseString
 import yaml
@@ -110,7 +111,7 @@ def convert_genicam_xml_to_pvi(xml_text: str, instance_class: str, label: str) -
     device: Device = Device(label=label, parent=instance_class, children=[pvi_model.tree])
 
     # Return YAML from Device
-    return yaml.safe_dump(device.model_dump(), sort_keys=False)
+    return yaml.safe_dump(type_first(device.model_dump(exclude_none=True)), sort_keys=False)
 
 
 class GenICamNode:
@@ -129,7 +130,7 @@ class GenICamNode:
 
         # Basic metadata
         self.name: str = xml_element.getAttribute("Name")
-        self.description: str = self._extract_description()
+        self.description: Optional[str] = self._extract_description()
         self.access: str = self._extract_access_mode()
         self.node_type: str = xml_element.nodeName  # Category, Float, Int, Enumeration
         self.is_enum: bool = self.node_type == "Enumeration"
@@ -143,7 +144,7 @@ class GenICamNode:
         self.choices: Optional[List[str]] = \
             self._extract_enum_choices() if self.node_type == "Enumeration" else None
 
-    def _extract_description(self) -> str:
+    def _extract_description(self) -> Optional[str]:
         # Do as below to look in immediate layer down only, rather than
         # desc_elements = self.xml_element.getElementsByTagName("Description")
         # if desc_elements and desc_elements[0].firstChild:
@@ -152,7 +153,7 @@ class GenICamNode:
         for child in self.xml_element.childNodes:
             if child.nodeName == "Description" and child.firstChild:
                 return child.firstChild.nodeValue.strip()
-        return ""
+        return None
 
     def _extract_access_mode(self) -> str:
         # Similar searh logic to _extract_description
@@ -277,7 +278,7 @@ class PviModel:
     @staticmethod
     def make_signal(node: GenICamNode)-> SignalR | SignalRW | SignalW | SignalX:
         signal_name = enforce_pascal_case(node.name)
-        signal_description = node.description or ""
+        signal_description = node.description
 
         read_widget={"type": "TextRead"}
 
@@ -348,7 +349,7 @@ class PviModel:
             ]
 
             group_name = enforce_pascal_case(node.name)
-            group_description = node.description or ""        
+            group_description = node.description        
             groups.append(
                 Group(
                     name= group_name,
