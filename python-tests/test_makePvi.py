@@ -156,6 +156,28 @@ class TestGenICamModel:
         #    
 
 
+    def test_generate_epics_record_name_uniquify(self):
+        record_name = GenICamModel._generate_epics_record_name(
+            "ThisNameIsLongerThan20Characters",
+            {"ASignal": "GC_ThiNamIsLonThaCha"},
+            20,
+            "GC_")
+        
+        assert record_name == "GC_ThiNamIsLonThaCh0"
+        # 
+
+
+    def test_generate_epics_record_name_uniquify_again(self):
+        record_name = GenICamModel._generate_epics_record_name(
+            "ThisNameIsLongerThan20Characters",
+            {"Signal1": "GC_ThiNamIsLonThaCha", "Signal2": "GC_ThiNamIsLonThaCh0"},
+            20,
+            "GC_")
+        
+        assert record_name == "GC_ThiNamIsLonThaCh1"
+        # 
+
+
 class TestPviModel:
     def test_pvi_model(self, pvi_model: PviModel):
         groups: List[Group] = pvi_model.groups
