@@ -1,7 +1,7 @@
 #!/bin/env python
 from optparse import OptionParser, Values
 from pathlib import Path
-from pvi.device import Device, enforce_pascal_case, Grid, Group, SignalR, SignalRW, SignalW
+from pvi.device import Device, enforce_pascal_case, Grid, Group, SignalR, SignalRW, SignalW, SignalX
 from typing import Dict, List, Optional, Tuple
 from xml.dom.minidom import Document, Element, parseString
 import yaml
@@ -242,10 +242,12 @@ class GenICamModel:
         """
         lookup: Dict[str, GenICamNode] = {}
         root_element: Element = self.doc.documentElement
+
         for xml_element in root_element.getElementsByTagName("*"):
             name: str = xml_element.getAttribute("Name")
             if name:
                 lookup[name] = GenICamNode(xml_element)
+
         return lookup
 
     def _resolve_references(self) -> None:
@@ -273,7 +275,7 @@ class PviModel:
         return f"$(P)$(R){name}{suffix}"    
 
     @staticmethod
-    def make_signal(node: GenICamNode)-> SignalR | SignalRW | SignalW:
+    def make_signal(node: GenICamNode)-> SignalR | SignalRW | SignalW | SignalX:
         signal_name = enforce_pascal_case(node.name)
         signale_description = node.description or ""
 
@@ -291,8 +293,7 @@ class PviModel:
         # Write or read-write
         if node.is_enum and node.choices:
             write_widget = {
-                "type": "ComboBox",
-                "choices": node.choices
+                "type": "ComboBox"
             }
         else:
             # If not enum or no choices then use TextWrite
@@ -335,7 +336,7 @@ class PviModel:
                 continue
 
             # Create signals from leaves
-            signals: List[SignalR | SignalRW | SignalW] = [
+            signals: List[SignalR | SignalRW | SignalW | SignalX] = [
                 PviModel.make_signal(leaf) for leaf in non_category_children
             ]
 
@@ -352,7 +353,7 @@ class PviModel:
 
         # In case no categories produced groups
         if not groups:
-            signals: List[SignalR | SignalRW | SignalW] = []
+            signals: List[SignalR | SignalRW | SignalW | SignalX] = []
             # Sort to make sure consistent test results
             for node in sorted(definition_nodes.values(), key=lambda n: n.name):
                 if not node.is_category():
@@ -364,6 +365,7 @@ class PviModel:
                     name=default_name,
                     children=signals,
                     layout=Grid())]
+
         return groups
 
 
