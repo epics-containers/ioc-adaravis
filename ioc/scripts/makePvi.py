@@ -3,6 +3,7 @@ from optparse import OptionParser, Values
 from pathlib import Path
 from pvi.device import Device, enforce_pascal_case, Grid, Group, SignalR, SignalRW, SignalW, SignalX
 from pvi._yaml_utils import type_first
+import re
 from typing import Dict, List, Optional, Tuple
 from xml.dom.minidom import Document, Element, parseString
 import yaml
@@ -135,6 +136,7 @@ class GenICamNode:
         self.node_type: str = xml_element.nodeName  # Category, Float, Int, Enumeration
         self.is_enum: bool = self.node_type == "Enumeration"
         self.is_command: bool = self.node_type == "Command"
+        self.epics_record_name: Optional[str] = None
 
         # Children Node objects (from <pFeature> references)
         self.children: List["GenICamNode"] = []
@@ -227,10 +229,17 @@ class GenICamNode:
 class GenICamModel:
     """Parses and resolves references for GenICam XML."""
 
-    def __init__(self, xml_text: str):
+    def __init__(
+            self,
+            xml_text: str,
+            epics_record_name_max_length: int = 20,
+            epics_record_name_prefix: str = "GC_"):
         self.doc: Document = parseString(xml_text)
         self.definition_nodes: Dict[str, GenICamNode] = self._build_definition_nodes()
         self._resolve_references()
+        self.epics_record_name_max_length: int = epics_record_name_max_length
+        self.epics_record_name_prefix: str = epics_record_name_prefix
+        self.epics_record_names: Dict[str, str] = self._build_epics_record_names()
 
     def _build_definition_nodes(self) -> Dict[str, GenICamNode]:
         """
@@ -258,6 +267,63 @@ class GenICamModel:
         for definition_node in self.definition_nodes.values():
             definition_node.resolve_children(self.definition_nodes)
 
+    
+    def _build_epics_record_names(self) -> Dict[str, str]:
+        epics_record_names: Dict[str, str] = {}
+
+        for definition_node in self.definition_nodes.values():
+            epics_record_name: str = GenICamModel._generate_epics_record_name(
+                definition_node.name,
+                epics_record_names,
+                self.epics_record_name_max_length,
+                self.epics_record_name_prefix
+            )
+            epics_record_names[definition_node.name] = epics_record_name
+            definition_node.epics_record_name = epics_record_name
+
+        return epics_record_names        
+
+    @staticmethod
+    def _generate_epics_record_name(
+        name: str,
+        epics_record_names: Dict[str, str],
+        max_length: int,
+        epics_record_name_prefix: str
+    ) -> str:
+        """
+        Generate epics record name so can generate PVs that correspond to what we have in epics.
+        This replicate the logic in MakeDb.
+        """
+
+        record_name = f"{epics_record_name_prefix}{name}"
+
+        # Step 1: Progressively truncating constituent “words” to 3 characters, stop if
+        # string is short enough
+        if len(record_name) > max_length:
+            words: List[str] = re.findall(r"[a-zA-Z][^A-Z]*", record_name)
+
+            for ii in range(len(words)):
+                word = words[ii]
+                if len(word) > 3:
+                    words[ii] = word[:3]
+                    record_name = "".join(words)
+                    if len(record_name) <= max_length:
+                        break
+
+        # Step 2: If still too long, truncate
+        if len(record_name) > max_length:
+            record_name = record_name[:max_length]
+
+        # Step 3: Ensure uniqueness
+        ii = 0
+        existing_values = set(epics_record_names.values())
+        while record_name in existing_values:
+            uniquifying_suffix = str(ii)
+            record_name = record_name[: max_length - len(uniquifying_suffix)] + uniquifying_suffix
+            ii += 1
+
+        return record_name
+
 
 class PviModel:
     """Creates PVI model whose groups property can be used by pvi.device.Device."""
@@ -270,14 +336,14 @@ class PviModel:
             layout=Grid(),
             children=self.groups
         )
-    
+
     @staticmethod
     def make_pv(name: str, suffix: str = "") -> str:
         return f"$(P)$(R){name}{suffix}"    
 
     @staticmethod
     def make_signal(node: GenICamNode)-> SignalR | SignalRW | SignalW | SignalX:
-        signal_name = enforce_pascal_case(node.name)
+        signal_name = enforce_pascal_case(node.epics_record_name)
         signal_description = node.description
 
         read_widget={"type": "TextRead"}
@@ -295,7 +361,7 @@ class PviModel:
             return SignalR(
                 name=signal_name,
                 description=signal_description,
-                read_pv=PviModel.make_pv(node.name),
+                read_pv=PviModel.make_pv(node.epics_record_name),
                 read_widget=read_widget
             )
 
@@ -304,7 +370,7 @@ class PviModel:
             return SignalX(
                 name=signal_name,
                 description=signal_description,
-                write_pv=PviModel.make_pv(node.name)
+                write_pv=PviModel.make_pv(node.epics_record_name)
             )
 
         # Write only
@@ -312,7 +378,7 @@ class PviModel:
             return SignalW(
                 name=signal_name,
                 description=signal_description,
-                write_pv=PviModel.make_pv(node.name),
+                write_pv=PviModel.make_pv(node.epics_record_name),
                 write_widget=write_widget
             )
 
@@ -320,9 +386,9 @@ class PviModel:
         return SignalRW(
             name=signal_name,
             description=signal_description,
-            read_pv=PviModel.make_pv(node.name, "_RBV"),
+            read_pv=PviModel.make_pv(node.epics_record_name, "_RBV"),
             read_widget=read_widget,
-            write_pv=PviModel.make_pv(node.name),
+            write_pv=PviModel.make_pv(node.epics_record_name),
             write_widget=write_widget
         )
 
