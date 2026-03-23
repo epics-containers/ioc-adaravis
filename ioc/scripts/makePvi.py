@@ -277,41 +277,46 @@ class PviModel:
     @staticmethod
     def make_signal(node: GenICamNode)-> SignalR | SignalRW | SignalW | SignalX:
         signal_name = enforce_pascal_case(node.name)
-        signale_description = node.description or ""
+        signal_description = node.description or ""
 
         access = node.access.upper()
+
+        # Command
+        if node.is_command:
+            return SignalX(
+                name=signal_name,
+                description=signal_description,
+                write_pv=PviModel.make_pv(node.name),
+                write_widget={"type": "TextWrite"}
+            )
 
         # Read only
         if access in ("RO", "READONLY"):
             return SignalR(
                 name=signal_name,
-                description=signale_description,
+                description=signal_description,
                 read_pv=PviModel.make_pv(node.name),
                 read_widget={"type": "TextRead"},
             )
 
-        # Write or read-write
-        if node.is_enum and node.choices:
-            write_widget = {
-                "type": "ComboBox"
-            }
-        else:
-            # If not enum or no choices then use TextWrite
-            write_widget = {
-                "type": "TextWrite"
-            }
-
-        if node.is_command or access in ("WO", "WRITEONLY"):
+        # Write only
+        if access in ("WO", "WRITEONLY"):
+            if node.is_enum and node.choices:
+                write_widget = {"type": "ComboBox"}
+            else:
+                # If not enum or no choices then use TextWrite
+                write_widget = {"type": "TextWrite"}
             return SignalW(
                 name=signal_name,
-                description=signale_description,
+                description=signal_description,
                 write_pv=PviModel.make_pv(node.name),
                 write_widget=write_widget,
             )
 
+        # Assume read-write
         return SignalRW(
             name=signal_name,
-            description=signale_description,
+            description=signal_description,
             write_pv=PviModel.make_pv(node.name),
             write_widget=write_widget,
             read_pv=PviModel.make_pv(node.name, "_RBV"),
