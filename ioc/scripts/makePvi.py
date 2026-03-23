@@ -279,16 +279,15 @@ class PviModel:
         signal_name = enforce_pascal_case(node.name)
         signal_description = node.description or ""
 
-        access = node.access.upper()
+        read_widget={"type": "TextRead"}
 
-        # Command
-        if node.is_command:
-            return SignalX(
-                name=signal_name,
-                description=signal_description,
-                write_pv=PviModel.make_pv(node.name),
-                write_widget={"type": "TextWrite"}
-            )
+        if node.is_enum and node.choices:
+            write_widget = {"type": "ComboBox"}
+        else:
+            # If not enum or no choices then use TextWrite
+            write_widget = {"type": "TextWrite"}
+
+        access = node.access.upper()
 
         # Read only
         if access in ("RO", "READONLY"):
@@ -296,31 +295,34 @@ class PviModel:
                 name=signal_name,
                 description=signal_description,
                 read_pv=PviModel.make_pv(node.name),
-                read_widget={"type": "TextRead"},
+                read_widget=read_widget
+            )
+
+        # Command
+        if node.is_command:
+            return SignalX(
+                name=signal_name,
+                description=signal_description,
+                write_pv=PviModel.make_pv(node.name)
             )
 
         # Write only
         if access in ("WO", "WRITEONLY"):
-            if node.is_enum and node.choices:
-                write_widget = {"type": "ComboBox"}
-            else:
-                # If not enum or no choices then use TextWrite
-                write_widget = {"type": "TextWrite"}
             return SignalW(
                 name=signal_name,
                 description=signal_description,
                 write_pv=PviModel.make_pv(node.name),
-                write_widget=write_widget,
+                write_widget=write_widget
             )
 
         # Assume read-write
         return SignalRW(
             name=signal_name,
             description=signal_description,
-            write_pv=PviModel.make_pv(node.name),
-            write_widget=write_widget,
             read_pv=PviModel.make_pv(node.name, "_RBV"),
-            read_widget={"type": "TextRead"},
+            read_widget=read_widget,
+            write_pv=PviModel.make_pv(node.name),
+            write_widget=write_widget
         )
 
     @staticmethod
