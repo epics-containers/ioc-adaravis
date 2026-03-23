@@ -92,7 +92,6 @@ class TestUtilities:
         cleaned = makePvi.sanitize_genicam_xml(XML_WITH_CAMERA_ID)
         assert cleaned.startswith("<Root>")
 
-
     def test_sanitize_genicam_xml_without_non_xml_header(self):
         XML_WITH_CAMERA_ID = """
         <Root>
@@ -109,7 +108,6 @@ class TestGenICamNode:
         node = GenICamNode(category_element)
         assert node.description == "AcquisitionCategory description"
 
-
     def test_node_extract_enum_choices(self, xml_doc: Document):
           enum_element = xml_doc.getElementsByTagName("Enumeration")[0]
           node = GenICamNode(enum_element)
@@ -120,7 +118,6 @@ class TestGenICamModel:
     def test_definition_nodes(self, genicam_model: GenICamModel):
         assert "AcquisitionCategory" in genicam_model.definition_nodes
         assert "ExposureTimeFeature" in genicam_model.definition_nodes
-
 
     def test_resolve_references(self, genicam_model: GenICamModel):
         acquisitionCategoryNode: GenICamNode = \
@@ -137,6 +134,27 @@ class TestGenICamModel:
         assert len(childCategoryWithLeafNode.children) == 1
         assert childCategoryWithLeafNode.children[0].name == "NestedFeature"
 
+    def test_generate_epics_record_name_shorten_first_word_is_enough(self):
+        record_name = GenICamModel._generate_epics_record_name(
+            "SesquipedalianMeansLongWord",
+            #12345678901234567890 
+            {"ASignal": "GC_ASignal"},
+            20,
+            "GC_")
+        
+        assert record_name == "GC_SesMeansLongWord"
+        #                      12345678901234567890 
+
+    def test_generate_epics_record_name_shorten_long_words(self):
+        record_name = GenICamModel._generate_epics_record_name(
+            "ThisNameIsLongerThan20Characters",
+            {"ASignal": "GC_ASignal"},
+            20,
+            "GC_")
+        
+        assert record_name == "GC_ThiNamIsLonThaCha"
+        #    
+
 
 class TestPviModel:
     def test_pvi_model(self, pvi_model: PviModel):
@@ -151,11 +169,10 @@ class TestPviModel:
         acquisitionGroup = next(g for g in groups if g.name == "AcquisitionCategory")
         signal_names = [s.name for s in acquisitionGroup.children]
         assert set(signal_names) == \
-            {"ExposureTimeFeature", "GainFeature", "OffsetFeature"}
+            {"GCExpTimeFeature", "GCGainFeature", "GCOffsetFeature"}
         for signal in acquisitionGroup.children:
-            assert signal.write_pv in ["$(P)$(R)ExposureTimeFeature", "$(P)$(R)GainFeature", "$(P)$(R)OffsetFeature"]
-            assert signal.read_pv in ["$(P)$(R)ExposureTimeFeature_RBV", "$(P)$(R)GainFeature_RBV", "$(P)$(R)OffsetFeature_RBV"]
-
+            assert signal.write_pv in ["$(P)$(R)GC_ExpTimeFeature", "$(P)$(R)GC_GainFeature", "$(P)$(R)GC_OffsetFeature"]
+            assert signal.read_pv in ["$(P)$(R)GC_ExpTimeFeature_RBV", "$(P)$(R)GC_GainFeature_RBV", "$(P)$(R)GC_OffsetFeature_RBV"]
 
     def test_convert_genicam_xml_to_pvi_generates_yaml(self, example_xml: str):
         yaml_text = makePvi.convert_genicam_xml_to_pvi(
@@ -187,7 +204,6 @@ class TestPviModel:
         # Signals inside group
         signal_names = [s["name"] for s in FirstGroup["children"]]
         assert set(signal_names) == {
-            "ExposureTimeFeature",
-            "GainFeature",
-            "OffsetFeature"}
-
+            "GCExpTimeFeature",
+            "GCGainFeature",
+            "GCOffsetFeature"}
