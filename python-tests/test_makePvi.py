@@ -1,18 +1,18 @@
-#from pathlib import Path
-#import sys
+from pathlib import Path
+import sys
 
-# Allow importing MakePvi.py from ioc/scripts
-#SCRIPT_DIR = Path(__file__).resolve().parents[1] / "ioc" / "scripts"
-#sys.path.insert(0, str(SCRIPT_DIR))
+# Allow importing makePvi.py from ioc/scripts
+SCRIPT_DIR = Path(__file__).resolve().parents[1] / "ioc"
+sys.path.insert(0, str(SCRIPT_DIR))
 
 from pvi.device import Group
 import pytest
 from typing import List
 from xml.dom.minidom import Document, parseString
-import yaml
+from ruamel.yaml import YAML
 
-from ioc.scripts import makePvi
-from ioc.scripts.makePvi import GenICamModel, GenICamNode, PviModel
+from scripts import makePvi
+from scripts.makePvi import GenICamModel, GenICamNode, PviModel
 
 
 @pytest.fixture
@@ -61,7 +61,7 @@ def example_xml() -> str:
         <Description>TriggerEnumeration description</Description>
         <EnumEntry Name="Off"/>
         <EnumEntry Name="On"/>
-      </Enumeration>  
+      </Enumeration>
     </Root>
     """
 
@@ -74,7 +74,7 @@ def xml_doc(example_xml: str) -> Document:
 @pytest.fixture
 def genicam_model(example_xml: str) -> GenICamModel:
     return GenICamModel(example_xml)
-    
+
 
 @pytest.fixture
 def pvi_model(genicam_model: GenICamModel) -> PviModel:
@@ -137,13 +137,13 @@ class TestGenICamModel:
     def test_generate_epics_record_name_shorten_first_word_is_enough(self):
         record_name = GenICamModel._generate_epics_record_name(
             "SesquipedalianMeansLongWord",
-            #12345678901234567890 
+            #12345678901234567890
             {"ASignal": "GC_ASignal"},
             20,
             "GC_")
-        
+
         assert record_name == "GC_SesMeansLongWord"
-        #                      12345678901234567890 
+        #                      12345678901234567890
 
     def test_generate_epics_record_name_shorten_long_words(self):
         record_name = GenICamModel._generate_epics_record_name(
@@ -151,9 +151,9 @@ class TestGenICamModel:
             {"ASignal": "GC_ASignal"},
             20,
             "GC_")
-        
+
         assert record_name == "GC_ThiNamIsLonThaCha"
-        #    
+        #
 
 
     def test_generate_epics_record_name_uniquify(self):
@@ -162,9 +162,9 @@ class TestGenICamModel:
             {"ASignal": "GC_ThiNamIsLonThaCha"},
             20,
             "GC_")
-        
+
         assert record_name == "GC_ThiNamIsLonThaCh0"
-        # 
+        #
 
 
     def test_generate_epics_record_name_uniquify_again(self):
@@ -173,9 +173,9 @@ class TestGenICamModel:
             {"Signal1": "GC_ThiNamIsLonThaCha", "Signal2": "GC_ThiNamIsLonThaCh0"},
             20,
             "GC_")
-        
+
         assert record_name == "GC_ThiNamIsLonThaCh1"
-        # 
+        #
 
 
 class TestPviModel:
@@ -204,7 +204,8 @@ class TestPviModel:
         )
         print(yaml_text)
         # Load YAML to dict
-        data = yaml.safe_load(yaml_text)
+        ym = YAML(typ='safe', pure=True)
+        data = ym.load(yaml_text)
         assert isinstance(data, dict)
         # Device label
         assert data["label"] == "Camera test label"
