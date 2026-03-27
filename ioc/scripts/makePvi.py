@@ -6,7 +6,8 @@ from pvi._yaml_utils import type_first
 import re
 from typing import Dict, List, Optional, Tuple
 from xml.dom.minidom import Document, Element, parseString
-import yaml
+from io import StringIO
+from ruamel.yaml import YAML
 
 DEBUG = False
 
@@ -112,7 +113,12 @@ def convert_genicam_xml_to_pvi(xml_text: str, instance_class: str, label: str) -
     device: Device = Device(label=label, parent=instance_class, children=[pvi_model.tree])
 
     # Return YAML from Device
-    return yaml.safe_dump(type_first(device.model_dump(exclude_none=True)), sort_keys=False)
+    ym = YAML(typ='safe', pure=True)
+    ym.default_flow_style = False
+    ym.sort_keys = False
+    stream = StringIO()
+    ym.dump(type_first(device.model_dump(exclude_none=True)), stream)
+    return stream.getvalue()
 
 
 class GenICamNode:
@@ -123,7 +129,7 @@ class GenICamNode:
         "node" refers to GenICam logical node
 
         Args:
-            xml_element: an xml.dom.minidom.Element representing a 
+            xml_element: an xml.dom.minidom.Element representing a
                          <Category>, <Float>, <Int>, <Enumeration>, etc.
         """
         # Original XML element
@@ -209,7 +215,7 @@ class GenICamNode:
         if not self.is_category():
             self.references_resolved = True
             return
-                
+
         # Process the pFeature in the immediate next level down (don't recurse down).
         for child_element in self.xml_element.childNodes:
             if not(child_element.nodeName == "pFeature" and child_element.firstChild):
@@ -248,7 +254,7 @@ class GenICamModel:
         Definition nodes are xml elements that look like this, we take them:
         <NodeType Name="My name" ...>
         Elements that look like below are reference nodes, we don't process them here:
-        <pFeature>My name</pFeature> 
+        <pFeature>My name</pFeature>
         """
         lookup: Dict[str, GenICamNode] = {}
         root_element: Element = self.doc.documentElement
@@ -267,7 +273,7 @@ class GenICamModel:
         for definition_node in self.definition_nodes.values():
             definition_node.resolve_children(self.definition_nodes)
 
-    
+
     def _build_epics_record_names(self) -> Dict[str, str]:
         epics_record_names: Dict[str, str] = {}
 
@@ -281,7 +287,7 @@ class GenICamModel:
             epics_record_names[definition_node.name] = epics_record_name
             definition_node.epics_record_name = epics_record_name
 
-        return epics_record_names        
+        return epics_record_names
 
     @staticmethod
     def _generate_epics_record_name(
@@ -339,7 +345,7 @@ class PviModel:
 
     @staticmethod
     def make_pv(name: str, suffix: str = "") -> str:
-        return f"$(P)$(R){name}{suffix}"    
+        return f"$(P)$(R){name}{suffix}"
 
     @staticmethod
     def make_signal(node: GenICamNode)-> SignalR | SignalRW | SignalW | SignalX:
@@ -415,7 +421,7 @@ class PviModel:
             ]
 
             group_name = enforce_pascal_case(node.name)
-            group_description = node.description        
+            group_description = node.description
             groups.append(
                 Group(
                     name= group_name,
