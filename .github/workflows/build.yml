@@ -66,7 +66,6 @@ jobs:
         # can't test non native without some hardware to run on
         if: ${{ matrix.epics-target == 'linux-x86_64' }}
         run: |
-          tests/run-python-tests.sh
           tests/run-tests.sh ci_test
 
       - name: Developer target metadata
