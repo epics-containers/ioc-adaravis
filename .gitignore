@@ -25,3 +25,11 @@ ioc/configure/CONFIG_SITE.Common.linux-x86_64
 
 **/.ansible
 **/*build.log
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.pytest_cache/
