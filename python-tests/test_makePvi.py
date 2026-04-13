@@ -152,9 +152,7 @@ class TestGenICamModel:
             20,
             "GC_")
         
-        assert record_name == "GC_ThiNamIsLonThaCha"
-        #    
-
+        assert record_name == "GC_ThiNamIsLonThaCha"   
 
     def test_generate_epics_record_name_uniquify(self):
         record_name = GenICamModel._generate_epics_record_name(
@@ -164,8 +162,6 @@ class TestGenICamModel:
             "GC_")
         
         assert record_name == "GC_ThiNamIsLonThaCh0"
-        # 
-
 
     def test_generate_epics_record_name_uniquify_again(self):
         record_name = GenICamModel._generate_epics_record_name(
@@ -175,7 +171,6 @@ class TestGenICamModel:
             "GC_")
         
         assert record_name == "GC_ThiNamIsLonThaCh1"
-        # 
 
 
 class TestPviModel:
