@@ -1,5 +1,4 @@
 #!/bin/env python
-from optparse import OptionParser, Values
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from pvi.device import Device, enforce_pascal_case, Grid, Group, SignalR, SignalRW, SignalW, SignalX
@@ -33,7 +32,7 @@ def main():
     output_folder: Path = Path(args.output_folder)
     output_folder.mkdir(parents=True, exist_ok=True)
     # Path.write_text closes file automatically
-    yaml_file: Path = output_folder / f"{options.instance_class}.pvi.device.yaml"
+    yaml_file: Path = output_folder / f"{args.instance_class}.pvi.device.yaml"
     yaml_file.write_text(yaml_text)
     print(f"Generated PVI YAML: {yaml_file}")
 
