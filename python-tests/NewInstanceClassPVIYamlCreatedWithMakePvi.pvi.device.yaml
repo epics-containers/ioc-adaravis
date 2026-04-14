@@ -1,1798 +1,1856 @@
-type: Device
-label: NewInstance
-parent: NewInstanceClassPVIYamlCreatedWithMakePvi
 children:
-- type: Group
-  name: NewInstanceClassPVIYamlCreatedWithMakePvi
-  layout:
-    type: Grid
-    labelled: true
-  children:
-  - type: Group
-    name: Acquisition
-    layout:
-      type: Grid
-      labelled: true
-    children:
-    - type: SignalRW
-      name: GCAcquisitionStart
-      write_pv: $(P)$(R)GC_AcquisitionStart
-      write_widget:
-        type: TextWrite
+- children:
+  - children:
+    - name: GCAcquisitionStart
       read_pv: $(P)$(R)GC_AcquisitionStart_RBV
       read_widget:
         type: TextRead
-    - type: SignalX
+      type: SignalRW
+      write_pv: $(P)$(R)GC_AcquisitionStart
+      write_widget:
+        type: TextWrite
+    - description: Stop acquisition. Acquisition will stop after acquisition of 
+        the current frame is complete.
       name: GCAcquisitionStop
-      description: Stop acquisition. Acquisition will stop after acquisition of the
-        current frame is complete.
+      type: SignalX
+      value: '1'
       write_pv: $(P)$(R)GC_AcquisitionStop
       write_widget:
-        type: ButtonPanel
         actions:
           Go: '1'
-      value: '1'
-    - type: SignalX
+        type: ButtonPanel
+    - description: Abort acquisition. Acquisition will stop immediately, but a 
+        partially transferred image will be completed.
       name: GCAcquisitionAbort
-      description: Abort acquisition. Acquisition will stop immediately, but a partially
-        transferred image will be completed.
+      type: SignalX
+      value: '1'
       write_pv: $(P)$(R)GC_AcquisitionAbort
       write_widget:
-        type: ButtonPanel
         actions:
           Go: '1'
-      value: '1'
-    - type: SignalRW
-      name: GCAcquisitionMode
-      description: 'The acquisition mode determines the behavior of the camera when
+        type: ButtonPanel
+    - description: 'The acquisition mode determines the behavior of the camera when
         acquisition start is triggered. "Continuous" mode: the camera will acquire
         images until acquisition stop is triggered. "SingleFrame" mode: the camera
         will acquire a single image. "MultiFrame" mode: the camera will acquire the
         number of images specified by AcquisitionFrameCount. "Recorder" mode: the
         camera will run continuously, and when the recorder event is triggered, send
         pre-trigger and post-trigger images to the host.'
-      write_pv: $(P)$(R)GC_AcquisitionMode
-      write_widget:
-        type: ComboBox
+      name: GCAcquisitionMode
       read_pv: $(P)$(R)GC_AcquisitionMode_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCAcqFrameCount
-      description: This is the number of images to acquire when in MultiFrame and
-        Recorder acquisition modes.
-      write_pv: $(P)$(R)GC_AcqFrameCount
+      type: SignalRW
+      write_pv: $(P)$(R)GC_AcquisitionMode
       write_widget:
-        type: TextWrite
+        type: ComboBox
+    - description: This is the number of images to acquire when in MultiFrame 
+        and Recorder acquisition modes.
+      name: GCAcqFrameCount
       read_pv: $(P)$(R)GC_AcqFrameCount_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCAcqFrameRateAbs
-      description: Frame rate, in frames per second. This is applicable when either
-        the FrameStart trigger mode is disabled, or the FrameStart trigger source
-        is FixedRate. Depending on the exposure duration, the camera may not achieve
-        the frame rate set here.
-      write_pv: $(P)$(R)GC_AcqFrameRateAbs
+      type: SignalRW
+      write_pv: $(P)$(R)GC_AcqFrameCount
       write_widget:
         type: TextWrite
+    - description: Frame rate, in frames per second. This is applicable when 
+        either the FrameStart trigger mode is disabled, or the FrameStart 
+        trigger source is FixedRate. Depending on the exposure duration, the 
+        camera may not achieve the frame rate set here.
+      name: GCAcqFrameRateAbs
       read_pv: $(P)$(R)GC_AcqFrameRateAbs_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCAcqFrameRateLimit
-      description: This is the maximum frame rate possible for the current exposure
-        duration and image format.
-      write_pv: $(P)$(R)GC_AcqFrameRateLimit
+      type: SignalRW
+      write_pv: $(P)$(R)GC_AcqFrameRateAbs
       write_widget:
         type: TextWrite
+    - description: This is the maximum frame rate possible for the current 
+        exposure duration and image format.
+      name: GCAcqFrameRateLimit
       read_pv: $(P)$(R)GC_AcqFrameRateLimit_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCRecPreEventCount
-      description: This is the number of pre-event images to acquire in the Recorder
-        acquisition mode. This must be less than or equal to AcquisitionFrameCount.
-      write_pv: $(P)$(R)GC_RecPreEventCount
+      type: SignalRW
+      write_pv: $(P)$(R)GC_AcqFrameRateLimit
       write_widget:
         type: TextWrite
+    - description: This is the number of pre-event images to acquire in the 
+        Recorder acquisition mode. This must be less than or equal to 
+        AcquisitionFrameCount.
+      name: GCRecPreEventCount
       read_pv: $(P)$(R)GC_RecPreEventCount_RBV
       read_widget:
         type: TextRead
-  - type: Group
-    name: BalanceWhiteAutoControl
-    layout:
-      type: Grid
-      labelled: true
-    children:
-    - type: SignalRW
-      name: GCBalWhiteAutoRate
-      description: Rate of white balance adjustments, from 1 (slowest) to 100 (fastest).
-        Use this control to slow down the auto-whitebalance adjustments.
-      write_pv: $(P)$(R)GC_BalWhiteAutoRate
+      type: SignalRW
+      write_pv: $(P)$(R)GC_RecPreEventCount
       write_widget:
         type: TextWrite
+    layout:
+      labelled: true
+      stacked: false
+      type: Grid
+    name: Acquisition
+    type: Group
+  - children:
+    - description: Rate of white balance adjustments, from 1 (slowest) to 100 
+        (fastest). Use this control to slow down the auto-whitebalance 
+        adjustments.
+      name: GCBalWhiteAutoRate
       read_pv: $(P)$(R)GC_BalWhiteAutoRate_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCBalWhiAutAdjTol
-      description: Tolerance, in percent, allowed from the ideal whitebalance values,
-        within which the auto-whitebalance does not run. This prevents needless small
-        adjustments from occurring each image.
-      write_pv: $(P)$(R)GC_BalWhiAutAdjTol
+      type: SignalRW
+      write_pv: $(P)$(R)GC_BalWhiteAutoRate
       write_widget:
         type: TextWrite
+    - description: Tolerance, in percent, allowed from the ideal whitebalance 
+        values, within which the auto-whitebalance does not run. This prevents 
+        needless small adjustments from occurring each image.
+      name: GCBalWhiAutAdjTol
       read_pv: $(P)$(R)GC_BalWhiAutAdjTol_RBV
       read_widget:
         type: TextRead
-  - type: Group
-    name: BlackLevelControl
-    layout:
-      type: Grid
-      labelled: true
-    children:
-    - type: SignalRW
-      name: GCBlaLevelSelector
-      description: Selects which Black Level is controlled by the various Black Level
-        features.
-      write_pv: $(P)$(R)GC_BlaLevelSelector
+      type: SignalRW
+      write_pv: $(P)$(R)GC_BalWhiAutAdjTol
       write_widget:
-        type: ComboBox
+        type: TextWrite
+    layout:
+      labelled: true
+      stacked: false
+      type: Grid
+    name: BalanceWhiteAutoControl
+    type: Group
+  - children:
+    - description: Selects which Black Level is controlled by the various Black 
+        Level features.
+      name: GCBlaLevelSelector
       read_pv: $(P)$(R)GC_BlaLevelSelector_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCBlackLevel
-      description: Black level (offset) value.
-      write_pv: $(P)$(R)GC_BlackLevel
+      type: SignalRW
+      write_pv: $(P)$(R)GC_BlaLevelSelector
       write_widget:
-        type: TextWrite
+        type: ComboBox
+    - description: Black level (offset) value.
+      name: GCBlackLevel
       read_pv: $(P)$(R)GC_BlackLevel_RBV
       read_widget:
         type: TextRead
-  - type: Group
-    name: ColorTransformationControl
-    description: Category that contains the Color Transformation control features.
-    layout:
-      type: Grid
-      labelled: true
-    children:
-    - type: SignalRW
-      name: GCColTraSelector
-      description: Selects which Color Transformation module is controlled by the
-        various Color Transformation features.
-      write_pv: $(P)$(R)GC_ColTraSelector
+      type: SignalRW
+      write_pv: $(P)$(R)GC_BlackLevel
       write_widget:
-        type: ComboBox
+        type: TextWrite
+    layout:
+      labelled: true
+      stacked: false
+      type: Grid
+    name: BlackLevelControl
+    type: Group
+  - children:
+    - description: Selects which Color Transformation module is controlled by 
+        the various Color Transformation features.
+      name: GCColTraSelector
       read_pv: $(P)$(R)GC_ColTraSelector_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCColTraMode
-      description: Selects the mode for the color transformation.
-      write_pv: $(P)$(R)GC_ColTraMode
+      type: SignalRW
+      write_pv: $(P)$(R)GC_ColTraSelector
       write_widget:
         type: ComboBox
+    - description: Selects the mode for the color transformation.
+      name: GCColTraMode
       read_pv: $(P)$(R)GC_ColTraMode_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCColTraValSelector
-      description: Selects the Gain factor or Offset of the Transformation matrix
-        to access in the selected Color Transformation module.
-      write_pv: $(P)$(R)GC_ColTraValSelector
+      type: SignalRW
+      write_pv: $(P)$(R)GC_ColTraMode
       write_widget:
         type: ComboBox
+    - description: Selects the Gain factor or Offset of the Transformation 
+        matrix to access in the selected Color Transformation module.
+      name: GCColTraValSelector
       read_pv: $(P)$(R)GC_ColTraValSelector_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCColTraValue
-      description: Represents the value of the selected Gain factor or Offset inside
-        the Transformation matrix.
-      write_pv: $(P)$(R)GC_ColTraValue
+      type: SignalRW
+      write_pv: $(P)$(R)GC_ColTraValSelector
       write_widget:
-        type: TextWrite
+        type: ComboBox
+    - description: Represents the value of the selected Gain factor or Offset 
+        inside the Transformation matrix.
+      name: GCColTraValue
       read_pv: $(P)$(R)GC_ColTraValue_RBV
       read_widget:
         type: TextRead
-  - type: Group
-    name: Controls
-    layout:
-      type: Grid
-      labelled: true
-    children:
-    - type: SignalRW
-      name: GCGamma
-      description: Applies gamma value to the raw sensor signal.
-      write_pv: $(P)$(R)GC_Gamma
+      type: SignalRW
+      write_pv: $(P)$(R)GC_ColTraValue
       write_widget:
         type: TextWrite
+    description: Category that contains the Color Transformation control 
+      features.
+    layout:
+      labelled: true
+      stacked: false
+      type: Grid
+    name: ColorTransformationControl
+    type: Group
+  - children:
+    - description: Applies gamma value to the raw sensor signal.
+      name: GCGamma
       read_pv: $(P)$(R)GC_Gamma_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCDefectMaskEnable
-      description: Enable masking of defective pixel clusters. Defective pixels are
-        detected and recorded at the factory.
-      write_pv: $(P)$(R)GC_DefectMaskEnable
+      type: SignalRW
+      write_pv: $(P)$(R)GC_Gamma
       write_widget:
         type: TextWrite
+    - description: Enable masking of defective pixel clusters. Defective pixels 
+        are detected and recorded at the factory.
+      name: GCDefectMaskEnable
       read_pv: $(P)$(R)GC_DefectMaskEnable_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCHue
-      description: Hue turns the color vectors in the U/V plane. It is 1 degree per
-        step.
-      write_pv: $(P)$(R)GC_Hue
+      type: SignalRW
+      write_pv: $(P)$(R)GC_DefectMaskEnable
       write_widget:
         type: TextWrite
+    - description: Hue turns the color vectors in the U/V plane. It is 1 degree 
+        per step.
+      name: GCHue
       read_pv: $(P)$(R)GC_Hue_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCSaturation
-      description: Saturation puts gain to the color vectors in the U/V plane.
-      write_pv: $(P)$(R)GC_Saturation
+      type: SignalRW
+      write_pv: $(P)$(R)GC_Hue
       write_widget:
         type: TextWrite
+    - description: Saturation puts gain to the color vectors in the U/V plane.
+      name: GCSaturation
       read_pv: $(P)$(R)GC_Saturation_RBV
       read_widget:
         type: TextRead
-  - type: Group
-    name: DSPSubregion
-    layout:
-      type: Grid
-      labelled: true
-    children:
-    - type: SignalRW
-      name: GCDSPSubregionLeft
-      description: The DSP subregion is the area of the image used for measurements
-        in "auto-" functions such as auto-exposure and auto-gain. DSPSubregionLeft
-        is the left column, relative to the current image region.
-      write_pv: $(P)$(R)GC_DSPSubregionLeft
+      type: SignalRW
+      write_pv: $(P)$(R)GC_Saturation
       write_widget:
         type: TextWrite
+    layout:
+      labelled: true
+      stacked: false
+      type: Grid
+    name: Controls
+    type: Group
+  - children:
+    - description: The DSP subregion is the area of the image used for 
+        measurements in "auto-" functions such as auto-exposure and auto-gain. 
+        DSPSubregionLeft is the left column, relative to the current image 
+        region.
+      name: GCDSPSubregionLeft
       read_pv: $(P)$(R)GC_DSPSubregionLeft_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCDSPSubregionTop
-      description: The DSP subregion is the area of the image used for measurements
-        in "auto-" functions such as auto-exposure and auto-gain. DSPSubregionTop
-        is the top row, relative to the current image region.
-      write_pv: $(P)$(R)GC_DSPSubregionTop
+      type: SignalRW
+      write_pv: $(P)$(R)GC_DSPSubregionLeft
       write_widget:
         type: TextWrite
+    - description: The DSP subregion is the area of the image used for 
+        measurements in "auto-" functions such as auto-exposure and auto-gain. 
+        DSPSubregionTop is the top row, relative to the current image region.
+      name: GCDSPSubregionTop
       read_pv: $(P)$(R)GC_DSPSubregionTop_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCDSPSubregionRight
-      description: The DSP subregion is the area of the image used for measurements
-        in "auto-" functions such as auto-exposure and auto-gain. DSPSubregionRight
-        is the right column, relative to the current image region. For convenience,
-        this value may be higher than the maximum Width.
-      write_pv: $(P)$(R)GC_DSPSubregionRight
+      type: SignalRW
+      write_pv: $(P)$(R)GC_DSPSubregionTop
       write_widget:
         type: TextWrite
+    - description: The DSP subregion is the area of the image used for 
+        measurements in "auto-" functions such as auto-exposure and auto-gain. 
+        DSPSubregionRight is the right column, relative to the current image 
+        region. For convenience, this value may be higher than the maximum 
+        Width.
+      name: GCDSPSubregionRight
       read_pv: $(P)$(R)GC_DSPSubregionRight_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCDSPSubBottom
-      description: The DSP subregion is the area of the image used for measurements
-        in "auto-" functions such as auto-exposure and auto-gain. DSPSubregionBottom
-        is the bottom row, relative to the current image region. For convenience,
-        this value may be higher than the maximum Height.
-      write_pv: $(P)$(R)GC_DSPSubBottom
+      type: SignalRW
+      write_pv: $(P)$(R)GC_DSPSubregionRight
       write_widget:
         type: TextWrite
+    - description: The DSP subregion is the area of the image used for 
+        measurements in "auto-" functions such as auto-exposure and auto-gain. 
+        DSPSubregionBottom is the bottom row, relative to the current image 
+        region. For convenience, this value may be higher than the maximum 
+        Height.
+      name: GCDSPSubBottom
       read_pv: $(P)$(R)GC_DSPSubBottom_RBV
       read_widget:
         type: TextRead
-  - type: Group
-    name: DefectMask
-    layout:
-      type: Grid
-      labelled: true
-    children:
-    - type: SignalRW
-      name: GCDefMasColEnable
-      description: Enable masking of defective columns. Defective columns are detected
-        and recorded at the factory.
-      write_pv: $(P)$(R)GC_DefMasColEnable
+      type: SignalRW
+      write_pv: $(P)$(R)GC_DSPSubBottom
       write_widget:
-        type: ComboBox
+        type: TextWrite
+    layout:
+      labelled: true
+      stacked: false
+      type: Grid
+    name: DSPSubregion
+    type: Group
+  - children:
+    - description: Enable masking of defective columns. Defective columns are 
+        detected and recorded at the factory.
+      name: GCDefMasColEnable
       read_pv: $(P)$(R)GC_DefMasColEnable_RBV
       read_widget:
         type: TextRead
-  - type: Group
-    name: DeviceStatus
-    layout:
-      type: Grid
-      labelled: true
-    children:
-    - type: SignalRW
-      name: GCDevTemSelector
-      write_pv: $(P)$(R)GC_DevTemSelector
+      type: SignalRW
+      write_pv: $(P)$(R)GC_DefMasColEnable
       write_widget:
         type: ComboBox
+    layout:
+      labelled: true
+      stacked: false
+      type: Grid
+    name: DefectMask
+    type: Group
+  - children:
+    - name: GCDevTemSelector
       read_pv: $(P)$(R)GC_DevTemSelector_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCDeviceTemperature
-      write_pv: $(P)$(R)GC_DeviceTemperature
+      type: SignalRW
+      write_pv: $(P)$(R)GC_DevTemSelector
       write_widget:
-        type: TextWrite
+        type: ComboBox
+    - name: GCDeviceTemperature
       read_pv: $(P)$(R)GC_DeviceTemperature_RBV
       read_widget:
         type: TextRead
-  - type: Group
-    name: EventControl
-    layout:
-      type: Grid
-      labelled: true
-    children:
-    - type: SignalRW
-      name: GCEventSelector
-      description: Activate event-notification on the GigE Vision message channel.
-      write_pv: $(P)$(R)GC_EventSelector
+      type: SignalRW
+      write_pv: $(P)$(R)GC_DeviceTemperature
       write_widget:
-        type: ComboBox
+        type: TextWrite
+    layout:
+      labelled: true
+      stacked: false
+      type: Grid
+    name: DeviceStatus
+    type: Group
+  - children:
+    - description: Activate event-notification on the GigE Vision message 
+        channel.
+      name: GCEventSelector
       read_pv: $(P)$(R)GC_EventSelector_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCEventNotification
-      description: Activate event-notification on the GigE Vision message channel.
-      write_pv: $(P)$(R)GC_EventNotification
+      type: SignalRW
+      write_pv: $(P)$(R)GC_EventSelector
       write_widget:
         type: ComboBox
+    - description: Activate event-notification on the GigE Vision message 
+        channel.
+      name: GCEventNotification
       read_pv: $(P)$(R)GC_EventNotification_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCEventsEnable1
-      description: Activate event-notification on the GigE Vision message channel.
-        For programmers. See register documentation.
-      write_pv: $(P)$(R)GC_EventsEnable1
+      type: SignalRW
+      write_pv: $(P)$(R)GC_EventNotification
       write_widget:
-        type: TextWrite
+        type: ComboBox
+    - description: Activate event-notification on the GigE Vision message 
+        channel. For programmers. See register documentation.
+      name: GCEventsEnable1
       read_pv: $(P)$(R)GC_EventsEnable1_RBV
       read_widget:
         type: TextRead
-  - type: Group
-    name: EventID
-    layout:
-      type: Grid
-      labelled: true
-    children:
-    - type: SignalRW
-      name: GCEveAcqStart
-      description: ID value of event.
-      write_pv: $(P)$(R)GC_EveAcqStart
+      type: SignalRW
+      write_pv: $(P)$(R)GC_EventsEnable1
       write_widget:
         type: TextWrite
+    layout:
+      labelled: true
+      stacked: false
+      type: Grid
+    name: EventControl
+    type: Group
+  - children:
+    - description: ID value of event.
+      name: GCEveAcqStart
       read_pv: $(P)$(R)GC_EveAcqStart_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCEveAcquisitionEnd
-      description: ID value of event.
-      write_pv: $(P)$(R)GC_EveAcquisitionEnd
+      type: SignalRW
+      write_pv: $(P)$(R)GC_EveAcqStart
       write_widget:
         type: TextWrite
+    - description: ID value of event.
+      name: GCEveAcquisitionEnd
       read_pv: $(P)$(R)GC_EveAcquisitionEnd_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCEventFrameTrigger
-      description: ID value of event.
-      write_pv: $(P)$(R)GC_EventFrameTrigger
+      type: SignalRW
+      write_pv: $(P)$(R)GC_EveAcquisitionEnd
       write_widget:
         type: TextWrite
+    - description: ID value of event.
+      name: GCEventFrameTrigger
       read_pv: $(P)$(R)GC_EventFrameTrigger_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCEventExposureEnd
-      description: ID value of event.
-      write_pv: $(P)$(R)GC_EventExposureEnd
+      type: SignalRW
+      write_pv: $(P)$(R)GC_EventFrameTrigger
       write_widget:
         type: TextWrite
+    - description: ID value of event.
+      name: GCEventExposureEnd
       read_pv: $(P)$(R)GC_EventExposureEnd_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCEveAcqRecTrigger
-      description: ID value of event.
-      write_pv: $(P)$(R)GC_EveAcqRecTrigger
+      type: SignalRW
+      write_pv: $(P)$(R)GC_EventExposureEnd
       write_widget:
         type: TextWrite
+    - description: ID value of event.
+      name: GCEveAcqRecTrigger
       read_pv: $(P)$(R)GC_EveAcqRecTrigger_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCEveLinRisingEdge
-      description: ID value of event.
-      write_pv: $(P)$(R)GC_EveLinRisingEdge
+      type: SignalRW
+      write_pv: $(P)$(R)GC_EveAcqRecTrigger
       write_widget:
         type: TextWrite
+    - description: ID value of event.
+      name: GCEveLinRisingEdge
       read_pv: $(P)$(R)GC_EveLinRisingEdge_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCEveLinFallingEdge
-      description: ID value of event.
-      write_pv: $(P)$(R)GC_EveLinFallingEdge
+      type: SignalRW
+      write_pv: $(P)$(R)GC_EveLinRisingEdge
       write_widget:
         type: TextWrite
+    - description: ID value of event.
+      name: GCEveLinFallingEdge
       read_pv: $(P)$(R)GC_EveLinFallingEdge_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCEveLinRisingEdge0
-      description: ID value of event.
-      write_pv: $(P)$(R)GC_EveLinRisingEdge0
+      type: SignalRW
+      write_pv: $(P)$(R)GC_EveLinFallingEdge
       write_widget:
         type: TextWrite
+    - description: ID value of event.
+      name: GCEveLinRisingEdge0
       read_pv: $(P)$(R)GC_EveLinRisingEdge0_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCEveLinFallingEdg0
-      description: ID value of event.
-      write_pv: $(P)$(R)GC_EveLinFallingEdg0
+      type: SignalRW
+      write_pv: $(P)$(R)GC_EveLinRisingEdge0
       write_widget:
         type: TextWrite
+    - description: ID value of event.
+      name: GCEveLinFallingEdg0
       read_pv: $(P)$(R)GC_EveLinFallingEdg0_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCEveFraTriReady
-      description: ID value of Frame Trigger Ready event. The Frame Trigger event
-        occurs when the camera is ready for another frame aquisition
-      write_pv: $(P)$(R)GC_EveFraTriReady
+      type: SignalRW
+      write_pv: $(P)$(R)GC_EveLinFallingEdg0
       write_widget:
         type: TextWrite
+    - description: ID value of Frame Trigger Ready event. The Frame Trigger 
+        event occurs when the camera is ready for another frame aquisition
+      name: GCEveFraTriReady
       read_pv: $(P)$(R)GC_EveFraTriReady_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCEveExposureStart
-      write_pv: $(P)$(R)GC_EveExposureStart
+      type: SignalRW
+      write_pv: $(P)$(R)GC_EveFraTriReady
       write_widget:
         type: TextWrite
+    - name: GCEveExposureStart
       read_pv: $(P)$(R)GC_EveExposureStart_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCEventOverflow
-      description: ID value of overflow event. The overflow event occurs when one
-        or more notification events are lost on the camera. If you use the message
-        channel for event notification, you are always subscribed to this event.
-      write_pv: $(P)$(R)GC_EventOverflow
+      type: SignalRW
+      write_pv: $(P)$(R)GC_EveExposureStart
       write_widget:
         type: TextWrite
+    - description: ID value of overflow event. The overflow event occurs when 
+        one or more notification events are lost on the camera. If you use the 
+        message channel for event notification, you are always subscribed to 
+        this event.
+      name: GCEventOverflow
       read_pv: $(P)$(R)GC_EventOverflow_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCEventError
-      description: ID value of error event. The error event occurs if there is a problem
-        on the camera; this event should be reported to technical support. If you
-        use the message channel for event notification, you are always subscribed
-        to this event.
-      write_pv: $(P)$(R)GC_EventError
+      type: SignalRW
+      write_pv: $(P)$(R)GC_EventOverflow
       write_widget:
         type: TextWrite
+    - description: ID value of error event. The error event occurs if there is a
+        problem on the camera; this event should be reported to technical 
+        support. If you use the message channel for event notification, you are 
+        always subscribed to this event.
+      name: GCEventError
       read_pv: $(P)$(R)GC_EventError_RBV
       read_widget:
         type: TextRead
-  - type: Group
-    name: Exposure
+      type: SignalRW
+      write_pv: $(P)$(R)GC_EventError
+      write_widget:
+        type: TextWrite
     layout:
-      type: Grid
       labelled: true
-    children:
-    - type: SignalRW
-      name: GCExposureAuto
-      description: 'Method used to set exposure duration, ExposureTimeAbs in Timed
+      stacked: false
+      type: Grid
+    name: EventID
+    type: Group
+  - children:
+    - description: 'Method used to set exposure duration, ExposureTimeAbs in Timed
         mode. Off: automatic mode is off. Once: auto-exposure occurs until target
         is achieved, then ExposureAuto returns to Off. Continuous: auto-exposure always
         runs.'
-      write_pv: $(P)$(R)GC_ExposureAuto
-      write_widget:
-        type: ComboBox
+      name: GCExposureAuto
       read_pv: $(P)$(R)GC_ExposureAuto_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCExposureMode
-      description: 'Method of control for exposure duration. Timed: exposure duration
-        is set by ExposureTimeAbs. TriggerWidth: exposure controlled by external trigger
-        pulse.'
-      write_pv: $(P)$(R)GC_ExposureMode
+      type: SignalRW
+      write_pv: $(P)$(R)GC_ExposureAuto
       write_widget:
         type: ComboBox
+    - description: 'Method of control for exposure duration. Timed: exposure duration
+        is set by ExposureTimeAbs. TriggerWidth: exposure controlled by external trigger
+        pulse.'
+      name: GCExposureMode
       read_pv: $(P)$(R)GC_ExposureMode_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCExposureTimeAbs
-      description: 'Exposure duration in microseconds. Timed: Sensor integration time.
-        TriggerWidth: Ignored.'
-      write_pv: $(P)$(R)GC_ExposureTimeAbs
+      type: SignalRW
+      write_pv: $(P)$(R)GC_ExposureMode
       write_widget:
-        type: TextWrite
+        type: ComboBox
+    - description: 'Exposure duration in microseconds. Timed: Sensor integration time.
+        TriggerWidth: Ignored.'
+      name: GCExposureTimeAbs
       read_pv: $(P)$(R)GC_ExposureTimeAbs_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCExpTimeIncrement
-      description: Increment of the exposure time in microseconds.
-      write_pv: $(P)$(R)GC_ExpTimeIncrement
+      type: SignalRW
+      write_pv: $(P)$(R)GC_ExposureTimeAbs
       write_widget:
         type: TextWrite
+    - description: Increment of the exposure time in microseconds.
+      name: GCExpTimeIncrement
       read_pv: $(P)$(R)GC_ExpTimeIncrement_RBV
       read_widget:
         type: TextRead
-  - type: Group
-    name: ExposureAutoControl
-    layout:
-      type: Grid
-      labelled: true
-    children:
-    - type: SignalRW
-      name: GCExpAutoTarget
-      description: When ExposureAutoAlg is Mean, this is the target image mean value,
-        in percent. Higher values result in brighter images.
-      write_pv: $(P)$(R)GC_ExpAutoTarget
+      type: SignalRW
+      write_pv: $(P)$(R)GC_ExpTimeIncrement
       write_widget:
         type: TextWrite
+    layout:
+      labelled: true
+      stacked: false
+      type: Grid
+    name: Exposure
+    type: Group
+  - children:
+    - description: When ExposureAutoAlg is Mean, this is the target image mean 
+        value, in percent. Higher values result in brighter images.
+      name: GCExpAutoTarget
       read_pv: $(P)$(R)GC_ExpAutoTarget_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCExposureAutoAlg
-      description: 'Algorithm used for auto-exposure. Mean: target a particular mean
+      type: SignalRW
+      write_pv: $(P)$(R)GC_ExpAutoTarget
+      write_widget:
+        type: TextWrite
+    - description: 'Algorithm used for auto-exposure. Mean: target a particular mean
         value of all measured pixels in the image. FitRange: adjust the maximum pixel
         value to fit the sensor range.'
-      write_pv: $(P)$(R)GC_ExposureAutoAlg
-      write_widget:
-        type: ComboBox
+      name: GCExposureAutoAlg
       read_pv: $(P)$(R)GC_ExposureAutoAlg_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCExposureAutoMin
-      description: Minimum auto-exposure value, in microseconds.
-      write_pv: $(P)$(R)GC_ExposureAutoMin
+      type: SignalRW
+      write_pv: $(P)$(R)GC_ExposureAutoAlg
       write_widget:
-        type: TextWrite
+        type: ComboBox
+    - description: Minimum auto-exposure value, in microseconds.
+      name: GCExposureAutoMin
       read_pv: $(P)$(R)GC_ExposureAutoMin_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCExposureAutoMax
-      description: Maximum auto-exposure value, in microseconds.
-      write_pv: $(P)$(R)GC_ExposureAutoMax
+      type: SignalRW
+      write_pv: $(P)$(R)GC_ExposureAutoMin
       write_widget:
         type: TextWrite
+    - description: Maximum auto-exposure value, in microseconds.
+      name: GCExposureAutoMax
       read_pv: $(P)$(R)GC_ExposureAutoMax_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCExposureAutoRate
-      description: Rate of exposure adjustments, from 1 (slowest) to 100 (fastest).
-        Use this control to slow down the auto-exposure adjustments.
-      write_pv: $(P)$(R)GC_ExposureAutoRate
+      type: SignalRW
+      write_pv: $(P)$(R)GC_ExposureAutoMax
       write_widget:
         type: TextWrite
+    - description: Rate of exposure adjustments, from 1 (slowest) to 100 
+        (fastest). Use this control to slow down the auto-exposure adjustments.
+      name: GCExposureAutoRate
       read_pv: $(P)$(R)GC_ExposureAutoRate_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCExpAutoOutliers
-      description: Number of upper outliers to discard before calculating exposure
-        adjustments. This is in ten-thousandths of the number pixels in the image.
-      write_pv: $(P)$(R)GC_ExpAutoOutliers
+      type: SignalRW
+      write_pv: $(P)$(R)GC_ExposureAutoRate
       write_widget:
         type: TextWrite
+    - description: Number of upper outliers to discard before calculating 
+        exposure adjustments. This is in ten-thousandths of the number pixels in
+        the image.
+      name: GCExpAutoOutliers
       read_pv: $(P)$(R)GC_ExpAutoOutliers_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCExpAutoAdjustTol
-      description: Tolerance, in percent, allowed from the ideal exposure value, within
-        which the auto-exposure does not run. This prevents needless small adjustments
-        from occurring each image.
-      write_pv: $(P)$(R)GC_ExpAutoAdjustTol
+      type: SignalRW
+      write_pv: $(P)$(R)GC_ExpAutoOutliers
       write_widget:
         type: TextWrite
+    - description: Tolerance, in percent, allowed from the ideal exposure value,
+        within which the auto-exposure does not run. This prevents needless 
+        small adjustments from occurring each image.
+      name: GCExpAutoAdjustTol
       read_pv: $(P)$(R)GC_ExpAutoAdjustTol_RBV
       read_widget:
         type: TextRead
-  - type: Group
-    name: GainAutoControl
-    layout:
-      type: Grid
-      labelled: true
-    children:
-    - type: SignalRW
-      name: GCGainAutoTarget
-      description: This is the target image mean value, in percent.
-      write_pv: $(P)$(R)GC_GainAutoTarget
+      type: SignalRW
+      write_pv: $(P)$(R)GC_ExpAutoAdjustTol
       write_widget:
         type: TextWrite
+    layout:
+      labelled: true
+      stacked: false
+      type: Grid
+    name: ExposureAutoControl
+    type: Group
+  - children:
+    - description: This is the target image mean value, in percent.
+      name: GCGainAutoTarget
       read_pv: $(P)$(R)GC_GainAutoTarget_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCGainAutoMin
-      write_pv: $(P)$(R)GC_GainAutoMin
+      type: SignalRW
+      write_pv: $(P)$(R)GC_GainAutoTarget
       write_widget:
         type: TextWrite
+    - name: GCGainAutoMin
       read_pv: $(P)$(R)GC_GainAutoMin_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCGainAutoMax
-      write_pv: $(P)$(R)GC_GainAutoMax
+      type: SignalRW
+      write_pv: $(P)$(R)GC_GainAutoMin
       write_widget:
         type: TextWrite
+    - name: GCGainAutoMax
       read_pv: $(P)$(R)GC_GainAutoMax_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCGainAutoRate
-      description: Rate of gain adjustments, from 1 (slowest) to 100 (fastest). Use
-        this control to slow down the auto-gain adjustments.
-      write_pv: $(P)$(R)GC_GainAutoRate
+      type: SignalRW
+      write_pv: $(P)$(R)GC_GainAutoMax
       write_widget:
         type: TextWrite
+    - description: Rate of gain adjustments, from 1 (slowest) to 100 (fastest). 
+        Use this control to slow down the auto-gain adjustments.
+      name: GCGainAutoRate
       read_pv: $(P)$(R)GC_GainAutoRate_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCGainAutoOutliers
-      description: Number of upper outliers to discard before calculating gain adjustments.
-        This is in ten-thousandths of the number pixels in the image.
-      write_pv: $(P)$(R)GC_GainAutoOutliers
+      type: SignalRW
+      write_pv: $(P)$(R)GC_GainAutoRate
       write_widget:
         type: TextWrite
+    - description: Number of upper outliers to discard before calculating gain 
+        adjustments. This is in ten-thousandths of the number pixels in the 
+        image.
+      name: GCGainAutoOutliers
       read_pv: $(P)$(R)GC_GainAutoOutliers_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCGainAutoAdjustTol
-      description: Tolerance, in percent, allowed from the ideal gain value, within
-        which the auto-gain does not run. This prevents needless small adjustments
-        from occurring each image.
-      write_pv: $(P)$(R)GC_GainAutoAdjustTol
+      type: SignalRW
+      write_pv: $(P)$(R)GC_GainAutoOutliers
       write_widget:
         type: TextWrite
+    - description: Tolerance, in percent, allowed from the ideal gain value, 
+        within which the auto-gain does not run. This prevents needless small 
+        adjustments from occurring each image.
+      name: GCGainAutoAdjustTol
       read_pv: $(P)$(R)GC_GainAutoAdjustTol_RBV
       read_widget:
         type: TextRead
-  - type: Group
-    name: GainControl
-    layout:
-      type: Grid
-      labelled: true
-    children:
-    - type: SignalRW
-      name: GCGainSelector
-      description: (GenICam boilerplate. Always All.)
-      write_pv: $(P)$(R)GC_GainSelector
+      type: SignalRW
+      write_pv: $(P)$(R)GC_GainAutoAdjustTol
       write_widget:
-        type: ComboBox
+        type: TextWrite
+    layout:
+      labelled: true
+      stacked: false
+      type: Grid
+    name: GainAutoControl
+    type: Group
+  - children:
+    - description: (GenICam boilerplate. Always All.)
+      name: GCGainSelector
       read_pv: $(P)$(R)GC_GainSelector_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCGain
-      description: Gain value of analog A/D stage. Units are usually in dB.
-      write_pv: $(P)$(R)GC_Gain
+      type: SignalRW
+      write_pv: $(P)$(R)GC_GainSelector
       write_widget:
-        type: TextWrite
+        type: ComboBox
+    - description: Gain value of analog A/D stage. Units are usually in dB.
+      name: GCGain
       read_pv: $(P)$(R)GC_Gain_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCGainRaw
-      description: Gain value of analog A/D stage. Units are usually in dB.
-      write_pv: $(P)$(R)GC_GainRaw
+      type: SignalRW
+      write_pv: $(P)$(R)GC_Gain
       write_widget:
         type: TextWrite
+    - description: Gain value of analog A/D stage. Units are usually in dB.
+      name: GCGainRaw
       read_pv: $(P)$(R)GC_GainRaw_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCGainAuto
-      description: 'Method used to set Gain. Off: automatic mode is off. Once: auto-gain
+      type: SignalRW
+      write_pv: $(P)$(R)GC_GainRaw
+      write_widget:
+        type: TextWrite
+    - description: 'Method used to set Gain. Off: automatic mode is off. Once: auto-gain
         occurs until target is achieved, then GainAuto returns to Off. Continuous:
         auto-gain always runs.'
-      write_pv: $(P)$(R)GC_GainAuto
-      write_widget:
-        type: ComboBox
+      name: GCGainAuto
       read_pv: $(P)$(R)GC_GainAuto_RBV
       read_widget:
         type: TextRead
-  - type: Group
-    name: GigE
-    layout:
-      type: Grid
-      labelled: true
-    children:
-    - type: SignalRW
-      name: GCStrBytesPerSecond
-      write_pv: $(P)$(R)GC_StrBytesPerSecond
+      type: SignalRW
+      write_pv: $(P)$(R)GC_GainAuto
       write_widget:
-        type: TextWrite
+        type: ComboBox
+    layout:
+      labelled: true
+      stacked: false
+      type: Grid
+    name: GainControl
+    type: Group
+  - children:
+    - name: GCStrBytesPerSecond
       read_pv: $(P)$(R)GC_StrBytesPerSecond_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCBanControlMode
-      description: Bandwidth allocation can be controlled by StreamBytesPerSecond,
-        or by register SCPD0. If you do not understand SCPD0 and how this driver uses
-        this register, leave this set to "StreamBytesPerSecond".
-      write_pv: $(P)$(R)GC_BanControlMode
+      type: SignalRW
+      write_pv: $(P)$(R)GC_StrBytesPerSecond
       write_widget:
-        type: ComboBox
+        type: TextWrite
+    - description: Bandwidth allocation can be controlled by 
+        StreamBytesPerSecond, or by register SCPD0. If you do not understand 
+        SCPD0 and how this driver uses this register, leave this set to 
+        "StreamBytesPerSecond".
+      name: GCBanControlMode
       read_pv: $(P)$(R)GC_BanControlMode_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCGevSCPSPacketSize
-      write_pv: $(P)$(R)GC_GevSCPSPacketSize
+      type: SignalRW
+      write_pv: $(P)$(R)GC_BanControlMode
       write_widget:
-        type: TextWrite
+        type: ComboBox
+    - name: GCGevSCPSPacketSize
       read_pv: $(P)$(R)GC_GevSCPSPacketSize_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCChunkModeActive
-      write_pv: $(P)$(R)GC_ChunkModeActive
+      type: SignalRW
+      write_pv: $(P)$(R)GC_GevSCPSPacketSize
       write_widget:
         type: TextWrite
+    - name: GCChunkModeActive
       read_pv: $(P)$(R)GC_ChunkModeActive_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCPayloadSize
-      description: Maximum size of image block payload.
-      write_pv: $(P)$(R)GC_PayloadSize
+      type: SignalRW
+      write_pv: $(P)$(R)GC_ChunkModeActive
       write_widget:
         type: TextWrite
+    - description: Maximum size of image block payload.
+      name: GCPayloadSize
       read_pv: $(P)$(R)GC_PayloadSize_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCNonImaPayloadSize
-      description: Maximum size of chunk data, not including the image chunk, in the
-        image block payload.
-      write_pv: $(P)$(R)GC_NonImaPayloadSize
+      type: SignalRW
+      write_pv: $(P)$(R)GC_PayloadSize
       write_widget:
         type: TextWrite
+    - description: Maximum size of chunk data, not including the image chunk, in
+        the image block payload.
+      name: GCNonImaPayloadSize
       read_pv: $(P)$(R)GC_NonImaPayloadSize_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCStrFraRatCon
-      description: When enabled, the frame rate of the camera is constrained by available
-        bandwidth. When disabled, the camera can image faster than it can send data.
-      write_pv: $(P)$(R)GC_StrFraRatCon
+      type: SignalRW
+      write_pv: $(P)$(R)GC_NonImaPayloadSize
       write_widget:
         type: TextWrite
+    - description: When enabled, the frame rate of the camera is constrained by 
+        available bandwidth. When disabled, the camera can image faster than it 
+        can send data.
+      name: GCStrFraRatCon
       read_pv: $(P)$(R)GC_StrFraRatCon_RBV
       read_widget:
         type: TextRead
-  - type: Group
-    name: ImageFormat
-    layout:
-      type: Grid
-      labelled: true
-    children:
-    - type: SignalRW
-      name: GCWidthMax
-      description: Maximum image width for the current image mode. Horizontal binning,
-        for example, will change this value.
-      write_pv: $(P)$(R)GC_WidthMax
+      type: SignalRW
+      write_pv: $(P)$(R)GC_StrFraRatCon
       write_widget:
         type: TextWrite
+    layout:
+      labelled: true
+      stacked: false
+      type: Grid
+    name: GigE
+    type: Group
+  - children:
+    - description: Maximum image width for the current image mode. Horizontal 
+        binning, for example, will change this value.
+      name: GCWidthMax
       read_pv: $(P)$(R)GC_WidthMax_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCHeightMax
-      description: Maximum image height for the current image mode. Vertical binning,
-        for example, will change this value.
-      write_pv: $(P)$(R)GC_HeightMax
+      type: SignalRW
+      write_pv: $(P)$(R)GC_WidthMax
       write_widget:
         type: TextWrite
+    - description: Maximum image height for the current image mode. Vertical 
+        binning, for example, will change this value.
+      name: GCHeightMax
       read_pv: $(P)$(R)GC_HeightMax_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCPixelFormat
-      description: Format of the image data.
-      write_pv: $(P)$(R)GC_PixelFormat
+      type: SignalRW
+      write_pv: $(P)$(R)GC_HeightMax
       write_widget:
-        type: ComboBox
+        type: TextWrite
+    - description: Format of the image data.
+      name: GCPixelFormat
       read_pv: $(P)$(R)GC_PixelFormat_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCSensorReadoutMode
-      description: Readout Mode of the sensor.
-      write_pv: $(P)$(R)GC_SensorReadoutMode
+      type: SignalRW
+      write_pv: $(P)$(R)GC_PixelFormat
       write_widget:
         type: ComboBox
+    - description: Readout Mode of the sensor.
+      name: GCSensorReadoutMode
       read_pv: $(P)$(R)GC_SensorReadoutMode_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCWidth
-      description: Width of image, in pixels.
-      write_pv: $(P)$(R)GC_Width
+      type: SignalRW
+      write_pv: $(P)$(R)GC_SensorReadoutMode
       write_widget:
-        type: TextWrite
+        type: ComboBox
+    - description: Width of image, in pixels.
+      name: GCWidth
       read_pv: $(P)$(R)GC_Width_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCHeight
-      description: Height of image, in pixels.
-      write_pv: $(P)$(R)GC_Height
+      type: SignalRW
+      write_pv: $(P)$(R)GC_Width
       write_widget:
         type: TextWrite
+    - description: Height of image, in pixels.
+      name: GCHeight
       read_pv: $(P)$(R)GC_Height_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCOffsetX
-      description: Starting column of the readout region (relative to the first column
-        of the sensor) in pixels.
-      write_pv: $(P)$(R)GC_OffsetX
+      type: SignalRW
+      write_pv: $(P)$(R)GC_Height
       write_widget:
         type: TextWrite
+    - description: Starting column of the readout region (relative to the first 
+        column of the sensor) in pixels.
+      name: GCOffsetX
       read_pv: $(P)$(R)GC_OffsetX_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCOffsetY
-      description: Starting row of the readout region (relative to the first row of
-        the sensor) in pixels.
-      write_pv: $(P)$(R)GC_OffsetY
+      type: SignalRW
+      write_pv: $(P)$(R)GC_OffsetX
       write_widget:
         type: TextWrite
+    - description: Starting row of the readout region (relative to the first row
+        of the sensor) in pixels.
+      name: GCOffsetY
       read_pv: $(P)$(R)GC_OffsetY_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCImageSize
-      description: Size of images, in bytes, for the current format and size.
-      write_pv: $(P)$(R)GC_ImageSize
+      type: SignalRW
+      write_pv: $(P)$(R)GC_OffsetY
       write_widget:
         type: TextWrite
+    - description: Size of images, in bytes, for the current format and size.
+      name: GCImageSize
       read_pv: $(P)$(R)GC_ImageSize_RBV
       read_widget:
         type: TextRead
-  - type: Group
-    name: ImageMode
-    layout:
-      type: Grid
-      labelled: true
-    children:
-    - type: SignalRW
-      name: GCSensorWidth
-      description: Full width of image sensor.
-      write_pv: $(P)$(R)GC_SensorWidth
+      type: SignalRW
+      write_pv: $(P)$(R)GC_ImageSize
       write_widget:
         type: TextWrite
+    layout:
+      labelled: true
+      stacked: false
+      type: Grid
+    name: ImageFormat
+    type: Group
+  - children:
+    - description: Full width of image sensor.
+      name: GCSensorWidth
       read_pv: $(P)$(R)GC_SensorWidth_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCSensorHeight
-      description: Full height of image sensor.
-      write_pv: $(P)$(R)GC_SensorHeight
+      type: SignalRW
+      write_pv: $(P)$(R)GC_SensorWidth
       write_widget:
         type: TextWrite
+    - description: Full height of image sensor.
+      name: GCSensorHeight
       read_pv: $(P)$(R)GC_SensorHeight_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCSensorTaps
-      description: Number of taps of the camera sensor.
-      write_pv: $(P)$(R)GC_SensorTaps
+      type: SignalRW
+      write_pv: $(P)$(R)GC_SensorHeight
       write_widget:
-        type: ComboBox
+        type: TextWrite
+    - description: Number of taps of the camera sensor.
+      name: GCSensorTaps
       read_pv: $(P)$(R)GC_SensorTaps_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCSenDigTaps
-      description: Number of digitized samples outputted simultaneously by the camera
-        A/D conversion stage.
-      write_pv: $(P)$(R)GC_SenDigTaps
+      type: SignalRW
+      write_pv: $(P)$(R)GC_SensorTaps
       write_widget:
         type: ComboBox
+    - description: Number of digitized samples outputted simultaneously by the 
+        camera A/D conversion stage.
+      name: GCSenDigTaps
       read_pv: $(P)$(R)GC_SenDigTaps_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCBinningHorizontal
-      description: Binning in horizontal direction. Binning is the summing of charge
-        of adjacent pixels.
-      write_pv: $(P)$(R)GC_BinningHorizontal
+      type: SignalRW
+      write_pv: $(P)$(R)GC_SenDigTaps
       write_widget:
-        type: TextWrite
+        type: ComboBox
+    - description: Binning in horizontal direction. Binning is the summing of 
+        charge of adjacent pixels.
+      name: GCBinningHorizontal
       read_pv: $(P)$(R)GC_BinningHorizontal_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCBinningVertical
-      description: Binning in vertical direction. Binning is the summing of charge
-        of adjacent pixels.
-      write_pv: $(P)$(R)GC_BinningVertical
+      type: SignalRW
+      write_pv: $(P)$(R)GC_BinningHorizontal
       write_widget:
         type: TextWrite
+    - description: Binning in vertical direction. Binning is the summing of 
+        charge of adjacent pixels.
+      name: GCBinningVertical
       read_pv: $(P)$(R)GC_BinningVertical_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCDecHorizontal
-      description: Horizontal decimation (sub-sampling) of the image.
-      write_pv: $(P)$(R)GC_DecHorizontal
+      type: SignalRW
+      write_pv: $(P)$(R)GC_BinningVertical
       write_widget:
         type: TextWrite
+    - description: Horizontal decimation (sub-sampling) of the image.
+      name: GCDecHorizontal
       read_pv: $(P)$(R)GC_DecHorizontal_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCDecVertical
-      description: Vertical decimation (sub-sampling) of the image.
-      write_pv: $(P)$(R)GC_DecVertical
+      type: SignalRW
+      write_pv: $(P)$(R)GC_DecHorizontal
       write_widget:
         type: TextWrite
+    - description: Vertical decimation (sub-sampling) of the image.
+      name: GCDecVertical
       read_pv: $(P)$(R)GC_DecVertical_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCReverseX
-      description: ReverseX is used to flip horizontally the image sent by the device.
-        The AOI is applied after the flipping.
-      write_pv: $(P)$(R)GC_ReverseX
+      type: SignalRW
+      write_pv: $(P)$(R)GC_DecVertical
       write_widget:
         type: TextWrite
+    - description: ReverseX is used to flip horizontally the image sent by the 
+        device. The AOI is applied after the flipping.
+      name: GCReverseX
       read_pv: $(P)$(R)GC_ReverseX_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCReverseY
-      description: ReverseY is used to flip vertically the image sent by the device.
-        The AOI is applied after the flipping.
-      write_pv: $(P)$(R)GC_ReverseY
+      type: SignalRW
+      write_pv: $(P)$(R)GC_ReverseX
       write_widget:
         type: TextWrite
+    - description: ReverseY is used to flip vertically the image sent by the 
+        device. The AOI is applied after the flipping.
+      name: GCReverseY
       read_pv: $(P)$(R)GC_ReverseY_RBV
       read_widget:
         type: TextRead
-  - type: Group
-    name: Info
-    layout:
-      type: Grid
-      labelled: true
-    children:
-    - type: SignalRW
-      name: GCFirmwareVerMajor
-      write_pv: $(P)$(R)GC_FirmwareVerMajor
+      type: SignalRW
+      write_pv: $(P)$(R)GC_ReverseY
       write_widget:
         type: TextWrite
+    layout:
+      labelled: true
+      stacked: false
+      type: Grid
+    name: ImageMode
+    type: Group
+  - children:
+    - name: GCFirmwareVerMajor
       read_pv: $(P)$(R)GC_FirmwareVerMajor_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCFirmwareVerMinor
-      write_pv: $(P)$(R)GC_FirmwareVerMinor
+      type: SignalRW
+      write_pv: $(P)$(R)GC_FirmwareVerMajor
       write_widget:
         type: TextWrite
+    - name: GCFirmwareVerMinor
       read_pv: $(P)$(R)GC_FirmwareVerMinor_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCFirmwareVerBuild
-      write_pv: $(P)$(R)GC_FirmwareVerBuild
+      type: SignalRW
+      write_pv: $(P)$(R)GC_FirmwareVerMinor
       write_widget:
         type: TextWrite
+    - name: GCFirmwareVerBuild
       read_pv: $(P)$(R)GC_FirmwareVerBuild_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCSensorType
-      description: Type of image sensor.
-      write_pv: $(P)$(R)GC_SensorType
+      type: SignalRW
+      write_pv: $(P)$(R)GC_FirmwareVerBuild
       write_widget:
-        type: ComboBox
+        type: TextWrite
+    - description: Type of image sensor.
+      name: GCSensorType
       read_pv: $(P)$(R)GC_SensorType_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCSensorBits
-      description: Maximum bit depth of sensor.
-      write_pv: $(P)$(R)GC_SensorBits
+      type: SignalRW
+      write_pv: $(P)$(R)GC_SensorType
       write_widget:
-        type: TextWrite
+        type: ComboBox
+    - description: Maximum bit depth of sensor.
+      name: GCSensorBits
       read_pv: $(P)$(R)GC_SensorBits_RBV
       read_widget:
         type: TextRead
-    - type: SignalR
-      name: GCDeviceVendorName
+      type: SignalRW
+      write_pv: $(P)$(R)GC_SensorBits
+      write_widget:
+        type: TextWrite
+    - name: GCDeviceVendorName
       read_pv: $(P)$(R)GC_DeviceVendorName
       read_widget:
         type: TextRead
-    - type: SignalR
+      type: SignalR
+    - description: Camera model name.
       name: GCDeviceModelName
-      description: Camera model name.
       read_pv: $(P)$(R)GC_DeviceModelName
       read_widget:
         type: TextRead
-    - type: SignalR
+      type: SignalR
+    - description: Firmware version of this AVT GigE camera.
       name: GCDevFirVersion
-      description: Firmware version of this AVT GigE camera.
       read_pv: $(P)$(R)GC_DevFirVersion
       read_widget:
         type: TextRead
-    - type: SignalR
+      type: SignalR
+    - description: Serial number.
       name: GCDeviceID
-      description: Serial number.
       read_pv: $(P)$(R)GC_DeviceID
       read_widget:
         type: TextRead
-    - type: SignalRW
+      type: SignalR
+    - description: User-programmable Device Identifier.
       name: GCDeviceUserID
-      description: User-programmable Device Identifier.
-      write_pv: $(P)$(R)GC_DeviceUserID
-      write_widget:
-        type: TextWrite
       read_pv: $(P)$(R)GC_DeviceUserID_RBV
       read_widget:
         type: TextRead
-    - type: SignalR
+      type: SignalRW
+      write_pv: $(P)$(R)GC_DeviceUserID
+      write_widget:
+        type: TextWrite
+    - description: Device part number.
       name: GCDevicePartNumber
-      description: Device part number.
       read_pv: $(P)$(R)GC_DevicePartNumber
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCDeviceScanType
-      write_pv: $(P)$(R)GC_DeviceScanType
-      write_widget:
-        type: ComboBox
+      type: SignalR
+    - name: GCDeviceScanType
       read_pv: $(P)$(R)GC_DeviceScanType_RBV
       read_widget:
         type: TextRead
-  - type: Group
-    name: Iris
-    layout:
-      type: Grid
-      labelled: true
-    children:
-    - type: SignalRW
-      name: GCIrisMode
-      description: 'Set the iris mode. Disabled: no iris control. Video: enable video
-        iris. VideoOpen: fully open a video iris. VideoClose: fully close a video
-        iris.'
-      write_pv: $(P)$(R)GC_IrisMode
+      type: SignalRW
+      write_pv: $(P)$(R)GC_DeviceScanType
       write_widget:
         type: ComboBox
+    layout:
+      labelled: true
+      stacked: false
+      type: Grid
+    name: Info
+    type: Group
+  - children:
+    - description: 'Set the iris mode. Disabled: no iris control. Video: enable video
+        iris. VideoOpen: fully open a video iris. VideoClose: fully close a video
+        iris.'
+      name: GCIrisMode
       read_pv: $(P)$(R)GC_IrisMode_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCIrisAutoTarget
-      description: This is the target image mean value, in percent.
-      write_pv: $(P)$(R)GC_IrisAutoTarget
+      type: SignalRW
+      write_pv: $(P)$(R)GC_IrisMode
       write_widget:
-        type: TextWrite
+        type: ComboBox
+    - description: This is the target image mean value, in percent.
+      name: GCIrisAutoTarget
       read_pv: $(P)$(R)GC_IrisAutoTarget_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCIrisVideoLevel
-      description: Current video-iris level, in approximately mV pp; read only. When
-        calibrating a video lens, this value should fall between IrisVideoLevelMin
-        and IrisVideoLevelMax.
-      write_pv: $(P)$(R)GC_IrisVideoLevel
+      type: SignalRW
+      write_pv: $(P)$(R)GC_IrisAutoTarget
       write_widget:
         type: TextWrite
+    - description: Current video-iris level, in approximately mV pp; read only. 
+        When calibrating a video lens, this value should fall between 
+        IrisVideoLevelMin and IrisVideoLevelMax.
+      name: GCIrisVideoLevel
       read_pv: $(P)$(R)GC_IrisVideoLevel_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCIrisVideoLevelMin
-      description: Minimum video iris level output by the camera, in approximately
-        mV pp. A higher minimum value slows the adjustment time but prevents excessive
-        overshoot.
-      write_pv: $(P)$(R)GC_IrisVideoLevelMin
+      type: SignalRW
+      write_pv: $(P)$(R)GC_IrisVideoLevel
       write_widget:
         type: TextWrite
+    - description: Minimum video iris level output by the camera, in 
+        approximately mV pp. A higher minimum value slows the adjustment time 
+        but prevents excessive overshoot.
+      name: GCIrisVideoLevelMin
       read_pv: $(P)$(R)GC_IrisVideoLevelMin_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCIrisVideoLevelMax
-      description: Maximum video iris level output by the camera, in approximately
-        mV pp. A lower minimum value slows the adjustment time but prevents excessive
-        overshoot.
-      write_pv: $(P)$(R)GC_IrisVideoLevelMax
+      type: SignalRW
+      write_pv: $(P)$(R)GC_IrisVideoLevelMin
       write_widget:
         type: TextWrite
+    - description: Maximum video iris level output by the camera, in 
+        approximately mV pp. A lower minimum value slows the adjustment time but
+        prevents excessive overshoot.
+      name: GCIrisVideoLevelMax
       read_pv: $(P)$(R)GC_IrisVideoLevelMax_RBV
       read_widget:
         type: TextRead
-  - type: Group
-    name: LUTControl
-    description: Category that includes the LUT control features.
-    layout:
-      type: Grid
-      labelled: true
-    children:
-    - type: SignalRW
-      name: GCLUTSelector
-      description: Selects which look up table is used.
-      write_pv: $(P)$(R)GC_LUTSelector
+      type: SignalRW
+      write_pv: $(P)$(R)GC_IrisVideoLevelMax
       write_widget:
-        type: ComboBox
+        type: TextWrite
+    layout:
+      labelled: true
+      stacked: false
+      type: Grid
+    name: Iris
+    type: Group
+  - children:
+    - description: Selects which look up table is used.
+      name: GCLUTSelector
       read_pv: $(P)$(R)GC_LUTSelector_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCLUTMode
-      description: Selects which mode is used for the selected look up table.
-      write_pv: $(P)$(R)GC_LUTMode
+      type: SignalRW
+      write_pv: $(P)$(R)GC_LUTSelector
       write_widget:
         type: ComboBox
+    - description: Selects which mode is used for the selected look up table.
+      name: GCLUTMode
       read_pv: $(P)$(R)GC_LUTMode_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCLUTEnable
-      description: Activates the selected LUT.
-      write_pv: $(P)$(R)GC_LUTEnable
+      type: SignalRW
+      write_pv: $(P)$(R)GC_LUTMode
       write_widget:
-        type: TextWrite
+        type: ComboBox
+    - description: Activates the selected LUT.
+      name: GCLUTEnable
       read_pv: $(P)$(R)GC_LUTEnable_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCLUTIndex
-      description: Control the index of the coefficient to access in the selected
-        look up table.
-      write_pv: $(P)$(R)GC_LUTIndex
+      type: SignalRW
+      write_pv: $(P)$(R)GC_LUTEnable
       write_widget:
         type: TextWrite
+    - description: Control the index of the coefficient to access in the 
+        selected look up table.
+      name: GCLUTIndex
       read_pv: $(P)$(R)GC_LUTIndex_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCLUTValue
-      description: Returns the Value at entry LUTIndex of the selected look up table
-      write_pv: $(P)$(R)GC_LUTValue
+      type: SignalRW
+      write_pv: $(P)$(R)GC_LUTIndex
       write_widget:
         type: TextWrite
+    - description: Returns the Value at entry LUTIndex of the selected look up 
+        table
+      name: GCLUTValue
       read_pv: $(P)$(R)GC_LUTValue_RBV
       read_widget:
         type: TextRead
-    - type: SignalX
-      name: GCLUTLoadAll
-      description: Load all look up tables from Flash.
-      write_pv: $(P)$(R)GC_LUTLoadAll
-      write_widget:
-        type: ButtonPanel
-        actions:
-          Go: '1'
-      value: '1'
-    - type: SignalX
-      name: GCLUTSaveAll
-      description: Save all look up tables in Flash.
-      write_pv: $(P)$(R)GC_LUTSaveAll
-      write_widget:
-        type: ButtonPanel
-        actions:
-          Go: '1'
-      value: '1'
-  - type: Group
-    name: LUTInfo
-    description: Category that includes the LUT info features for the look up table.
-    layout:
-      type: Grid
-      labelled: true
-    children:
-    - type: SignalRW
-      name: GCLUTBitDepthIn
-      description: Bit length of the input value of the look up table block
-      write_pv: $(P)$(R)GC_LUTBitDepthIn
+      type: SignalRW
+      write_pv: $(P)$(R)GC_LUTValue
       write_widget:
         type: TextWrite
+    - description: Load all look up tables from Flash.
+      name: GCLUTLoadAll
+      type: SignalX
+      value: '1'
+      write_pv: $(P)$(R)GC_LUTLoadAll
+      write_widget:
+        actions:
+          Go: '1'
+        type: ButtonPanel
+    - description: Save all look up tables in Flash.
+      name: GCLUTSaveAll
+      type: SignalX
+      value: '1'
+      write_pv: $(P)$(R)GC_LUTSaveAll
+      write_widget:
+        actions:
+          Go: '1'
+        type: ButtonPanel
+    description: Category that includes the LUT control features.
+    layout:
+      labelled: true
+      stacked: false
+      type: Grid
+    name: LUTControl
+    type: Group
+  - children:
+    - description: Bit length of the input value of the look up table block
+      name: GCLUTBitDepthIn
       read_pv: $(P)$(R)GC_LUTBitDepthIn_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCLUTBitDepthOut
-      description: Bit length of the output value of the look up table block
-      write_pv: $(P)$(R)GC_LUTBitDepthOut
+      type: SignalRW
+      write_pv: $(P)$(R)GC_LUTBitDepthIn
       write_widget:
         type: TextWrite
+    - description: Bit length of the output value of the look up table block
+      name: GCLUTBitDepthOut
       read_pv: $(P)$(R)GC_LUTBitDepthOut_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCLUTAddress
-      description: Address of the memory area where the selected LUT is located (for
-        raw memory transfer)
-      write_pv: $(P)$(R)GC_LUTAddress
+      type: SignalRW
+      write_pv: $(P)$(R)GC_LUTBitDepthOut
       write_widget:
         type: TextWrite
+    - description: Address of the memory area where the selected LUT is located 
+        (for raw memory transfer)
+      name: GCLUTAddress
       read_pv: $(P)$(R)GC_LUTAddress_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCLUTSizeBytes
-      description: Size of the memory area where the LUT is located
-      write_pv: $(P)$(R)GC_LUTSizeBytes
+      type: SignalRW
+      write_pv: $(P)$(R)GC_LUTAddress
       write_widget:
         type: TextWrite
+    - description: Size of the memory area where the LUT is located
+      name: GCLUTSizeBytes
       read_pv: $(P)$(R)GC_LUTSizeBytes_RBV
       read_widget:
         type: TextRead
-  - type: Group
-    name: LensDCIris
-    layout:
-      type: Grid
-      labelled: true
-    children:
-    - type: SignalRW
-      name: GCLenDCDriStrength
-      write_pv: $(P)$(R)GC_LenDCDriStrength
+      type: SignalRW
+      write_pv: $(P)$(R)GC_LUTSizeBytes
       write_widget:
         type: TextWrite
+    description: Category that includes the LUT info features for the look up 
+      table.
+    layout:
+      labelled: true
+      stacked: false
+      type: Grid
+    name: LUTInfo
+    type: Group
+  - children:
+    - name: GCLenDCDriStrength
       read_pv: $(P)$(R)GC_LenDCDriStrength_RBV
       read_widget:
         type: TextRead
-  - type: Group
-    name: LensPIris
-    layout:
-      type: Grid
-      labelled: true
-    children:
-    - type: SignalRW
-      name: GCLenPIrisFrequency
-      write_pv: $(P)$(R)GC_LenPIrisFrequency
+      type: SignalRW
+      write_pv: $(P)$(R)GC_LenDCDriStrength
       write_widget:
         type: TextWrite
+    layout:
+      labelled: true
+      stacked: false
+      type: Grid
+    name: LensDCIris
+    type: Group
+  - children:
+    - name: GCLenPIrisFrequency
       read_pv: $(P)$(R)GC_LenPIrisFrequency_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCLensPIrisNumSteps
-      write_pv: $(P)$(R)GC_LensPIrisNumSteps
+      type: SignalRW
+      write_pv: $(P)$(R)GC_LenPIrisFrequency
       write_widget:
         type: TextWrite
+    - name: GCLensPIrisNumSteps
       read_pv: $(P)$(R)GC_LensPIrisNumSteps_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCLensPIrisPosition
-      write_pv: $(P)$(R)GC_LensPIrisPosition
+      type: SignalRW
+      write_pv: $(P)$(R)GC_LensPIrisNumSteps
       write_widget:
         type: TextWrite
+    - name: GCLensPIrisPosition
       read_pv: $(P)$(R)GC_LensPIrisPosition_RBV
       read_widget:
         type: TextRead
-  - type: Group
-    name: PvApi
-    layout:
-      type: Grid
-      labelled: true
-    children:
-    - type: SignalRW
-      name: GCPvDumTriSelector
-      write_pv: $(P)$(R)GC_PvDumTriSelector
+      type: SignalRW
+      write_pv: $(P)$(R)GC_LensPIrisPosition
       write_widget:
-        type: ComboBox
+        type: TextWrite
+    layout:
+      labelled: true
+      stacked: false
+      type: Grid
+    name: LensPIris
+    type: Group
+  - children:
+    - name: GCPvDumTriSelector
       read_pv: $(P)$(R)GC_PvDumTriSelector_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCPvDumFraStaTriMod
-      write_pv: $(P)$(R)GC_PvDumFraStaTriMod
+      type: SignalRW
+      write_pv: $(P)$(R)GC_PvDumTriSelector
       write_widget:
         type: ComboBox
+    - name: GCPvDumFraStaTriMod
       read_pv: $(P)$(R)GC_PvDumFraStaTriMod_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCPvDumTriggerMode
-      write_pv: $(P)$(R)GC_PvDumTriggerMode
+      type: SignalRW
+      write_pv: $(P)$(R)GC_PvDumFraStaTriMod
       write_widget:
         type: ComboBox
+    - name: GCPvDumTriggerMode
       read_pv: $(P)$(R)GC_PvDumTriggerMode_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCFraStaTriDelay
-      write_pv: $(P)$(R)GC_FraStaTriDelay
+      type: SignalRW
+      write_pv: $(P)$(R)GC_PvDumTriggerMode
       write_widget:
-        type: TextWrite
+        type: ComboBox
+    - name: GCFraStaTriDelay
       read_pv: $(P)$(R)GC_FraStaTriDelay_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCExposureModeValue
-      description: 'Method of control for exposure duration. Timed: exposure duration
+      type: SignalRW
+      write_pv: $(P)$(R)GC_FraStaTriDelay
+      write_widget:
+        type: TextWrite
+    - description: 'Method of control for exposure duration. Timed: exposure duration
         is set by ExposureValue. AutoOnce: auto-exposure occurs until target is achieved,
         then ExposureMode returns to Timed. Auto: auto-exposure always runs. TriggerWidth:
         exposure controlled by external trigger pulse.'
-      write_pv: $(P)$(R)GC_ExposureModeValue
-      write_widget:
-        type: ComboBox
+      name: GCExposureModeValue
       read_pv: $(P)$(R)GC_ExposureModeValue_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCExposureValue
-      description: 'Exposure duration, in microseconds. Timed: Sensor integration
-        time. TriggerWidth: Ignored.'
-      write_pv: $(P)$(R)GC_ExposureValue
+      type: SignalRW
+      write_pv: $(P)$(R)GC_ExposureModeValue
       write_widget:
-        type: TextWrite
+        type: ComboBox
+    - description: 'Exposure duration, in microseconds. Timed: Sensor integration
+        time. TriggerWidth: Ignored.'
+      name: GCExposureValue
       read_pv: $(P)$(R)GC_ExposureValue_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCTimeStampValueLo
-      description: Low-word value of timestamp, when latched by GevTimestampControlLatch.
-      write_pv: $(P)$(R)GC_TimeStampValueLo
+      type: SignalRW
+      write_pv: $(P)$(R)GC_ExposureValue
       write_widget:
         type: TextWrite
+    - description: Low-word value of timestamp, when latched by 
+        GevTimestampControlLatch.
+      name: GCTimeStampValueLo
       read_pv: $(P)$(R)GC_TimeStampValueLo_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCTimeStampValueHi
-      description: High-word value of timestamp, when latched by GevTimestampControlLatch.
-      write_pv: $(P)$(R)GC_TimeStampValueHi
+      type: SignalRW
+      write_pv: $(P)$(R)GC_TimeStampValueLo
       write_widget:
         type: TextWrite
+    - description: High-word value of timestamp, when latched by 
+        GevTimestampControlLatch.
+      name: GCTimeStampValueHi
       read_pv: $(P)$(R)GC_TimeStampValueHi_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCWhitebalValueRed
-      write_pv: $(P)$(R)GC_WhitebalValueRed
+      type: SignalRW
+      write_pv: $(P)$(R)GC_TimeStampValueHi
       write_widget:
         type: TextWrite
+    - name: GCWhitebalValueRed
       read_pv: $(P)$(R)GC_WhitebalValueRed_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCWhitebalValueBlue
-      write_pv: $(P)$(R)GC_WhitebalValueBlue
+      type: SignalRW
+      write_pv: $(P)$(R)GC_WhitebalValueRed
       write_widget:
         type: TextWrite
+    - name: GCWhitebalValueBlue
       read_pv: $(P)$(R)GC_WhitebalValueBlue_RBV
       read_widget:
         type: TextRead
-    - type: SignalR
-      name: GCModelName
+      type: SignalRW
+      write_pv: $(P)$(R)GC_WhitebalValueBlue
+      write_widget:
+        type: TextWrite
+    - name: GCModelName
       read_pv: $(P)$(R)GC_ModelName
       read_widget:
         type: TextRead
-    - type: SignalRW
+      type: SignalR
+    - description: Gain value of analog A/D stage. Units are usually in dB.
       name: GCPvGainRaw
-      description: Gain value of analog A/D stage. Units are usually in dB.
-      write_pv: $(P)$(R)GC_PvGainRaw
-      write_widget:
-        type: TextWrite
       read_pv: $(P)$(R)GC_PvGainRaw_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCPvGainAutoMin
-      description: Minimum auto-gain value.
-      write_pv: $(P)$(R)GC_PvGainAutoMin
+      type: SignalRW
+      write_pv: $(P)$(R)GC_PvGainRaw
       write_widget:
         type: TextWrite
+    - description: Minimum auto-gain value.
+      name: GCPvGainAutoMin
       read_pv: $(P)$(R)GC_PvGainAutoMin_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCPvGainAutoMax
-      description: Maximum auto-gain value.
-      write_pv: $(P)$(R)GC_PvGainAutoMax
+      type: SignalRW
+      write_pv: $(P)$(R)GC_PvGainAutoMin
       write_widget:
         type: TextWrite
+    - description: Maximum auto-gain value.
+      name: GCPvGainAutoMax
       read_pv: $(P)$(R)GC_PvGainAutoMax_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCOffsetValue
-      description: Black level (offset) value.
-      write_pv: $(P)$(R)GC_OffsetValue
+      type: SignalRW
+      write_pv: $(P)$(R)GC_PvGainAutoMax
       write_widget:
         type: TextWrite
+    - description: Black level (offset) value.
+      name: GCOffsetValue
       read_pv: $(P)$(R)GC_OffsetValue_RBV
       read_widget:
         type: TextRead
-  - type: Group
-    name: SavedUserSets
-    layout:
-      type: Grid
-      labelled: true
-    children:
-    - type: SignalRW
-      name: GCUserSetSelector
-      description: Select a user set, for loading or saving camera parameters.
-      write_pv: $(P)$(R)GC_UserSetSelector
+      type: SignalRW
+      write_pv: $(P)$(R)GC_OffsetValue
       write_widget:
-        type: ComboBox
+        type: TextWrite
+    layout:
+      labelled: true
+      stacked: false
+      type: Grid
+    name: PvApi
+    type: Group
+  - children:
+    - description: Select a user set, for loading or saving camera parameters.
+      name: GCUserSetSelector
       read_pv: $(P)$(R)GC_UserSetSelector_RBV
       read_widget:
         type: TextRead
-    - type: SignalX
-      name: GCUserSetLoad
-      description: Load camera parameters from the user set specified by UserSetSelector.
-      write_pv: $(P)$(R)GC_UserSetLoad
-      write_widget:
-        type: ButtonPanel
-        actions:
-          Go: '1'
-      value: '1'
-    - type: SignalX
-      name: GCUserSetSave
-      description: Save camera parameters to the user set specified by UserSetSelector.
-      write_pv: $(P)$(R)GC_UserSetSave
-      write_widget:
-        type: ButtonPanel
-        actions:
-          Go: '1'
-      value: '1'
-    - type: SignalRW
-      name: GCUseSetDefSelector
-      description: On power-up or reset, this user set is loaded.
-      write_pv: $(P)$(R)GC_UseSetDefSelector
+      type: SignalRW
+      write_pv: $(P)$(R)GC_UserSetSelector
       write_widget:
         type: ComboBox
+    - description: Load camera parameters from the user set specified by 
+        UserSetSelector.
+      name: GCUserSetLoad
+      type: SignalX
+      value: '1'
+      write_pv: $(P)$(R)GC_UserSetLoad
+      write_widget:
+        actions:
+          Go: '1'
+        type: ButtonPanel
+    - description: Save camera parameters to the user set specified by 
+        UserSetSelector.
+      name: GCUserSetSave
+      type: SignalX
+      value: '1'
+      write_pv: $(P)$(R)GC_UserSetSave
+      write_widget:
+        actions:
+          Go: '1'
+        type: ButtonPanel
+    - description: On power-up or reset, this user set is loaded.
+      name: GCUseSetDefSelector
       read_pv: $(P)$(R)GC_UseSetDefSelector_RBV
       read_widget:
         type: TextRead
-  - type: Group
-    name: StreamHold
-    layout:
-      type: Grid
-      labelled: true
-    children:
-    - type: SignalRW
-      name: GCStreamHoldEnable
-      description: Control on-camera image storage; this control is like a "pause"
-        button for the image stream. When enabled, images remain stored on the camera,
-        and are not transmitted to the host. When disabled, the image stream resumes,
-        and any stored images are sent to the host.
-      write_pv: $(P)$(R)GC_StreamHoldEnable
+      type: SignalRW
+      write_pv: $(P)$(R)GC_UseSetDefSelector
       write_widget:
         type: ComboBox
+    layout:
+      labelled: true
+      stacked: false
+      type: Grid
+    name: SavedUserSets
+    type: Group
+  - children:
+    - description: Control on-camera image storage; this control is like a 
+        "pause" button for the image stream. When enabled, images remain stored 
+        on the camera, and are not transmitted to the host. When disabled, the 
+        image stream resumes, and any stored images are sent to the host.
+      name: GCStreamHoldEnable
       read_pv: $(P)$(R)GC_StreamHoldEnable_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCStrHoldCapacity
-      description: Maximum number of images (for the current size and format) which
-        can be stored on the camera when StreamHold is enabled.
-      write_pv: $(P)$(R)GC_StrHoldCapacity
+      type: SignalRW
+      write_pv: $(P)$(R)GC_StreamHoldEnable
       write_widget:
-        type: TextWrite
+        type: ComboBox
+    - description: Maximum number of images (for the current size and format) 
+        which can be stored on the camera when StreamHold is enabled.
+      name: GCStrHoldCapacity
       read_pv: $(P)$(R)GC_StrHoldCapacity_RBV
       read_widget:
         type: TextRead
-  - type: Group
-    name: Strobe
-    layout:
-      type: Grid
-      labelled: true
-    children:
-    - type: SignalRW
-      name: GCStrobeSource
-      description: Signal source of the strobe timing unit. See SyncOutSource for
-        descriptions.
-      write_pv: $(P)$(R)GC_StrobeSource
+      type: SignalRW
+      write_pv: $(P)$(R)GC_StrHoldCapacity
       write_widget:
-        type: ComboBox
+        type: TextWrite
+    layout:
+      labelled: true
+      stacked: false
+      type: Grid
+    name: StreamHold
+    type: Group
+  - children:
+    - description: Signal source of the strobe timing unit. See SyncOutSource 
+        for descriptions.
+      name: GCStrobeSource
       read_pv: $(P)$(R)GC_StrobeSource_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCStrDurationMode
-      description: 'Mode of the strobe timing unit. Source: strobe duration is the
-        same as source duration. Controlled: strobe duration is set by StrobeDuration.'
-      write_pv: $(P)$(R)GC_StrDurationMode
+      type: SignalRW
+      write_pv: $(P)$(R)GC_StrobeSource
       write_widget:
         type: ComboBox
+    - description: 'Mode of the strobe timing unit. Source: strobe duration is the
+        same as source duration. Controlled: strobe duration is set by StrobeDuration.'
+      name: GCStrDurationMode
       read_pv: $(P)$(R)GC_StrDurationMode_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCStrobeDelay
-      description: Delay from strobe trigger to strobe output, in microseconds.
-      write_pv: $(P)$(R)GC_StrobeDelay
+      type: SignalRW
+      write_pv: $(P)$(R)GC_StrDurationMode
       write_widget:
-        type: TextWrite
+        type: ComboBox
+    - description: Delay from strobe trigger to strobe output, in microseconds.
+      name: GCStrobeDelay
       read_pv: $(P)$(R)GC_StrobeDelay_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCStrobeDuration
-      description: Duration of strobe, in microseconds.
-      write_pv: $(P)$(R)GC_StrobeDuration
+      type: SignalRW
+      write_pv: $(P)$(R)GC_StrobeDelay
       write_widget:
         type: TextWrite
+    - description: Duration of strobe, in microseconds.
+      name: GCStrobeDuration
       read_pv: $(P)$(R)GC_StrobeDuration_RBV
       read_widget:
         type: TextRead
-  - type: Group
-    name: SubstrateVoltage
-    layout:
-      type: Grid
-      labelled: true
-    children:
-    - type: SignalRW
-      name: GCVsubValue
-      description: Substrate voltage in mV.
-      write_pv: $(P)$(R)GC_VsubValue
+      type: SignalRW
+      write_pv: $(P)$(R)GC_StrobeDuration
       write_widget:
         type: TextWrite
+    layout:
+      labelled: true
+      stacked: false
+      type: Grid
+    name: Strobe
+    type: Group
+  - children:
+    - description: Substrate voltage in mV.
+      name: GCVsubValue
       read_pv: $(P)$(R)GC_VsubValue_RBV
       read_widget:
         type: TextRead
-  - type: Group
-    name: SyncIn
-    layout:
-      type: Grid
-      labelled: true
-    children:
-    - type: SignalRW
-      name: GCSyncInLevels
-      description: Momentary logic levels of the hardware line inputs.
-      write_pv: $(P)$(R)GC_SyncInLevels
+      type: SignalRW
+      write_pv: $(P)$(R)GC_VsubValue
       write_widget:
         type: TextWrite
+    layout:
+      labelled: true
+      stacked: false
+      type: Grid
+    name: SubstrateVoltage
+    type: Group
+  - children:
+    - description: Momentary logic levels of the hardware line inputs.
+      name: GCSyncInLevels
       read_pv: $(P)$(R)GC_SyncInLevels_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCSyncInSelector
-      description: Select the sync-in line to control with {SyncInGlitchFilter}.
-      write_pv: $(P)$(R)GC_SyncInSelector
+      type: SignalRW
+      write_pv: $(P)$(R)GC_SyncInLevels
       write_widget:
-        type: ComboBox
+        type: TextWrite
+    - description: Select the sync-in line to control with {SyncInGlitchFilter}.
+      name: GCSyncInSelector
       read_pv: $(P)$(R)GC_SyncInSelector_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCSynInGlitchFilter
-      description: Glitch filter on sync-in line, in nanoseconds.
-      write_pv: $(P)$(R)GC_SynInGlitchFilter
+      type: SignalRW
+      write_pv: $(P)$(R)GC_SyncInSelector
       write_widget:
-        type: TextWrite
+        type: ComboBox
+    - description: Glitch filter on sync-in line, in nanoseconds.
+      name: GCSynInGlitchFilter
       read_pv: $(P)$(R)GC_SynInGlitchFilter_RBV
       read_widget:
         type: TextRead
-  - type: Group
-    name: SyncOut
-    layout:
-      type: Grid
-      labelled: true
-    children:
-    - type: SignalRW
-      name: GCSyncOutLevels
-      description: 'Output levels of hardware sync outputs, for output(s) in GPO mode.
-        (Note: SyncOutPolarity can invert these values.)'
-      write_pv: $(P)$(R)GC_SyncOutLevels
+      type: SignalRW
+      write_pv: $(P)$(R)GC_SynInGlitchFilter
       write_widget:
         type: TextWrite
+    layout:
+      labelled: true
+      stacked: false
+      type: Grid
+    name: SyncIn
+    type: Group
+  - children:
+    - description: 'Output levels of hardware sync outputs, for output(s) in GPO mode.
+        (Note: SyncOutPolarity can invert these values.)'
+      name: GCSyncOutLevels
       read_pv: $(P)$(R)GC_SyncOutLevels_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCSyncOutSelector
-      description: Select the sync-out line to control with {SyncOutSource, SyncOutPolarity}.
-      write_pv: $(P)$(R)GC_SyncOutSelector
+      type: SignalRW
+      write_pv: $(P)$(R)GC_SyncOutLevels
       write_widget:
-        type: ComboBox
+        type: TextWrite
+    - description: Select the sync-out line to control with {SyncOutSource, 
+        SyncOutPolarity}.
+      name: GCSyncOutSelector
       read_pv: $(P)$(R)GC_SyncOutSelector_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCSyncOutSource
-      description: 'Signal source of the sync-out line specified by SyncOutSelector.
+      type: SignalRW
+      write_pv: $(P)$(R)GC_SyncOutSelector
+      write_widget:
+        type: ComboBox
+    - description: 'Signal source of the sync-out line specified by SyncOutSelector.
         GPO: general purpose output. AcquisitionTriggerReady: acquisition trigger
         may occur. FrameTriggerReady: frame trigger may occur. Exposing: exposure
         in progress. FrameReadout: image readout in progress. Imaging: exposure or
         frame readout in progress. Acquiring: acquisition is running. LineIn: external
         line input. Strobe: source is strobe timing unit.'
-      write_pv: $(P)$(R)GC_SyncOutSource
-      write_widget:
-        type: ComboBox
+      name: GCSyncOutSource
       read_pv: $(P)$(R)GC_SyncOutSource_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCSyncOutPolarity
-      description: Polarity applied to the sync-out line specified by SyncOutSelector.
-      write_pv: $(P)$(R)GC_SyncOutPolarity
+      type: SignalRW
+      write_pv: $(P)$(R)GC_SyncOutSource
       write_widget:
         type: ComboBox
+    - description: Polarity applied to the sync-out line specified by 
+        SyncOutSelector.
+      name: GCSyncOutPolarity
       read_pv: $(P)$(R)GC_SyncOutPolarity_RBV
       read_widget:
         type: TextRead
-  - type: Group
-    name: Timestamp
-    layout:
-      type: Grid
-      labelled: true
-    children:
-    - type: SignalRW
-      name: GCGevTimTicFre
-      description: Frequency of image timestamp, in Hertz.
-      write_pv: $(P)$(R)GC_GevTimTicFre
+      type: SignalRW
+      write_pv: $(P)$(R)GC_SyncOutPolarity
       write_widget:
-        type: TextWrite
+        type: ComboBox
+    layout:
+      labelled: true
+      stacked: false
+      type: Grid
+    name: SyncOut
+    type: Group
+  - children:
+    - description: Frequency of image timestamp, in Hertz.
+      name: GCGevTimTicFre
       read_pv: $(P)$(R)GC_GevTimTicFre_RBV
       read_widget:
         type: TextRead
-    - type: SignalX
-      name: GCGevTimConLatch
-      description: Capture timestamp and store in GevTimestampValue.
-      write_pv: $(P)$(R)GC_GevTimConLatch
-      write_widget:
-        type: ButtonPanel
-        actions:
-          Go: '1'
-      value: '1'
-    - type: SignalX
-      name: GCGevTimConReset
-      description: Reset the timestamp.
-      write_pv: $(P)$(R)GC_GevTimConReset
-      write_widget:
-        type: ButtonPanel
-        actions:
-          Go: '1'
-      value: '1'
-    - type: SignalRW
-      name: GCGevTimestampValue
-      description: Value of timestamp, when latched by GevTimestampControlLatch.
-      write_pv: $(P)$(R)GC_GevTimestampValue
+      type: SignalRW
+      write_pv: $(P)$(R)GC_GevTimTicFre
       write_widget:
         type: TextWrite
+    - description: Capture timestamp and store in GevTimestampValue.
+      name: GCGevTimConLatch
+      type: SignalX
+      value: '1'
+      write_pv: $(P)$(R)GC_GevTimConLatch
+      write_widget:
+        actions:
+          Go: '1'
+        type: ButtonPanel
+    - description: Reset the timestamp.
+      name: GCGevTimConReset
+      type: SignalX
+      value: '1'
+      write_pv: $(P)$(R)GC_GevTimConReset
+      write_widget:
+        actions:
+          Go: '1'
+        type: ButtonPanel
+    - description: Value of timestamp, when latched by GevTimestampControlLatch.
+      name: GCGevTimestampValue
       read_pv: $(P)$(R)GC_GevTimestampValue_RBV
       read_widget:
         type: TextRead
-  - type: Group
-    name: Trigger
-    layout:
-      type: Grid
-      labelled: true
-    children:
-    - type: SignalRW
-      name: GCTriggerSelector
-      description: Select a trigger here, then use the controls {TriggerMode, TriggerSoftware,
-        TriggerSource, TriggerActivation, TriggerOverlap, TriggerDelayAbs} to setup
-        and read the trigger attributes. FrameStart is the trigger which starts each
-        image (when acquisition is running). AcquisitionStart is the trigger which
-        starts the acquisition process.
-      write_pv: $(P)$(R)GC_TriggerSelector
+      type: SignalRW
+      write_pv: $(P)$(R)GC_GevTimestampValue
       write_widget:
-        type: ComboBox
+        type: TextWrite
+    layout:
+      labelled: true
+      stacked: false
+      type: Grid
+    name: Timestamp
+    type: Group
+  - children:
+    - description: Select a trigger here, then use the controls {TriggerMode, 
+        TriggerSoftware, TriggerSource, TriggerActivation, TriggerOverlap, 
+        TriggerDelayAbs} to setup and read the trigger attributes. FrameStart is
+        the trigger which starts each image (when acquisition is running). 
+        AcquisitionStart is the trigger which starts the acquisition process.
+      name: GCTriggerSelector
       read_pv: $(P)$(R)GC_TriggerSelector_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCTriggerMode
-      description: 'Enable or disable this trigger. Note: when the FrameStart trigger
-        is disabled, images are triggered at a fixed rate specified by AcquisitionFrameRateAbs.'
-      write_pv: $(P)$(R)GC_TriggerMode
+      type: SignalRW
+      write_pv: $(P)$(R)GC_TriggerSelector
       write_widget:
         type: ComboBox
+    - description: 'Enable or disable this trigger. Note: when the FrameStart trigger
+        is disabled, images are triggered at a fixed rate specified by AcquisitionFrameRateAbs.'
+      name: GCTriggerMode
       read_pv: $(P)$(R)GC_TriggerMode_RBV
       read_widget:
         type: TextRead
-    - type: SignalX
-      name: GCTriggerSoftware
-      description: This software command effects a trigger.
-      write_pv: $(P)$(R)GC_TriggerSoftware
-      write_widget:
-        type: ButtonPanel
-        actions:
-          Go: '1'
-      value: '1'
-    - type: SignalRW
-      name: GCTriggerSource
-      description: Source of trigger, when TriggerMode is On. This might be an hardware
-        trigger, a fixed rate generator, or software trigger only.
-      write_pv: $(P)$(R)GC_TriggerSource
+      type: SignalRW
+      write_pv: $(P)$(R)GC_TriggerMode
       write_widget:
         type: ComboBox
+    - description: This software command effects a trigger.
+      name: GCTriggerSoftware
+      type: SignalX
+      value: '1'
+      write_pv: $(P)$(R)GC_TriggerSoftware
+      write_widget:
+        actions:
+          Go: '1'
+        type: ButtonPanel
+    - description: Source of trigger, when TriggerMode is On. This might be an 
+        hardware trigger, a fixed rate generator, or software trigger only.
+      name: GCTriggerSource
       read_pv: $(P)$(R)GC_TriggerSource_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCTriggerActivation
-      description: Type of activation, for hardware triggers. This controls edge/level
-        and polarity sensitivities.
-      write_pv: $(P)$(R)GC_TriggerActivation
+      type: SignalRW
+      write_pv: $(P)$(R)GC_TriggerSource
       write_widget:
         type: ComboBox
+    - description: Type of activation, for hardware triggers. This controls 
+        edge/level and polarity sensitivities.
+      name: GCTriggerActivation
       read_pv: $(P)$(R)GC_TriggerActivation_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCTriggerOverlap
-      description: Permitted window of trigger activation, relative to previous frame.
-      write_pv: $(P)$(R)GC_TriggerOverlap
+      type: SignalRW
+      write_pv: $(P)$(R)GC_TriggerActivation
       write_widget:
         type: ComboBox
+    - description: Permitted window of trigger activation, relative to previous 
+        frame.
+      name: GCTriggerOverlap
       read_pv: $(P)$(R)GC_TriggerOverlap_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCTriggerDelayAbs
-      description: Delay from hardware trigger activation to trigger effect, in microseconds.
-      write_pv: $(P)$(R)GC_TriggerDelayAbs
+      type: SignalRW
+      write_pv: $(P)$(R)GC_TriggerOverlap
       write_widget:
-        type: TextWrite
+        type: ComboBox
+    - description: Delay from hardware trigger activation to trigger effect, in 
+        microseconds.
+      name: GCTriggerDelayAbs
       read_pv: $(P)$(R)GC_TriggerDelayAbs_RBV
       read_widget:
         type: TextRead
-  - type: Group
-    name: Whitebalance
-    layout:
-      type: Grid
-      labelled: true
-    children:
-    - type: SignalRW
-      name: GCBalRatioSelector
-      description: Select the Red or Blue channel to adjust with BalanceRatioAbs.
-      write_pv: $(P)$(R)GC_BalRatioSelector
+      type: SignalRW
+      write_pv: $(P)$(R)GC_TriggerDelayAbs
       write_widget:
-        type: ComboBox
+        type: TextWrite
+    layout:
+      labelled: true
+      stacked: false
+      type: Grid
+    name: Trigger
+    type: Group
+  - children:
+    - description: Select the Red or Blue channel to adjust with 
+        BalanceRatioAbs.
+      name: GCBalRatioSelector
       read_pv: $(P)$(R)GC_BalRatioSelector_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCBalanceRatioAbs
-      description: Adjust the gain of the red or blue channel (see BalanceRatioSelector).
-        The green channel gain is always 1.00.
-      write_pv: $(P)$(R)GC_BalanceRatioAbs
+      type: SignalRW
+      write_pv: $(P)$(R)GC_BalRatioSelector
       write_widget:
-        type: TextWrite
+        type: ComboBox
+    - description: Adjust the gain of the red or blue channel (see 
+        BalanceRatioSelector). The green channel gain is always 1.00.
+      name: GCBalanceRatioAbs
       read_pv: $(P)$(R)GC_BalanceRatioAbs_RBV
       read_widget:
         type: TextRead
-    - type: SignalRW
-      name: GCBalanceWhiteAuto
-      description: 'Method used to set White Balance values. Off: automatic mode is
+      type: SignalRW
+      write_pv: $(P)$(R)GC_BalanceRatioAbs
+      write_widget:
+        type: TextWrite
+    - description: 'Method used to set White Balance values. Off: automatic mode is
         off. Once: auto-whitebalance occurs until target is achieved, then BalanceWhiteAuto
         returns to Off. Continuous: auto-whitebalance always runs.'
-      write_pv: $(P)$(R)GC_BalanceWhiteAuto
-      write_widget:
-        type: ComboBox
+      name: GCBalanceWhiteAuto
       read_pv: $(P)$(R)GC_BalanceWhiteAuto_RBV
       read_widget:
         type: TextRead
+      type: SignalRW
+      write_pv: $(P)$(R)GC_BalanceWhiteAuto
+      write_widget:
+        type: ComboBox
+    layout:
+      labelled: true
+      stacked: false
+      type: Grid
+    name: Whitebalance
+    type: Group
+  layout:
+    labelled: true
+    stacked: false
+    type: Grid
+  name: NewInstanceClassPVIYamlCreatedWithMakePvi
+  type: Group
+label: NewInstance
+parent: NewInstanceClassPVIYamlCreatedWithMakePvi
+type: Device
