@@ -1,10 +1,10 @@
 #!/bin/env python
 from optparse import OptionParser, Values
+from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from pvi.device import Device, enforce_pascal_case, Grid, Group, SignalR, SignalRW, SignalW, SignalX
 from pvi._yaml_utils import type_first
 import re
-from typing import Dict, List, Optional, Tuple
 from xml.dom.minidom import Document, Element, parseString
 from io import StringIO
 from ruamel.yaml import YAML
@@ -14,14 +14,10 @@ DEBUG = False
 
 def main():
     # Get parameters
-    # Type hint doesn't like options, args: Tuple[Values, List[str]] = parser.parse_args()
-    # so do as below
-    options: Values
-    args: List[str]
-    options, args = get_cli_params()
+    args: Namespace = get_cli_params()
 
     # Read input file
-    genicam_input_file: Path = Path(args[0])
+    genicam_input_file: Path = Path(args.input_xml)
     # Path.read_text closes file automatically
     file_contents: str = genicam_input_file.read_text()
     xml_text: str = sanitize_genicam_xml(file_contents)
@@ -29,12 +25,12 @@ def main():
     # Convert to PVI yaml
     yaml_text: str = convert_genicam_xml_to_pvi(
         xml_text,
-        instance_class=options.instance_class,
-        label=options.label
+        instance_class=args.instance_class,
+        label=args.label
     )
 
     # Write output file
-    output_folder: Path = Path(args[1])
+    output_folder: Path = Path(args.output_folder)
     output_folder.mkdir(parents=True, exist_ok=True)
     # Path.write_text closes file automatically
     yaml_file: Path = output_folder / f"{options.instance_class}.pvi.device.yaml"
@@ -42,29 +38,22 @@ def main():
     print(f"Generated PVI YAML: {yaml_file}")
 
 
-def get_cli_params() -> Tuple[Values, List[str]]:
+def get_cli_params() -> Namespace:
     """
     Parse CLI arguments and validate required fields.
     Returns:
-        Tuple[Values, List[str]]: (options, positional args)
+        argparse.Namespace
     """
     usage: str = "usage: %prog [options] <input-xml> <output-folder>"
-    parser: OptionParser = OptionParser(usage=usage)
-    parser.add_option("--name", dest="instance_class", help="Device class name")
-    parser.add_option("--label", dest="label", help="Device label")
-    # Type hint doesn't like options, args: Tuple[Values, List[str]] = parser.parse_args()
-    # so do as below
-    options: Values
-    args: List[str]
-    options, args = parser.parse_args()
+    parser: ArgumentParser = ArgumentParser(usage=usage)
+    parser.add_argument("input_xml", help="Input XML file")
+    parser.add_argument("output_folder", help="Output folder")
+    parser.add_argument("--name", dest="instance_class", required=True, help="Device class name")
+    parser.add_argument("--label", dest="label", required=True, help="Device label")
 
-    if not options.instance_class or not options.label:
-        parser.error("--name and --label are required")
+    args = parser.parse_args()
 
-    if len(args) != 2:
-        parser.error("You must provide <input-xml> and <output-folder>")
-
-    return options, args
+    return args
 
 
 def sanitize_genicam_xml(xml_text: str) -> str:
@@ -76,7 +65,7 @@ def sanitize_genicam_xml(xml_text: str) -> str:
     Returns:
         Cleaned XML text.
     """
-    lines: List[str] = xml_text.splitlines(True)
+    lines: list[str] = xml_text.splitlines(True)
 
     try:
         # Look at first 2 lines, locate the first one that looks like xml
@@ -137,22 +126,22 @@ class GenICamNode:
 
         # Basic metadata
         self.name: str = xml_element.getAttribute("Name")
-        self.description: Optional[str] = self._extract_description()
+        self.description: str | None = self._extract_description()
         self.access: str = self._extract_access_mode()
         self.node_type: str = xml_element.nodeName  # Category, Float, Int, Enumeration
         self.is_enum: bool = self.node_type == "Enumeration"
         self.is_command: bool = self.node_type == "Command"
-        self.epics_record_name: Optional[str] = None
+        self.epics_record_name: str | None = None
 
         # Children Node objects (from <pFeature> references)
-        self.children: List["GenICamNode"] = []
+        self.children: list["GenICamNode"] = []
         self.references_resolved: bool = False
 
         # Enumerations
-        self.choices: Optional[List[str]] = \
+        self.choices: list[str] | None = \
             self._extract_enum_choices() if self.node_type == "Enumeration" else None
 
-    def _extract_description(self) -> Optional[str]:
+    def _extract_description(self) -> str | None:
         # Do as below to look in immediate layer down only, rather than
         # desc_elements = self.xml_element.getElementsByTagName("Description")
         # if desc_elements and desc_elements[0].firstChild:
@@ -164,15 +153,15 @@ class GenICamNode:
         return None
 
     def _extract_access_mode(self) -> str:
-        # Similar searh logic to _extract_description
+        # Similar search logic to _extract_description
         for child in self.xml_element.childNodes:
             if child.nodeName == "AccessMode" and child.firstChild:
                 return child.firstChild.nodeValue.strip()
         return "RW"  # default
 
-    def _extract_enum_choices(self) -> List[str]:
-        choices: List[str] = []
-        # Similar searh logic to _extract_description
+    def _extract_enum_choices(self) -> list[str]:
+        choices: list[str] = []
+        # Similar search logic to _extract_description
         for child in self.xml_element.childNodes:
             if child.nodeName == "EnumEntry":
                 name = child.getAttribute("Name")
@@ -196,7 +185,7 @@ class GenICamNode:
             raise RuntimeError(f"References not yet resolved for node {self.name}")
         return self.is_category() and any(child.is_leaf() for child in self.children)
 
-    def resolve_children(self, definition_nodes_lookup: Dict[str, "GenICamNode"]) -> None:
+    def resolve_children(self, definition_nodes_lookup: dict[str, "GenICamNode"]) -> None:
         """
         Populating self.children by resolving <pFeature> references.
         <pFeature> references are inside <Category > like this:
@@ -229,7 +218,7 @@ class GenICamNode:
         self.references_resolved = True
 
     def __repr__(self) -> str:
-            return f"Node({self.name}, {self.node_type})"
+        return f"Node({self.name}, {self.node_type})"
 
 
 class GenICamModel:
@@ -241,13 +230,13 @@ class GenICamModel:
             epics_record_name_max_length: int = 20,
             epics_record_name_prefix: str = "GC_"):
         self.doc: Document = parseString(xml_text)
-        self.definition_nodes: Dict[str, GenICamNode] = self._build_definition_nodes()
+        self.definition_nodes: dict[str, GenICamNode] = self._build_definition_nodes()
         self._resolve_references()
         self.epics_record_name_max_length: int = epics_record_name_max_length
         self.epics_record_name_prefix: str = epics_record_name_prefix
-        self.epics_record_names: Dict[str, str] = self._build_epics_record_names()
+        self.epics_record_names: dict[str, str] = self._build_epics_record_names()
 
-    def _build_definition_nodes(self) -> Dict[str, GenICamNode]:
+    def _build_definition_nodes(self) -> dict[str, GenICamNode]:
         """
         Extract all GenICam definition nodes, wrap them as Node objects and
         add them to a dictionary.
@@ -256,7 +245,7 @@ class GenICamModel:
         Elements that look like below are reference nodes, we don't process them here:
         <pFeature>My name</pFeature>
         """
-        lookup: Dict[str, GenICamNode] = {}
+        lookup: dict[str, GenICamNode] = {}
         root_element: Element = self.doc.documentElement
 
         for xml_element in root_element.getElementsByTagName("*"):
@@ -273,11 +262,15 @@ class GenICamModel:
         for definition_node in self.definition_nodes.values():
             definition_node.resolve_children(self.definition_nodes)
 
+    def _build_epics_record_names(self) -> dict[str, str]:
+        epics_record_names: dict[str, str] = {}
 
-    def _build_epics_record_names(self) -> Dict[str, str]:
-        epics_record_names: Dict[str, str] = {}
-
-        for definition_node in self.definition_nodes.values():
+        # Need to iterate over self.definition_nodes in an ordered way so that
+        # the ouput is deterministic
+        for definition_node in sorted(
+            self.definition_nodes.values(),
+            key=lambda node: node.name
+        ):
             epics_record_name: str = GenICamModel._generate_epics_record_name(
                 definition_node.name,
                 epics_record_names,
@@ -292,7 +285,7 @@ class GenICamModel:
     @staticmethod
     def _generate_epics_record_name(
         name: str,
-        epics_record_names: Dict[str, str],
+        epics_record_names: dict[str, str],
         max_length: int,
         epics_record_name_prefix: str
     ) -> str:
@@ -306,7 +299,7 @@ class GenICamModel:
         # Step 1: Progressively truncating constituent “words” to 3 characters, stop if
         # string is short enough
         if len(record_name) > max_length:
-            words: List[str] = re.findall(r"[a-zA-Z][^A-Z]*", record_name)
+            words: list[str] = re.findall(r"[a-zA-Z][^A-Z]*", record_name)
 
             for ii in range(len(words)):
                 word = words[ii]
@@ -334,7 +327,7 @@ class GenICamModel:
 class PviModel:
     """Creates PVI model whose groups property can be used by pvi.device.Device."""
     def __init__(self, genicam_model: GenICamModel, instance_class: str):
-        self.groups: List[Group] = \
+        self.groups: list[Group] = \
             PviModel._build_pvi_groups(genicam_model.definition_nodes, instance_class)
         # tree is just all the groups nested in a top group
         self.tree: Group = Group(
@@ -399,8 +392,8 @@ class PviModel:
         )
 
     @staticmethod
-    def _build_pvi_groups(definition_nodes: Dict[str, GenICamNode], instance_class: str) -> List[Group]:
-        groups: List[Group] = []
+    def _build_pvi_groups(definition_nodes: dict[str, GenICamNode], instance_class: str) -> list[Group]:
+        groups: list[Group] = []
 
         # Sort to make sure consistent test results
         for node in sorted(definition_nodes.values(), key=lambda n: n.name):
@@ -416,7 +409,7 @@ class PviModel:
                 continue
 
             # Create signals from leaves
-            signals: List[SignalR | SignalRW | SignalW | SignalX] = [
+            signals: list[SignalR | SignalRW | SignalW | SignalX] = [
                 PviModel.make_signal(leaf) for leaf in non_category_children
             ]
 
@@ -433,7 +426,7 @@ class PviModel:
 
         # In case no categories produced groups
         if not groups:
-            signals: List[SignalR | SignalRW | SignalW | SignalX] = []
+            signals: list[SignalR | SignalRW | SignalW | SignalX] = []
             # Sort to make sure consistent test results
             for node in sorted(definition_nodes.values(), key=lambda n: n.name):
                 if not node.is_category():

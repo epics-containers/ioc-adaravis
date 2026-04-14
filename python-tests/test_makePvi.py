@@ -7,7 +7,6 @@ sys.path.insert(0, str(SCRIPT_DIR))
 
 from pvi.device import Group
 import pytest
-from typing import List
 from xml.dom.minidom import Document, parseString
 from ruamel.yaml import YAML
 
@@ -175,7 +174,7 @@ class TestGenICamModel:
 
 class TestPviModel:
     def test_pvi_model(self, pvi_model: PviModel):
-        groups: List[Group] = pvi_model.groups
+        groups: list[Group] = pvi_model.groups
         # Check groups
         group_names = [g.name for g in groups]
         assert "AcquisitionCategory" in group_names
