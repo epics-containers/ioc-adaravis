@@ -5,11 +5,8 @@ from pvi.device import Device, enforce_pascal_case, Grid, Group, SignalR, Signal
 from pvi._yaml_utils import type_first
 import re
 from xml.dom.minidom import Document, Element, parseString
-# Temporarily commented out code that uses of ruamel and use yaml instead
-# because code that uses ruamel gives wrong output
-#from io import StringIO
-#from ruamel.yaml import YAML
-import yaml
+from io import StringIO
+from ruamel.yaml import YAML
 
 DEBUG = False
 
@@ -104,17 +101,21 @@ def convert_genicam_xml_to_pvi(xml_text: str, instance_class: str, label: str) -
     device: Device = Device(label=label, parent=instance_class, children=[pvi_model.tree])
 
     # Return YAML from Device
-    # Temporarily commented out code that uses of ruamel and use yaml instead
-    # because code that uses ruamel gives wrong output
-    #ym = YAML(typ='safe', pure=True)
-    #ym.default_flow_style = False
-    #ym.sort_keys = False
-    #stream = StringIO()
-    #ym.dump(type_first(device.model_dump(exclude_none=True)), stream)
-    #return stream.getvalue()
-
-    return yaml.safe_dump(type_first(device.model_dump(exclude_none=True)), sort_keys=False)
-
+    # Not using typ='safe' to default to typ='rt', ie, full round-trip YAML engine.
+    # This outputs in insertion order.
+    # Note, with rt there is no need for ym.sort_keys = False.
+    ym = YAML()
+    # Use pure Python emitter instead of the C backend, slower but more consistent
+    ym.pure = True
+    # This outputs like PyYaml
+    # a:
+    #   b: 1
+    # instead of
+    # a: {b: 1}
+    ym.default_flow_style = False
+    stream = StringIO()
+    ym.dump(type_first(device.model_dump(exclude_none=True)), stream)
+    return stream.getvalue()
 
 
 class GenICamNode:
@@ -274,18 +275,15 @@ class GenICamModel:
 
         # Need to iterate over self.definition_nodes in an ordered way so that
         # the ouput is deterministic
-        for definition_node in sorted(
-            self.definition_nodes.values(),
-            key=lambda node: node.name
-        ):
+        for node in sorted(self.definition_nodes.values(), key=lambda n: n.name):
             epics_record_name: str = GenICamModel._generate_epics_record_name(
-                definition_node.name,
+                node.name,
                 epics_record_names,
                 self.epics_record_name_max_length,
                 self.epics_record_name_prefix
             )
-            epics_record_names[definition_node.name] = epics_record_name
-            definition_node.epics_record_name = epics_record_name
+            epics_record_names[node.name] = epics_record_name
+            node.epics_record_name = epics_record_name
 
         return epics_record_names
 
