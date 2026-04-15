@@ -5,8 +5,11 @@ from pvi.device import Device, enforce_pascal_case, Grid, Group, SignalR, Signal
 from pvi._yaml_utils import type_first
 import re
 from xml.dom.minidom import Document, Element, parseString
-from io import StringIO
-from ruamel.yaml import YAML
+# Temporarily commented out code that uses of ruamel and use yaml instead
+# because code that uses ruamel gives wrong output
+#from io import StringIO
+#from ruamel.yaml import YAML
+import yaml
 
 DEBUG = False
 
@@ -101,12 +104,17 @@ def convert_genicam_xml_to_pvi(xml_text: str, instance_class: str, label: str) -
     device: Device = Device(label=label, parent=instance_class, children=[pvi_model.tree])
 
     # Return YAML from Device
-    ym = YAML(typ='safe', pure=True)
-    ym.default_flow_style = False
-    ym.sort_keys = False
-    stream = StringIO()
-    ym.dump(type_first(device.model_dump(exclude_none=True)), stream)
-    return stream.getvalue()
+    # Temporarily commented out code that uses of ruamel and use yaml instead
+    # because code that uses ruamel gives wrong output
+    #ym = YAML(typ='safe', pure=True)
+    #ym.default_flow_style = False
+    #ym.sort_keys = False
+    #stream = StringIO()
+    #ym.dump(type_first(device.model_dump(exclude_none=True)), stream)
+    #return stream.getvalue()
+
+    return yaml.safe_dump(type_first(device.model_dump(exclude_none=True)), sort_keys=False)
+
 
 
 class GenICamNode:
