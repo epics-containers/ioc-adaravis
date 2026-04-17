@@ -43,8 +43,7 @@ def get_cli_params() -> Namespace:
     Returns:
         argparse.Namespace
     """
-    usage: str = "usage: %prog [options] <input-xml> <output-folder>"
-    parser: ArgumentParser = ArgumentParser(usage=usage)
+    parser: ArgumentParser = ArgumentParser()
     parser.add_argument("input_xml", help="Input XML file")
     parser.add_argument("output_folder", help="Output folder")
     parser.add_argument("--name", dest="instance_class", required=True, help="Device class name")
