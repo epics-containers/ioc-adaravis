@@ -7,14 +7,12 @@ children:
   layout:
     type: Grid
     labelled: true
-    stacked: false
   children:
   - type: Group
     name: Acquisition
     layout:
       type: Grid
       labelled: true
-      stacked: false
     children:
     - type: SignalRW
       name: GCAcquisitionStart
@@ -107,7 +105,6 @@ children:
     layout:
       type: Grid
       labelled: true
-      stacked: false
     children:
     - type: SignalRW
       name: GCBalWhiteAutoRate
@@ -136,7 +133,6 @@ children:
     layout:
       type: Grid
       labelled: true
-      stacked: false
     children:
     - type: SignalRW
       name: GCBlaLevelSelector
@@ -164,7 +160,6 @@ children:
     layout:
       type: Grid
       labelled: true
-      stacked: false
     children:
     - type: SignalRW
       name: GCColTraSelector
@@ -210,7 +205,6 @@ children:
     layout:
       type: Grid
       labelled: true
-      stacked: false
     children:
     - type: SignalRW
       name: GCGamma
@@ -255,7 +249,6 @@ children:
     layout:
       type: Grid
       labelled: true
-      stacked: false
     children:
     - type: SignalRW
       name: GCDSPSubregionLeft
@@ -311,7 +304,6 @@ children:
     layout:
       type: Grid
       labelled: true
-      stacked: false
     children:
     - type: SignalRW
       name: GCDefMasColEnable
@@ -328,7 +320,6 @@ children:
     layout:
       type: Grid
       labelled: true
-      stacked: false
     children:
     - type: SignalRW
       name: GCDevTemSelector
@@ -351,7 +342,6 @@ children:
     layout:
       type: Grid
       labelled: true
-      stacked: false
     children:
     - type: SignalRW
       name: GCEventSelector
@@ -388,7 +378,6 @@ children:
     layout:
       type: Grid
       labelled: true
-      stacked: false
     children:
     - type: SignalRW
       name: GCEveAcqStart
@@ -518,7 +507,6 @@ children:
     layout:
       type: Grid
       labelled: true
-      stacked: false
     children:
     - type: SignalRW
       name: GCExposureAuto
@@ -567,7 +555,6 @@ children:
     layout:
       type: Grid
       labelled: true
-      stacked: false
     children:
     - type: SignalRW
       name: GCExpAutoTarget
@@ -645,7 +632,6 @@ children:
     layout:
       type: Grid
       labelled: true
-      stacked: false
     children:
     - type: SignalRW
       name: GCGainAutoTarget
@@ -709,7 +695,6 @@ children:
     layout:
       type: Grid
       labelled: true
-      stacked: false
     children:
     - type: SignalRW
       name: GCGainSelector
@@ -754,7 +739,6 @@ children:
     layout:
       type: Grid
       labelled: true
-      stacked: false
     children:
     - type: SignalRW
       name: GCStrBytesPerSecond
@@ -827,7 +811,6 @@ children:
     layout:
       type: Grid
       labelled: true
-      stacked: false
     children:
     - type: SignalRW
       name: GCWidthMax
@@ -919,7 +902,6 @@ children:
     layout:
       type: Grid
       labelled: true
-      stacked: false
     children:
     - type: SignalRW
       name: GCSensorWidth
@@ -1021,7 +1003,6 @@ children:
     layout:
       type: Grid
       labelled: true
-      stacked: false
     children:
     - type: SignalRW
       name: GCFirmwareVerMajor
@@ -1116,7 +1097,6 @@ children:
     layout:
       type: Grid
       labelled: true
-      stacked: false
     children:
     - type: SignalRW
       name: GCIrisMode
@@ -1177,7 +1157,6 @@ children:
     layout:
       type: Grid
       labelled: true
-      stacked: false
     children:
     - type: SignalRW
       name: GCLUTSelector
@@ -1251,7 +1230,6 @@ children:
     layout:
       type: Grid
       labelled: true
-      stacked: false
     children:
     - type: SignalRW
       name: GCLUTBitDepthIn
@@ -1295,7 +1273,6 @@ children:
     layout:
       type: Grid
       labelled: true
-      stacked: false
     children:
     - type: SignalRW
       name: GCLenDCDriStrength
@@ -1310,7 +1287,6 @@ children:
     layout:
       type: Grid
       labelled: true
-      stacked: false
     children:
     - type: SignalRW
       name: GCLenPIrisFrequency
@@ -1341,7 +1317,6 @@ children:
     layout:
       type: Grid
       labelled: true
-      stacked: false
     children:
     - type: SignalRW
       name: GCPvDumTriSelector
@@ -1479,7 +1454,6 @@ children:
     layout:
       type: Grid
       labelled: true
-      stacked: false
     children:
     - type: SignalRW
       name: GCUserSetSelector
@@ -1524,7 +1498,6 @@ children:
     layout:
       type: Grid
       labelled: true
-      stacked: false
     children:
     - type: SignalRW
       name: GCStreamHoldEnable
@@ -1553,7 +1526,6 @@ children:
     layout:
       type: Grid
       labelled: true
-      stacked: false
     children:
     - type: SignalRW
       name: GCStrobeSource
@@ -1598,7 +1570,6 @@ children:
     layout:
       type: Grid
       labelled: true
-      stacked: false
     children:
     - type: SignalRW
       name: GCVsubValue
@@ -1614,7 +1585,6 @@ children:
     layout:
       type: Grid
       labelled: true
-      stacked: false
     children:
     - type: SignalRW
       name: GCSyncInLevels
@@ -1648,7 +1618,6 @@ children:
     layout:
       type: Grid
       labelled: true
-      stacked: false
     children:
     - type: SignalRW
       name: GCSyncOutLevels
@@ -1699,7 +1668,6 @@ children:
     layout:
       type: Grid
       labelled: true
-      stacked: false
     children:
     - type: SignalRW
       name: GCGevTimTicFre
@@ -1742,7 +1710,6 @@ children:
     layout:
       type: Grid
       labelled: true
-      stacked: false
     children:
     - type: SignalRW
       name: GCTriggerSelector
@@ -1821,7 +1788,6 @@ children:
     layout:
       type: Grid
       labelled: true
-      stacked: false
     children:
     - type: SignalRW
       name: GCBalRatioSelector
