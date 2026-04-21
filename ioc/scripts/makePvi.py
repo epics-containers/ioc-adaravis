@@ -97,7 +97,7 @@ def convert_genicam_xml_to_pvi(xml_text: str, instance_class: str, label: str) -
     pvi_model: PviModel = PviModel(genicam_model, instance_class)
 
     # Build Device
-    device: Device = Device(label=label, parent=instance_class, children=[pvi_model.tree])
+    device: Device = Device(label=label, children=pvi_model.groups)
 
     # Return YAML from Device
     # Not using typ='safe' to default to typ='rt', ie, full round-trip YAML engine.
@@ -113,7 +113,9 @@ def convert_genicam_xml_to_pvi(xml_text: str, instance_class: str, label: str) -
     # a: {b: 1}
     ym.default_flow_style = False
     stream = StringIO()
-    ym.dump(type_first(device.model_dump(exclude_none=True)), stream)
+    data = device.model_dump(exclude_none=True)
+    data.pop("type", None)  # remove top-level type "type: Device" because pvi format doesn't like it
+    ym.dump(type_first(data), stream)
     return stream.getvalue()
 
 
