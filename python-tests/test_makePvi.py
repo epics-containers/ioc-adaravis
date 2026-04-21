@@ -204,11 +204,7 @@ class TestPviModel:
         # Device label
         assert data["label"] == "Camera test label"
 
-        children = data["children"]
-        assert len(children) == 1
-
-        root = children[0]
-        groups = root["children"]
+        groups = data["children"]
         assert len(groups) == 2
 
         group_names = [g["name"] for g in groups]
