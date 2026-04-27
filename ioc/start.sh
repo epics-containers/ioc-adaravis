@@ -82,9 +82,11 @@ do
             fi
         fi
         # Generate pvi device from the GenICam DB
-        python /epics/ioc/scripts/makePvi.py /tmp/${instance_id}-genicam.xml /epics/pvi-defs/
-            --name $instance_class # device class
-            --label "GenICam $instance_id" # instance ID
+        # --name is device class
+        # --label is instance ID
+        python /epics/ioc/scripts/makePvi.py /tmp/${instance_id}-genicam.xml /epics/pvi-defs/ \
+            --name $instance_class \
+            --label "GenICam $instance_id"
     fi
 done
 
