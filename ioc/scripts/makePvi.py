@@ -1,7 +1,7 @@
 #!/bin/env python
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from pvi.device import Device, enforce_pascal_case, Grid, Group, SignalR, SignalRW, SignalW, SignalX
+from pvi.device import Device, enforce_pascal_case, Grid, Group, Include, SignalR, SignalRW, SignalW, SignalX
 from pvi._yaml_utils import type_first
 import re
 from xml.dom.minidom import Document, Element, parseString
@@ -25,7 +25,8 @@ def main():
     yaml_text: str = convert_genicam_xml_to_pvi(
         xml_text,
         instance_class=args.instance_class,
-        label=args.label
+        label=args.label,
+        include=args.include
     )
 
     # Write output file
@@ -47,7 +48,8 @@ def get_cli_params() -> Namespace:
     parser.add_argument("input_xml", help="Input XML file")
     parser.add_argument("output_folder", help="Output folder")
     parser.add_argument("--name", dest="instance_class", required=True, help="Device class name")
-    parser.add_argument("--label", dest="label", required=True, help="Device label")
+    parser.add_argument("--label", dest="label", required=True, help="Device instance, used for label")
+    parser.add_argument("--include", dest="include", required=False, help="Root name of PVI yaml file to include")
 
     args = parser.parse_args()
 
@@ -79,7 +81,7 @@ def sanitize_genicam_xml(xml_text: str) -> str:
     return "".join(lines[start_line:]).lstrip()
 
 
-def convert_genicam_xml_to_pvi(xml_text: str, instance_class: str, label: str) -> str:
+def convert_genicam_xml_to_pvi(xml_text: str, instance_class: str, label: str, include: str = "") -> str:
     """
     Convert GenICam XML text into PVI YAML text.
      Args:
@@ -98,6 +100,9 @@ def convert_genicam_xml_to_pvi(xml_text: str, instance_class: str, label: str) -
 
     # Build Device
     device: Device = Device(label=label, children=pvi_model.groups)
+    # Add ADAravis
+    if (include):
+        device.children = list(device.children) + [Include(file_name=include)]
 
     # Return YAML from Device
     # Not using typ='safe' to default to typ='rt', ie, full round-trip YAML engine.

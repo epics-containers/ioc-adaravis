@@ -81,12 +81,13 @@ do
                 python /epics/support/ADGenICam/scripts/makeDb.py /tmp/${instance_id}-genicam.xml /epics/support/ADGenICam/db/${instance_class}.template
             fi
         fi
-        # Generate pvi device from the GenICam DB
+        # Generate pvi device from the GenICam XML, optionally Include ADAravis PVI yaml
         # --name is device class
         # --label is instance ID
         python /epics/ioc/scripts/makePvi.py /tmp/${instance_id}-genicam.xml /epics/pvi-defs/ \
             --name $instance_class \
-            --label "GenICam $instance_id"
+            --label "GenICam $instance_id" \
+            --include ADAravis      
     fi
 done
 

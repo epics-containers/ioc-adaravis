@@ -207,16 +207,41 @@ class TestPviModel:
         groups = data["children"]
         assert len(groups) == 2
 
-        group_names = [g["name"] for g in groups]
+        group_names = [g["name"] for g in groups if g["type"] == "Group"]
         assert "AcquisitionCategory" in group_names
         assert "ChildCategoryWithLeaf" in group_names
 
-        FirstGroup = next(g for g in groups if g["name"] == "AcquisitionCategory")
+        firstGroup = next(g for g in groups if g["type"] == "Group" and g["name"] == "AcquisitionCategory")
 
-        assert FirstGroup["name"] == "AcquisitionCategory"
+        assert firstGroup["name"] == "AcquisitionCategory"
         # Signals inside group
-        signal_names = [s["name"] for s in FirstGroup["children"]]
+        signal_names = [s["name"] for s in firstGroup["children"]]
         assert set(signal_names) == {
             "GCExpTimeFeature",
             "GCGainFeature",
             "GCOffsetFeature"}
+
+    def test_convert_genicam_xml_to_pvi_with_adaravis_include(self, example_xml: str):
+        yaml_text = makePvi.convert_genicam_xml_to_pvi(
+            example_xml,
+            instance_class="Camera instance class",
+            label="Camera instance ID",
+            include="ADAravis"
+        )
+        print(yaml_text)
+        # Load YAML to dict
+        ym = YAML(typ='safe', pure=True)
+        data = ym.load(yaml_text)
+        assert isinstance(data, dict)
+        # Device label
+        assert data["label"] == "Camera instance ID"
+
+        groups = data["children"]
+        assert len(groups) == 3
+
+        include = next(g for g in groups if g["type"] == "Include")
+        assert include["file_name"] == "ADAravis"
+
+        group_names = [g["name"] for g in groups if g["type"] == "Group"]
+        assert "AcquisitionCategory" in group_names
+        assert "ChildCategoryWithLeaf" in group_names
