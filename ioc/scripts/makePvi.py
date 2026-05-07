@@ -100,7 +100,6 @@ def convert_genicam_xml_to_pvi(xml_text: str, instance_class: str, label: str, i
 
     # Build Device
     device: Device = Device(label=label, children=pvi_model.groups)
-    # Add ADAravis
     if (include):
         device.children = list(device.children) + [Include(file_name=include)]
 
