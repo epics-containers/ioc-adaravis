@@ -80,18 +80,18 @@ for ((count = 0 ; count < ${#entities[@]}; count++ )); do # Iterate over each en
 
     instance_class=$(yq ".entities[${count}].CLASS" "${ibek_src}")
     instance_id=$(yq ".entities[${count}].ID" "${ibek_src}")
+    output_file_name_root="${instance_class}-${instance_id}"
     label="GenICam ${instance_id}"
 
     if [[ ${instance_class} != "AutoADGenICam" ]]; then
         # Not AutoADGenICam, generate pvi device from the existing GenICam DB
         template="/epics/support/ADGenICam/db/${instance_class}.template"
-        generate_pvi_from_template "${template}" "${instance_class}" "${label}"
+        generate_pvi_from_template "${template}" "${output_file_name_root}" "${label}"
         continue
     fi   
 
     # Auto generate GenICam database from camera parameters XML
-    instance_class="auto-${instance_id}"
-    template="/epics/support/ADGenICam/db/${instance_class}.template"
+    output_file_name_root="auto-${instance_id}"
     xml_file="/tmp/${instance_id}-genicam.xml"
     arv-tool-0.8 -a "${instance_id}" genicam > "${xml_file}"
 
@@ -100,15 +100,16 @@ for ((count = 0 ; count < ${#entities[@]}; count++ )); do # Iterate over each en
         python /epics/ioc/scripts/makePvi.py \
             "${xml_file}" \
             /epics/pvi-defs/ \
-            --name "${instance_class}" \
+            --name "${output_file_name_root}" \
             --label "${label}"
         continue
     fi
 
     # Can't get xml from camera: make empty GenICam DB and generate pvi device from it
     echo "Can't connect to camera ${instance_id}"
+    template="/epics/support/ADGenICam/db/${output_file_name_root}.template"
     touch "${template}"
-    generate_pvi_from_template "${template}" "${instance_class}" "${label}"
+    generate_pvi_from_template "${template}" "${output_file_name_root}" "${label}"
 done
 
 # get the ibek support yaml files this ioc's support modules
