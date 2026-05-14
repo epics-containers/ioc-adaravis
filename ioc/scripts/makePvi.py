@@ -1,7 +1,7 @@
 #!/bin/env python
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from pvi.device import Device, enforce_pascal_case, Grid, Group, Include, SignalR, SignalRW, SignalW, SignalX, SubScreen
+from pvi.device import Device, enforce_pascal_case, Grid, Group, SignalR, SignalRW, SignalW, SignalX, SubScreen
 from pvi._yaml_utils import type_first, load_yaml
 import re
 from xml.dom.minidom import Document, Element, parseString
@@ -50,7 +50,7 @@ def get_cli_params() -> Namespace:
     parser.add_argument("output_folder", help="Output folder")
     parser.add_argument("--instance_class", dest="instance_class", required=True, help="Device class name, used as output file name root")
     parser.add_argument("--label", dest="label", required=True, help="Device instance ID, used for label")
-    parser.add_argument("--embed_in", dest="inclosed_in", required=False, help="Root name of PVI yaml file that encloses the yaml from XML")
+    parser.add_argument("--embed_in", dest="embed_in", required=False, help="Root name of PVI yaml file that encloses the yaml from XML")
 
     args = parser.parse_args()
 
