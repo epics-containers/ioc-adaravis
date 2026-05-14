@@ -105,13 +105,13 @@ for ((count = 0 ; count < ${#entities[@]}; count++ )); do # Iterate over each en
     arv-tool-0.8 -a "${instance_id}" genicam > "${xml_file}"
 
     if [[ -s ${xml_file} ]]; then
-        # Generate pvi device from xml
+        # Generate pvi device from xml, embedded in a copy of ADAravis as subscreen
         python /epics/ioc/scripts/makePvi.py \
             "${xml_file}" \
-            /epics/pvi-defs/ \
+            "/epics/pvi-defs/" \
             --instance_class "${instance_class}" \
             --label "${label}" \
-            --enclosed_in "ADAravis"
+            --embed_in "ADAravis" \
         continue
     fi
 

@@ -221,12 +221,13 @@ class TestPviModel:
             "GCGainFeature",
             "GCOffsetFeature"}
 
-    def test_convert_genicam_xml_to_pvi_with_adaravis_include(self, example_xml: str):
+    def test_convert_genicam_xml_to_pvi_embedded_in_adaravis(self, example_xml: str):
         yaml_text = makePvi.convert_genicam_xml_to_pvi(
             example_xml,
             instance_class="Camera instance class",
             label="Camera instance ID",
-            include="ADAravis"
+            embed_in="ADAravis",
+            embedding_file_folder="/epics/pvi-defs/",
         )
         print(yaml_text)
         # Load YAML to dict
@@ -234,14 +235,34 @@ class TestPviModel:
         data = ym.load(yaml_text)
         assert isinstance(data, dict)
         # Device label
-        assert data["label"] == "Camera instance ID"
+        assert data["label"] == "ADAravis Camera + Camera instance ID"
 
-        groups = data["children"]
-        assert len(groups) == 3
+        level_1_childen = data["children"]
 
-        include = next(g for g in groups if g["type"] == "Include")
-        assert include["file_name"] == "ADAravis"
+        # We have the ADAravis and GenICam groupsS
+        group_names = [g["name"] for g in level_1_childen if g["type"] == "Group"]
+        assert "ADAravis" in group_names
+        assert "GenICam" in group_names
 
-        group_names = [g["name"] for g in groups if g["type"] == "Group"]
+        genicam_group = next(g for g in level_1_childen if g["type"] == "Group" and g["name"] == "GenICam")
+        assert genicam_group["type"] == "Group"
+        assert genicam_group["name"] == "GenICam"
+        assert genicam_group["layout"]["type"] == "SubScreen"
+
+        # Check GenICam's children  
+        genicam_children = genicam_group["children"]
+        assert len(genicam_children) == 2
+
+        group_names = [g["name"] for g in genicam_children if g["type"] == "Group"]
         assert "AcquisitionCategory" in group_names
         assert "ChildCategoryWithLeaf" in group_names
+
+        firstGroup = next(g for g in genicam_children if g["type"] == "Group" and g["name"] == "AcquisitionCategory")
+
+        assert firstGroup["name"] == "AcquisitionCategory"
+        # Signals inside group
+        signal_names = [s["name"] for s in firstGroup["children"]]
+        assert set(signal_names) == {
+            "GCExpTimeFeature",
+            "GCGainFeature",
+            "GCOffsetFeature"}
