@@ -227,7 +227,7 @@ class TestPviModel:
             instance_class="Camera instance class",
             label="Camera instance ID",
             embed_in="ADAravis",
-            embedding_file_folder="/epics/pvi-defs/",
+            embedding_file_folder="./",
         )
         print(yaml_text)
         # Load YAML to dict
