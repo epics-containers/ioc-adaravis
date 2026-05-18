@@ -79,26 +79,11 @@ for ((count = 0 ; count < ${#entities[@]}; count++ )); do # Iterate over each en
     [[ ${instance_type} != "ADAravis.aravisCamera" ]] && continue
 
     instance_id=$(yq ".entities[${count}].ID" "${ibek_src}")
-
+    instance_class="auto-${instance_id}"
+    output_file_name_root="${instance_class}"
     label="GenICam ${instance_id}" 
 
-    original_class=$(yq ".entities[${count}].CLASS" "${ibek_src}")
- 
-    instance_class="${original_class}"
-    output_file_name_root="${instance_class}-${instance_id}"
-    if [[ ${instance_class} == "AutoADGenICam" ]]; then
-        instance_class="auto-${instance_id}"
-        # instance_class already has instance ID so can use it in output file name
-        output_file_name_root="${instance_class}"
-    fi
-
     template="/epics/support/ADGenICam/db/${instance_class}.template"
-
-    if [[ ${original_class} != "AutoADGenICam" ]]; then
-        # Not AutoADGenICam, generate pvi device from the existing GenICam DB
-        generate_pvi_from_template "${template}" "${output_file_name_root}" "${label}"
-        continue
-    fi   
 
     # Auto generate GenICam database from camera parameters xml
     xml_file="/tmp/${instance_id}-genicam.xml"
