@@ -96,7 +96,7 @@ for ((count = 0 ; count < ${#entities[@]}; count++ )); do # Iterate over each en
             "/epics/pvi-defs/" \
             --instance_class "${instance_class}" \
             --label "${label}" \
-            --embed_in "ADAravis" \
+            --embed_in "ADAravis"
         continue
     fi
 
