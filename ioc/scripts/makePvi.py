@@ -1,8 +1,8 @@
 #!/bin/env python
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from pvi.device import Device, enforce_pascal_case, Grid, Group, SignalR, SignalRW, SignalW, SignalX
-from pvi._yaml_utils import type_first
+from pvi.device import Device, enforce_pascal_case, Grid, Group, SignalR, SignalRW, SignalW, SignalX, SubScreen
+from pvi._yaml_utils import type_first, load_yaml
 import re
 from xml.dom.minidom import Document, Element, parseString
 from io import StringIO
@@ -25,7 +25,9 @@ def main():
     yaml_text: str = convert_genicam_xml_to_pvi(
         xml_text,
         instance_class=args.instance_class,
-        label=args.label
+        label=args.label,
+        embed_in=args.embed_in,
+        embedding_file_folder=args.output_folder
     )
 
     # Write output file
@@ -46,8 +48,9 @@ def get_cli_params() -> Namespace:
     parser: ArgumentParser = ArgumentParser()
     parser.add_argument("input_xml", help="Input XML file")
     parser.add_argument("output_folder", help="Output folder")
-    parser.add_argument("--name", dest="instance_class", required=True, help="Device class name")
-    parser.add_argument("--label", dest="label", required=True, help="Device label")
+    parser.add_argument("--instance_class", dest="instance_class", required=True, help="Device class name, used as output file name root")
+    parser.add_argument("--label", dest="label", required=True, help="Device instance ID, used for label")
+    parser.add_argument("--embed_in", dest="embed_in", required=False, help="Root name of PVI yaml file that encloses the yaml from XML")
 
     args = parser.parse_args()
 
@@ -79,13 +82,21 @@ def sanitize_genicam_xml(xml_text: str) -> str:
     return "".join(lines[start_line:]).lstrip()
 
 
-def convert_genicam_xml_to_pvi(xml_text: str, instance_class: str, label: str) -> str:
+def convert_genicam_xml_to_pvi(
+        xml_text: str,
+        instance_class: str,
+        label: str,
+        embed_in: str = "",
+        embedding_file_folder: str = "") -> str:
     """
-    Convert GenICam XML text into PVI YAML text.
+    Convert GenICam XML text into PVI YAML text,
+    optionally enclose it as a subscreen in another PVI YAML.
      Args:
         xml_text: GenICam XML as string.
         instance_class: Device class name (used for YAML name/class fields).
         label: Device label (used for YAML label field).
+        embed_in: Root name of PVI yaml file that encloses the yaml from XML.
+        embedding_file_folder: Folder containing the embedding file.
 
     Returns:
         YAML text as string.
@@ -94,28 +105,43 @@ def convert_genicam_xml_to_pvi(xml_text: str, instance_class: str, label: str) -
     genicam_model: GenICamModel = GenICamModel(xml_text)
 
     # Creating output model
-    pvi_model: PviModel = PviModel(genicam_model, instance_class)
+    genicam_pvi_model: PviModel = PviModel(genicam_model, instance_class)
 
     # Build Device
-    device: Device = Device(label=label, children=pvi_model.groups)
+    device: Device
+    
+    if not embed_in:
+        # GenICam as alone device
+        device = Device(label=label, children=genicam_pvi_model.groups)
+
+    else:
+        # GenICam embedded as subscreen
+        enclosing_yaml = load_yaml(Path(f"{embedding_file_folder}{embed_in}.pvi.device.yaml"))
+        device = Device.model_validate(enclosing_yaml)
+        device.label = f"{device.label} + {label}"
+        genicam_group: Group = Group(
+            name="GenICam",
+            layout=SubScreen(labelled=False),
+            children=genicam_pvi_model.groups)
+        device.children.append(genicam_group)
 
     # Return YAML from Device
     # Not using typ='safe' to default to typ='rt', ie, full round-trip YAML engine.
     # This outputs in insertion order.
     # Note, with rt there is no need for ym.sort_keys = False.
-    ym = YAML()
+    output_yaml = YAML()
     # Use pure Python emitter instead of the C backend, slower but more consistent
-    ym.pure = True
+    output_yaml.pure = True
     # This outputs like PyYaml
     # a:
     #   b: 1
     # instead of
     # a: {b: 1}
-    ym.default_flow_style = False
+    output_yaml.default_flow_style = False
     stream = StringIO()
     data = device.model_dump(exclude_none=True)
     data.pop("type", None)  # remove top-level type "type: Device" because pvi format doesn't like it
-    ym.dump(type_first(data), stream)
+    output_yaml.dump(type_first(data), stream)
     return stream.getvalue()
 
 

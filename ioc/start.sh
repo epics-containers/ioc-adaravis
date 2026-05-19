@@ -56,38 +56,57 @@ if [[ -d /epics/support/configure/protocol ]] ; then
     cp -r /epics/support/configure/protocol  ${RUNTIME_DIR}
 fi
 
-# generate template for Aravis cameras parameters ******************************
+# generate pvi device and template for Aravis cameras parameters ******************************
 
-ibek_src=${CONFIG_DIR}/ioc.yaml
-readarray entities < <(yq -o=j -I=0 '.entities[]' ${ibek_src})
-for ((count = 0 ; count < ${#entities[@]} ; count++ ))  # Iterate over each entity
-do
-    instance_type=$(yq .entities[${count}].type ${ibek_src})
-    if [ $instance_type = "ADAravis.aravisCamera" ]
-    then
-        instance_class=$(yq .entities[${count}].CLASS ${ibek_src})
-        instance_id=$(yq .entities[${count}].ID ${ibek_src})
+generate_pvi_from_template() {
+    local template="$1"
+    local name="$2"
+    local label="$3"
 
-        if [[ $instance_class == "AutoADGenICam" ]]; then
-            instance_class=auto-${instance_id}
-            # Auto generate GenICam database from camera parameters XML
-            arv-tool-0.8 -a ${instance_id} genicam > /tmp/${instance_id}-genicam.xml
-            if [[ ! -s /tmp/${instance_id}-genicam.xml ]]; then
-                # can't contact the camera - make an empty template
-                echo "Can't connect to camera ${instance_id}"
-                touch /epics/support/ADGenICam/db/${instance_class}.template
-            else
-                # make a db file from the GenICam XML
-                python /epics/support/ADGenICam/scripts/makeDb.py /tmp/${instance_id}-genicam.xml /epics/support/ADGenICam/db/${instance_class}.template
-            fi
-        fi
-        # Generate pvi device from the GenICam DB
-        # --name is device class
-        # --label is instance ID
-        python /epics/ioc/scripts/makePvi.py /tmp/${instance_id}-genicam.xml /epics/pvi-defs/ \
-            --name $instance_class \
-            --label "GenICam $instance_id"
+    pvi convert device \
+        --template "${template}" \
+        --name "${name}" \
+        --label "${label}" \
+        /epics/pvi-defs/
+}
+
+ibek_src="${CONFIG_DIR}/ioc.yaml"
+readarray entities < <(yq -o=j -I=0 '.entities[]' "${ibek_src}")
+
+for ((count = 0 ; count < ${#entities[@]}; count++ )); do # Iterate over each entity
+    instance_type=$(yq ".entities[${count}].type" "${ibek_src}")
+
+    [[ ${instance_type} != "ADAravis.aravisCamera" ]] && continue
+
+    instance_id=$(yq ".entities[${count}].ID" "${ibek_src}")
+    instance_class="auto-${instance_id}"
+    label="GenICam ${instance_id}"
+    xml_file="/tmp/${instance_id}-genicam.xml"
+    template="/epics/support/ADGenICam/db/${instance_class}.template"
+
+    arv-tool-0.8 -a "${instance_id}" genicam > "${xml_file}"
+
+    if [[ -s ${xml_file} ]]; then
+        # Generate pvi device from GenICam XML, embedded in a copy of ADAravis as subscreen
+        python /epics/ioc/scripts/makePvi.py \
+            "${xml_file}" \
+            "/epics/pvi-defs/" \
+            --instance_class "${instance_class}" \
+            --label "${label}" \
+            --embed_in "ADAravis"
+
+        # Make a db file from the GenICam XML
+        python /epics/support/ADGenICam/scripts/makeDb.py \
+            "${xml_file}" \
+            "${template}"
+
+        continue
     fi
+
+    # Can't get xml from camera: make empty GenICam template and generate pvi device from it
+    echo "Can't get xml from camera ${instance_id}"
+    touch "${template}"
+    generate_pvi_from_template "${template}" "${instance_class}" "${label}"
 done
 
 # get the ibek support yaml files this ioc's support modules
