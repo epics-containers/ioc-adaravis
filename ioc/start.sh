@@ -56,7 +56,7 @@ if [[ -d /epics/support/configure/protocol ]] ; then
     cp -r /epics/support/configure/protocol  ${RUNTIME_DIR}
 fi
 
-# generate template for Aravis cameras parameters ******************************
+# generate pvi device and template for Aravis cameras parameters ******************************
 
 generate_pvi_from_template() {
     local template="$1"
@@ -80,13 +80,10 @@ for ((count = 0 ; count < ${#entities[@]}; count++ )); do # Iterate over each en
 
     instance_id=$(yq ".entities[${count}].ID" "${ibek_src}")
     instance_class="auto-${instance_id}"
-    output_file_name_root="${instance_class}"
-    label="GenICam ${instance_id}" 
-
+    label="GenICam ${instance_id}"
+    xml_file="/tmp/${instance_id}-genicam.xml"
     template="/epics/support/ADGenICam/db/${instance_class}.template"
 
-    # Auto generate GenICam database from camera parameters xml
-    xml_file="/tmp/${instance_id}-genicam.xml"
     arv-tool-0.8 -a "${instance_id}" genicam > "${xml_file}"
 
     if [[ -s ${xml_file} ]]; then
@@ -106,10 +103,10 @@ for ((count = 0 ; count < ${#entities[@]}; count++ )); do # Iterate over each en
         continue
     fi
 
-    # Can't get xml from camera: make empty GenICam DB and generate pvi device from it
+    # Can't get xml from camera: make empty GenICam template and generate pvi device from it
     echo "Can't get xml from camera ${instance_id}"
     touch "${template}"
-    generate_pvi_from_template "${template}" "${output_file_name_root}" "${label}"
+    generate_pvi_from_template "${template}" "${instance_class}" "${label}"
 done
 
 # get the ibek support yaml files this ioc's support modules
