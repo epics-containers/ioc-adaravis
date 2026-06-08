@@ -57,10 +57,10 @@ FROM ${RUNTIME} AS runtime
 COPY --from=runtime_prep /assets /
 # Huy try changing
 # COPY --from=runtime_prep /usr/bin/yq /usr/bin/yq
-# Use wget because image does not have curl
-RUN wget -qO /usr/local/bin/yq \
+RUN apt-get update && apt-get install -y curl
+RUN curl -L \
   https://github.com/mikefarah/yq/releases/download/v4.44.2/yq_linux_amd64 \
- && chmod +x /usr/local/bin/yq
+  -o /usr/local/bin/yq && chmod +x /usr/local/bin/yq
 
 # install runtime system dependencies, collected from install.sh scripts
 RUN ibek support apt-install-runtime-packages
