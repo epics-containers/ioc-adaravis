@@ -55,7 +55,11 @@ FROM ${RUNTIME} AS runtime
 
 # get runtime assets from the preparation stage
 COPY --from=runtime_prep /assets /
-COPY --from=runtime_prep /usr/bin/yq /usr/bin/yq
+# Huy try changing
+# COPY --from=runtime_prep /usr/bin/yq /usr/bin/yq
+RUN curl -L \
+  https://github.com/mikefarah/yq/releases/download/v4.44.2/yq_linux_amd64 \
+  -o /usr/local/bin/yq && chmod +x /usr/local/bin/yq
 
 # install runtime system dependencies, collected from install.sh scripts
 RUN ibek support apt-install-runtime-packages
