@@ -154,7 +154,7 @@ class GenICamNode:
 
         Args:
             xml_element: an xml.dom.minidom.Element representing a
-                         <Category>, <Float>, <Int>, <Enumeration>, etc.
+                         <Category>, <Float>, <Int>, <Enumeration>, etc
         """
         # Original XML element
         self.xml_element: Element = xml_element
@@ -163,7 +163,21 @@ class GenICamNode:
         self.name: str = xml_element.getAttribute("Name")
         self.description: str | None = self._extract_description()
         self.access: str = self._extract_access_mode()
-        self.node_type: str = xml_element.nodeName  # Category, Float, Int, Enumeration
+        self.node_type: str = xml_element.nodeName  # Category, Float, Int, Enumeration, etc
+        self.is_category = self.node_type == "Category"
+        self.is_signal: bool = self.node_type in [
+            "Integer",
+            "IntReg",
+            "IntConverter",
+            "IntSwissKnife",
+            "Boolean",
+            "Float",
+            "Converter",
+            "SwissKnife",
+            "String",
+            "StringReg",
+            "Command",
+            "Enumeration"]
         self.is_enum: bool = self.node_type == "Enumeration"
         self.is_command: bool = self.node_type == "Command"
         self.epics_record_name: str | None = None
@@ -204,9 +218,6 @@ class GenICamNode:
                     choices.append(name)
         return choices
 
-    def is_category(self) -> bool:
-        return self.node_type == "Category"
-
     def is_leaf(self) -> bool:
         if not self.references_resolved:
             raise RuntimeError(f"References not yet resolved for node {self.name}")
@@ -218,7 +229,7 @@ class GenICamNode:
         """
         if not self.references_resolved:
             raise RuntimeError(f"References not yet resolved for node {self.name}")
-        return self.is_category() and any(child.is_leaf() for child in self.children)
+        return self.is_category and any(child.is_leaf() for child in self.children)
 
     def resolve_children(self, definition_nodes_lookup: dict[str, "GenICamNode"]) -> None:
         """
@@ -236,7 +247,7 @@ class GenICamNode:
         """
         if self.references_resolved:
             return
-        if not self.is_category():
+        if not self.is_category:
             self.references_resolved = True
             return
 
@@ -435,14 +446,14 @@ class PviModel:
 
             # Select group's children that are not category, these are leaves
             non_category_children = [
-                child for child in node.children if not child.is_category()
+                child for child in node.children if not child.is_category
             ]
             if not non_category_children:
                 continue
 
             # Create signals from leaves
             signals: list[SignalR | SignalRW | SignalW | SignalX] = [
-                PviModel.make_signal(leaf) for leaf in non_category_children
+                PviModel.make_signal(leaf) for leaf in non_category_children if leaf.is_signal
             ]
 
             group_name = enforce_pascal_case(node.name)
@@ -461,7 +472,7 @@ class PviModel:
             signals: list[SignalR | SignalRW | SignalW | SignalX] = []
             # Sort to make sure consistent test results
             for node in sorted(definition_nodes.values(), key=lambda n: n.name):
-                if not node.is_category():
+                if not node.is_category and node.is_signal:
                     signals.append(PviModel.make_signal(node))
 
             if signals:

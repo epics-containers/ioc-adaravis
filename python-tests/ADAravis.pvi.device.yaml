@@ -1,8 +1,5 @@
 label: ADAravis Camera
 children:
-  - type: Include
-    file_name: ADDriver
-
   - type: Group
     name: ADAravis
     layout:

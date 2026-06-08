@@ -5,7 +5,7 @@ import sys
 SCRIPT_DIR = Path(__file__).resolve().parents[1] / "ioc"
 sys.path.insert(0, str(SCRIPT_DIR))
 
-from pvi.device import Group
+from pvi.device import Group, SignalX
 import pytest
 from xml.dom.minidom import Document, parseString
 from ruamel.yaml import YAML
@@ -189,6 +189,108 @@ class TestPviModel:
         for signal in acquisitionGroup.children:
             assert signal.write_pv in ["$(P)$(R)GC_ExpTimeFeature", "$(P)$(R)GC_GainFeature", "$(P)$(R)GC_OffsetFeature"]
             assert signal.read_pv in ["$(P)$(R)GC_ExpTimeFeature_RBV", "$(P)$(R)GC_GainFeature_RBV", "$(P)$(R)GC_OffsetFeature_RBV"]
+
+    def test_command_generates_signalx(self):
+        xml = """
+        <Root>
+        <Category Name="AcquisitionCategory">
+            <pFeature>AcquisitionStart</pFeature>
+        </Category>
+
+        <Command Name="AcquisitionStart">
+            <Description>Start acquisition</Description>
+        </Command>
+        </Root>
+        """
+
+        genicam_model: GenICamModel = GenICamModel(xml)
+        pvi_model: PviModel = PviModel(genicam_model, "Camera")
+
+        signal = pvi_model.groups[0].children[0]
+
+        assert isinstance(signal, SignalX)
+        assert signal.write_pv == "$(P)$(R)GC_AcquisitionStart"
+
+    def test_filter_for_signals(self):
+        xml = """
+        <Root>
+        <Category Name="AcquisitionCategory">
+            <pFeature>IntegerSignal</pFeature>
+            <pFeature>NotASignal</pFeature>
+            <pFeature>IntRegSignal</pFeature>
+            <pFeature>IntConSignal</pFeature>
+            <pFeature>IntSwiKnifeSignal</pFeature>
+            <pFeature>BooleanSignal</pFeature>
+            <pFeature>FloatSignal</pFeature>
+            <pFeature>ConverterSignal</pFeature>
+            <pFeature>SwissKnifeSignal</pFeature>
+            <pFeature>StringSignal</pFeature>
+            <pFeature>StringRegSignal</pFeature>
+            <pFeature>CommandSignal</pFeature>
+            <pFeature>EnumerationSignal</pFeature>          
+        </Category>
+
+        <Integer Name="IntegerSignal">
+            <Description>Integer Signal</Description>
+        </Integer>
+        <NotASignal Name="NotASignal">
+            <Description>Not A Signal</Description>
+        </NotASignal>
+        <IntReg Name="IntRegSignal">
+            <Description>IntReg Signal</Description>
+        </IntReg>
+        <IntConverter Name="IntConSignal">
+            <Description>IntConverter Signal</Description>
+        </IntConverter>
+        <IntSwissKnife Name="IntSwiKnifeSignal">
+            <Description>Int Swiss Knife Signal</Description>
+        </IntSwissKnife>
+        <Boolean Name="BooleanSignal">
+            <Description>Boolean Signal</Description>
+        </Boolean>
+        <Float Name="FloatSignal">
+            <Description>Float Signal</Description>
+        </Float>
+        <Converter Name="ConverterSignal">
+            <Description>Converter Signal</Description>
+        </Converter>
+        <SwissKnife Name="SwissKnifeSignal">
+            <Description>Swiss Knife Signal</Description>
+        </SwissKnife>
+        <String Name="StringSignal">
+            <Description>String Signal</Description>
+        </String>
+        <StringReg Name="StringRegSignal">
+            <Description>StringReg Signal</Description>
+        </StringReg>
+        <Command Name="CommandSignal">
+            <Description>Command Signal</Description>
+        </Command>
+        <Enumeration Name="EnumerationSignal">
+            <Description>Enumeration Signal</Description>
+        </Enumeration>   
+        </Root>
+        """
+
+        genicam_model: GenICamModel = GenICamModel(xml)
+        pvi_model: PviModel = PviModel(genicam_model, "Camera")
+        groups: list[Group] = pvi_model.groups
+        acquisitionGroup = next(g for g in groups if g.name == "AcquisitionCategory")
+        signal_names = [s.name for s in acquisitionGroup.children]
+        assert set(signal_names) == {
+            "GCIntegerSignal",
+            "GCIntRegSignal",
+            "GCIntConSignal",
+            "GCIntSwiKnifeSignal",
+            "GCBooleanSignal",
+            "GCFloatSignal",
+            "GCConverterSignal",
+            "GCSwissKnifeSignal",
+            "GCStringSignal",
+            "GCStringRegSignal",
+            "GCCommandSignal",
+            "GCEnumerationSignal"
+        }
 
     def test_convert_genicam_xml_to_pvi_generates_yaml(self, example_xml: str):
         yaml_text = makePvi.convert_genicam_xml_to_pvi(
