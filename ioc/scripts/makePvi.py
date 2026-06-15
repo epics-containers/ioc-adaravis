@@ -204,7 +204,7 @@ class GenICamNode:
     def _extract_access_mode(self) -> str:
         # Similar search logic to _extract_description
         for child in self.xml_element.childNodes:
-            if child.nodeName == "AccessMode" and child.firstChild:
+            if child.nodeName in ("AccessMode", "ImposedAccessMode") and child.firstChild:
                 return child.firstChild.nodeValue.strip()
         return "RW"  # default
 
