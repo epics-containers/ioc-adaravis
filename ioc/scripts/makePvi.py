@@ -403,7 +403,7 @@ class PviModel:
             return SignalR(
                 name=signal_name,
                 description=signal_description,
-                read_pv=PviModel.make_pv(node.epics_record_name),
+                read_pv=PviModel.make_pv(node.epics_record_name, "_RBV"),
                 read_widget=read_widget
             )
 
