@@ -1,5 +1,6 @@
 #!/bin/env python
 from argparse import ArgumentParser, Namespace
+from enum import Enum
 from pathlib import Path
 from pvi.device import Device, enforce_pascal_case, Grid, Group, SignalR, SignalRW, SignalW, SignalX, SubScreen
 from pvi._yaml_utils import type_first, load_yaml
@@ -145,6 +146,13 @@ def convert_genicam_xml_to_pvi(
     return stream.getvalue()
 
 
+class AccessType(Enum):
+    READ_ONLY = "R"
+    WRITE_ONLY = "W"
+    READWRITE = "RW"
+    EXECUTE = "X"
+
+
 class GenICamNode:
     def __init__(self, xml_element: Element) -> None:
         """
@@ -162,8 +170,8 @@ class GenICamNode:
         # Basic metadata
         self.name: str = xml_element.getAttribute("Name")
         self.description: str | None = self._extract_description()
-        self.access: str = self._extract_access_mode()
-        self.node_type: str = xml_element.nodeName  # Category, Float, Int, Enumeration, etc
+        self.node_type: str = xml_element.nodeName # Raw from XML: Category, Float, Enumeration, etc
+        self.access_type: AccessType | None = None # Parsed, to parse later
         self.is_category = self.node_type == "Category"
         self.is_signal: bool = self.node_type in [
             "Integer",
@@ -179,7 +187,6 @@ class GenICamNode:
             "Command",
             "Enumeration"]
         self.is_enum: bool = self.node_type == "Enumeration"
-        self.is_command: bool = self.node_type == "Command"
         self.epics_record_name: str | None = None
 
         # Children Node objects (from <pFeature> references)
@@ -201,13 +208,6 @@ class GenICamNode:
                 return child.firstChild.nodeValue.strip()
         return None
 
-    def _extract_access_mode(self) -> str:
-        # Similar search logic to _extract_description
-        for child in self.xml_element.childNodes:
-            if child.nodeName in ("AccessMode", "ImposedAccessMode") and child.firstChild:
-                return child.firstChild.nodeValue.strip()
-        return "RW"  # default
-
     def _extract_enum_choices(self) -> list[str]:
         choices: list[str] = []
         # Similar search logic to _extract_description
@@ -217,6 +217,12 @@ class GenICamNode:
                 if name:
                     choices.append(name)
         return choices
+
+    def get_child_text(self, *names: str) -> str | None:
+        for child in self.xml_element.childNodes:
+            if child.nodeName in names and child.firstChild:
+                return child.firstChild.nodeValue.strip()
+        return None
 
     def is_leaf(self) -> bool:
         if not self.references_resolved:
@@ -231,7 +237,9 @@ class GenICamNode:
             raise RuntimeError(f"References not yet resolved for node {self.name}")
         return self.is_category and any(child.is_leaf() for child in self.children)
 
-    def resolve_children(self, definition_nodes_lookup: dict[str, "GenICamNode"]) -> None:
+    def resolve_children(
+        self,
+        definition_nodes_lookup: dict[str, "GenICamNode"]) -> None:
         """
         Populating self.children by resolving <pFeature> references.
         <pFeature> references are inside <Category > like this:
@@ -262,6 +270,65 @@ class GenICamNode:
                 self.children.append(referenced_definition_node)
 
         self.references_resolved = True
+   
+    def _determine_access_type(
+        self,
+        definition_nodes_lookup: dict[str, "GenICamNode"],
+        visited: set[str]) -> AccessType | None:
+        """
+        Recursive helper equivalent to makeDb.py:is_node_readonly()
+        """
+        if self.name in visited:
+            return False
+
+        visited.add(self.name)
+
+        if not self.is_signal:
+            return None
+        
+        if self.node_type == "Command":
+            return AccessType.EXECUTE
+
+        # SwissKnife special case
+        if self.node_type in ("SwissKnife", "IntSwissKnife"):
+            return AccessType.READ_ONLY
+
+        # Directly determined via AccessMode/ImposedAccessMode
+        access_mode = self.get_child_text("AccessMode", "ImposedAccessMode")
+        if access_mode:
+            access_mode = access_mode.strip().upper()
+            if access_mode in ("RO", "READONLY"):
+                return AccessType.READ_ONLY
+            
+            if access_mode in ("WO", "WRITEONLY"):
+                return AccessType.WRITE_ONLY
+            
+            if access_mode in ("RW", "READWRITE"):
+                return AccessType.READWRITE
+
+        # Indirectly determined via pValue reference
+        referenced_name = self.get_child_text("pValue")
+        if referenced_name:
+            referenced_node = definition_nodes_lookup.get(referenced_name)
+            if referenced_node:
+                return  referenced_node.determine_readonly(
+                    definition_nodes_lookup,
+                    visited)
+
+        raise RuntimeError(
+            f"Cannot determine access type for {self.name} ({self.node_type})"
+        )
+
+    def set_access_type(
+        self,
+        definition_nodes_lookup: dict[str, "GenICamNode"]) -> None:
+        """
+        Public entry point called once by GenICamModel.
+        """
+        if self.is_signal and self.access_type is None:
+            self.access_type = self._determine_access_type(
+                definition_nodes_lookup,
+                visited=set())
 
     def __repr__(self) -> str:
         return f"Node({self.name}, {self.node_type})"
@@ -278,6 +345,7 @@ class GenICamModel:
         self.doc: Document = parseString(xml_text)
         self.definition_nodes: dict[str, GenICamNode] = self._build_definition_nodes()
         self._resolve_references()
+        self._set_access_type_for_nodes() # must be after resolving references
         self.epics_record_name_max_length: int = epics_record_name_max_length
         self.epics_record_name_prefix: str = epics_record_name_prefix
         self.epics_record_names: dict[str, str] = self._build_epics_record_names()
@@ -307,6 +375,14 @@ class GenICamModel:
         """
         for definition_node in self.definition_nodes.values():
             definition_node.resolve_children(self.definition_nodes)
+
+    def _set_access_type_for_nodes(self) -> None:
+        """
+        Determine nodes' access types has to be done after resolving references
+        because it might need to traverse the model.
+        """        
+        for node in self.definition_nodes.values():
+            node.set_access_type(self.definition_nodes)
 
     def _build_epics_record_names(self) -> dict[str, str]:
         epics_record_names: dict[str, str] = {}
@@ -396,35 +472,33 @@ class PviModel:
             # If not enum or no choices then use TextWrite
             write_widget = {"type": "TextWrite"}
 
-        access = node.access.upper()
+        print(f">>>>>>>> {signal_name}, {node.access_type}")
 
-        # Read only
-        if access in ("RO", "READONLY"):
-            return SignalR(
-                name=signal_name,
-                description=signal_description,
-                read_pv=PviModel.make_pv(node.epics_record_name, "_RBV"),
-                read_widget=read_widget
-            )
+        match node.access_type:
 
-        # Command
-        if node.is_command:
-            return SignalX(
-                name=signal_name,
-                description=signal_description,
-                write_pv=PviModel.make_pv(node.epics_record_name)
-            )
+            case AccessType.EXECUTE:
+                return SignalX(
+                    name=signal_name,
+                    description=signal_description,
+                    write_pv=PviModel.make_pv(node.epics_record_name)
+                )
 
-        # Write only
-        if access in ("WO", "WRITEONLY"):
-            return SignalW(
-                name=signal_name,
-                description=signal_description,
-                write_pv=PviModel.make_pv(node.epics_record_name),
-                write_widget=write_widget
-            )
+            case AccessType.READ_ONLY:
+                return SignalR(
+                    name=signal_name,
+                    description=signal_description,
+                    read_pv=PviModel.make_pv(node.epics_record_name, "_RBV"),
+                    read_widget=read_widget
+                )
 
-        # Assume read-write
+            case AccessType.WRITE_ONLY:
+                return SignalW(
+                    name=signal_name,
+                    description=signal_description,
+                    write_pv=PviModel.make_pv(node.epics_record_name),
+                    write_widget=write_widget
+                )
+
         return SignalRW(
             name=signal_name,
             description=signal_description,

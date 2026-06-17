@@ -33,14 +33,17 @@ def example_xml() -> str:
 
       <Float Name="ExposureTimeFeature">
         <Description>ExposureTimeFeature description</Description>
+        <AccessMode>RW</AccessMode>
       </Float>
 
       <Float Name="GainFeature">
         <Description>GainFeature description</Description>
+        <ImposedAccessMode>WO</ImposedAccessMode>
       </Float>
 
       <Float Name="OffsetFeature">
         <Description>OffsetFeature description</Description>
+        <ImposedAccessMode>WO</ImposedAccessMode>
       </Float>
 
       <Category Name="EmptyCategoryIgnored">
@@ -54,10 +57,12 @@ def example_xml() -> str:
 
       <Float Name="NestedFeature">
         <Description>NestedFeature description</Description>
+        <ImposedAccessMode>WO</ImposedAccessMode>
       </Float>
 
       <Enumeration Name="TriggerModeEnumeration">
         <Description>TriggerEnumeration description</Description>
+        <ImposedAccessMode>WO</ImposedAccessMode>
         <EnumEntry Name="Off"/>
         <EnumEntry Name="On"/>
       </Enumeration>
@@ -187,8 +192,9 @@ class TestPviModel:
         assert set(signal_names) == \
             {"GCExpTimeFeature", "GCGainFeature", "GCOffsetFeature"}
         for signal in acquisitionGroup.children:
-            assert signal.write_pv in ["$(P)$(R)GC_ExpTimeFeature", "$(P)$(R)GC_GainFeature", "$(P)$(R)GC_OffsetFeature"]
-            assert signal.read_pv in ["$(P)$(R)GC_ExpTimeFeature_RBV", "$(P)$(R)GC_GainFeature_RBV", "$(P)$(R)GC_OffsetFeature_RBV"]
+            if signal.name == "GCExpTimeFeature":
+                assert signal.write_pv in ["$(P)$(R)GC_ExpTimeFeature", "$(P)$(R)GC_GainFeature", "$(P)$(R)GC_OffsetFeature"]
+                assert signal.read_pv in ["$(P)$(R)GC_ExpTimeFeature_RBV", "$(P)$(R)GC_GainFeature_RBV", "$(P)$(R)GC_OffsetFeature_RBV"]
 
     def test_command_generates_signalx(self):
         xml = """
@@ -232,42 +238,55 @@ class TestPviModel:
 
         <Integer Name="IntegerSignal">
             <Description>Integer Signal</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
         </Integer>
         <NotASignal Name="NotASignal">
             <Description>Not A Signal</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
         </NotASignal>
         <IntReg Name="IntRegSignal">
             <Description>IntReg Signal</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
         </IntReg>
         <IntConverter Name="IntConSignal">
             <Description>IntConverter Signal</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
         </IntConverter>
         <IntSwissKnife Name="IntSwiKnifeSignal">
             <Description>Int Swiss Knife Signal</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
         </IntSwissKnife>
         <Boolean Name="BooleanSignal">
             <Description>Boolean Signal</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
         </Boolean>
         <Float Name="FloatSignal">
             <Description>Float Signal</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
         </Float>
         <Converter Name="ConverterSignal">
             <Description>Converter Signal</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
         </Converter>
         <SwissKnife Name="SwissKnifeSignal">
             <Description>Swiss Knife Signal</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
         </SwissKnife>
         <String Name="StringSignal">
             <Description>String Signal</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
         </String>
         <StringReg Name="StringRegSignal">
             <Description>StringReg Signal</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
         </StringReg>
         <Command Name="CommandSignal">
             <Description>Command Signal</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
         </Command>
         <Enumeration Name="EnumerationSignal">
             <Description>Enumeration Signal</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
         </Enumeration>   
         </Root>
         """
