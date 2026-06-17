@@ -56,7 +56,19 @@ if [[ -d /epics/support/configure/protocol ]] ; then
     cp -r /epics/support/configure/protocol  ${RUNTIME_DIR}
 fi
 
-# generate template for Aravis cameras parameters ******************************
+# generate pvi device and template for Aravis cameras parameters ******************************
+
+generate_pvi_from_template() {
+    local template="$1"
+    local name="$2"
+    local label="$3"
+
+    pvi convert device \
+        --template "${template}" \
+        --name "${name}" \
+        --label "${label}" \
+        /epics/pvi-defs/
+}
 
 generate_pvi_from_template() {
     local template="$1"
