@@ -147,8 +147,8 @@ def convert_genicam_xml_to_pvi(
 
 
 class AccessType(Enum):
-    READ_ONLY = "R"
-    WRITE_ONLY = "W"
+    READ = "R"
+    WRITE = "W"
     READWRITE = "RW"
     EXECUTE = "X"
 
@@ -279,41 +279,42 @@ class GenICamNode:
         Recursive helper equivalent to makeDb.py:is_node_readonly()
         """
         if self.name in visited:
-            return False
+            raise RuntimeError(f"Circular access dependency involving {self.name}")
 
         visited.add(self.name)
 
-        if not self.is_signal:
-            return None
-        
         if self.node_type == "Command":
             return AccessType.EXECUTE
+        
+        if not self.is_signal:
+            return None
 
-        # SwissKnife special case
-        if self.node_type in ("SwissKnife", "IntSwissKnife"):
-            return AccessType.READ_ONLY
-
-        # Directly determined via AccessMode/ImposedAccessMode
+        # The ordering 1, 2, 3 below mirrors  makeDb.py
+        # 1. Directly determined via AccessMode/ImposedAccessMode
         access_mode = self.get_child_text("AccessMode", "ImposedAccessMode")
         if access_mode:
             access_mode = access_mode.strip().upper()
             if access_mode in ("RO", "READONLY"):
-                return AccessType.READ_ONLY
+                return AccessType.READ
             
             if access_mode in ("WO", "WRITEONLY"):
-                return AccessType.WRITE_ONLY
+                return AccessType.WRITE
             
             if access_mode in ("RW", "READWRITE"):
                 return AccessType.READWRITE
 
-        # Indirectly determined via pValue reference
+        # 2. Indirectly determined via pValue reference
         referenced_name = self.get_child_text("pValue")
         if referenced_name:
             referenced_node = definition_nodes_lookup.get(referenced_name)
             if referenced_node:
-                return  referenced_node.determine_readonly(
+                return  referenced_node._determine_access_type(
                     definition_nodes_lookup,
                     visited)
+
+        # 3. SwissKnife special case
+        if self.node_type in ("SwissKnife", "IntSwissKnife"):
+            return AccessType.READ
 
         raise RuntimeError(
             f"Cannot determine access type for {self.name} ({self.node_type})"
@@ -345,7 +346,11 @@ class GenICamModel:
         self.doc: Document = parseString(xml_text)
         self.definition_nodes: dict[str, GenICamNode] = self._build_definition_nodes()
         self._resolve_references()
-        self._set_access_type_for_nodes() # must be after resolving references
+        self._set_access_type_for_nodes()
+        for node in self.definition_nodes.values():
+            if node.is_signal and node.access_type is None:
+                raise RuntimeError(f"Signal node {node.name} has no access type")
+
         self.epics_record_name_max_length: int = epics_record_name_max_length
         self.epics_record_name_prefix: str = epics_record_name_prefix
         self.epics_record_names: dict[str, str] = self._build_epics_record_names()
@@ -376,11 +381,7 @@ class GenICamModel:
         for definition_node in self.definition_nodes.values():
             definition_node.resolve_children(self.definition_nodes)
 
-    def _set_access_type_for_nodes(self) -> None:
-        """
-        Determine nodes' access types has to be done after resolving references
-        because it might need to traverse the model.
-        """        
+    def _set_access_type_for_nodes(self) -> None:  
         for node in self.definition_nodes.values():
             node.set_access_type(self.definition_nodes)
 
@@ -483,7 +484,7 @@ class PviModel:
                     write_pv=PviModel.make_pv(node.epics_record_name)
                 )
 
-            case AccessType.READ_ONLY:
+            case AccessType.READ:
                 return SignalR(
                     name=signal_name,
                     description=signal_description,
@@ -491,7 +492,7 @@ class PviModel:
                     read_widget=read_widget
                 )
 
-            case AccessType.WRITE_ONLY:
+            case AccessType.WRITE:
                 return SignalW(
                     name=signal_name,
                     description=signal_description,
@@ -499,13 +500,18 @@ class PviModel:
                     write_widget=write_widget
                 )
 
-        return SignalRW(
-            name=signal_name,
-            description=signal_description,
-            read_pv=PviModel.make_pv(node.epics_record_name, "_RBV"),
-            read_widget=read_widget,
-            write_pv=PviModel.make_pv(node.epics_record_name),
-            write_widget=write_widget
+            case AccessType.READWRITE:
+                return SignalRW(
+                    name=signal_name,
+                    description=signal_description,
+                    read_pv=PviModel.make_pv(node.epics_record_name, "_RBV"),
+                    read_widget=read_widget,
+                    write_pv=PviModel.make_pv(node.epics_record_name),
+                    write_widget=write_widget
+                )
+
+        raise RuntimeError(
+            f"Unexpected access type {node.access_type} for node {node.name}"
         )
 
     @staticmethod
