@@ -5,8 +5,6 @@ from io import StringIO
 from pathlib import Path
 from pvi.device import Device, enforce_pascal_case, Grid, Group, SignalR, SignalRW, SignalW, SignalX, SubScreen
 from pvi._yaml_utils import type_first, load_yaml
-from pvi.device import Device, enforce_pascal_case, Grid, Group, SignalR, SignalRW, SignalW, SignalX, SubScreen
-from pvi._yaml_utils import type_first, load_yaml
 import re
 from ruamel.yaml import YAML
 import warnings
@@ -54,9 +52,6 @@ def get_cli_params() -> Namespace:
     parser.add_argument("--instance_class", dest="instance_class", required=True, help="Device class name, used as output file name root")
     parser.add_argument("--label", dest="label", required=True, help="Device instance ID, used for label")
     parser.add_argument("--embed_in", dest="embed_in", required=False, help="Root name of PVI yaml file that encloses the yaml from XML")
-    parser.add_argument("--instance_class", dest="instance_class", required=True, help="Device class name, used as output file name root")
-    parser.add_argument("--label", dest="label", required=True, help="Device instance ID, used for label")
-    parser.add_argument("--embed_in", dest="embed_in", required=False, help="Root name of PVI yaml file that encloses the yaml from XML")
 
     args = parser.parse_args()
 
@@ -93,23 +88,13 @@ def convert_genicam_xml_to_pvi(
         label: str,
         embed_in: str = "",
         embedding_file_folder: str = "") -> str:
-def convert_genicam_xml_to_pvi(
-        xml_text: str,
-        instance_class: str,
-        label: str,
-        embed_in: str = "",
-        embedding_file_folder: str = "") -> str:
     """
-    Convert GenICam XML text into PVI YAML text,
-    optionally enclose it as a subscreen in another PVI YAML.
     Convert GenICam XML text into PVI YAML text,
     optionally enclose it as a subscreen in another PVI YAML.
      Args:
         xml_text: GenICam XML as string.
         instance_class: Device class name (used for YAML name/class fields).
         label: Device label (used for YAML label field).
-        embed_in: Root name of PVI yaml file that encloses the yaml from XML.
-        embedding_file_folder: Folder containing the embedding file.
         embed_in: Root name of PVI yaml file that encloses the yaml from XML.
         embedding_file_folder: Folder containing the embedding file.
 
@@ -121,25 +106,8 @@ def convert_genicam_xml_to_pvi(
 
     # Creating output model
     genicam_pvi_model: PviModel = PviModel(genicam_model, instance_class)
-    genicam_pvi_model: PviModel = PviModel(genicam_model, instance_class)
 
     # Build Device
-    device: Device
-    
-    if not embed_in:
-        # GenICam as alone device
-        device = Device(label=label, children=genicam_pvi_model.groups)
-
-    else:
-        # GenICam embedded as subscreen
-        enclosing_yaml = load_yaml(Path(f"{embedding_file_folder}{embed_in}.pvi.device.yaml"))
-        device = Device.model_validate(enclosing_yaml)
-        device.label = f"{device.label} + {label}"
-        genicam_group: Group = Group(
-            name="GenICam",
-            layout=SubScreen(labelled=False),
-            children=genicam_pvi_model.groups)
-        device.children.append(genicam_group)
     device: Device
     
     if not embed_in:
@@ -162,9 +130,7 @@ def convert_genicam_xml_to_pvi(
     # This outputs in insertion order.
     # Note, with rt there is no need for ym.sort_keys = False.
     output_yaml = YAML()
-    output_yaml = YAML()
     # Use pure Python emitter instead of the C backend, slower but more consistent
-    output_yaml.pure = True
     output_yaml.pure = True
     # This outputs like PyYaml
     # a:
@@ -172,11 +138,9 @@ def convert_genicam_xml_to_pvi(
     # instead of
     # a: {b: 1}
     output_yaml.default_flow_style = False
-    output_yaml.default_flow_style = False
     stream = StringIO()
     data = device.model_dump(exclude_none=True)
     data.pop("type", None)  # remove top-level type "type: Device" because pvi format doesn't like it
-    output_yaml.dump(type_first(data), stream)
     output_yaml.dump(type_first(data), stream)
     return stream.getvalue()
 
