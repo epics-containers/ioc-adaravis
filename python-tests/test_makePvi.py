@@ -387,3 +387,199 @@ class TestPviModel:
             "GCExpTimeFeature",
             "GCGainFeature",
             "GCOffsetFeature"}
+
+
+class TestAccessMode:
+    def test_access_type_ro(self):
+        xml = """
+        <Root>
+            <Float Name="Gain">
+                <AccessMode>RO</AccessMode>
+            </Float>
+        </Root>
+        """
+        model = GenICamModel(xml)
+        assert (
+            model.definition_nodes["Gain"].access_type
+            == makePvi.AccessType.READ)
+
+    def test_access_type_readonly(self):
+        xml = """
+        <Root>
+            <Float Name="Gain">
+                <AccessMode>ReadOnly</AccessMode>
+            </Float>
+        </Root>
+        """
+        model = GenICamModel(xml)
+        assert (
+            model.definition_nodes["Gain"].access_type
+            == makePvi.AccessType.READ)
+        
+    def test_access_type_wo(self):
+        xml = """
+        <Root>
+            <Float Name="Gain">
+                <AccessMode>WO</AccessMode>
+            </Float>
+        </Root>
+        """
+        model = GenICamModel(xml)
+        assert (
+            model.definition_nodes["Gain"].access_type
+            == makePvi.AccessType.WRITE)
+
+    def test_access_type_rw(self):
+        xml = """
+        <Root>
+            <Float Name="Gain">
+                <AccessMode>RW</AccessMode>
+            </Float>
+        </Root>
+        """
+        model = GenICamModel(xml)
+        assert (
+            model.definition_nodes["Gain"].access_type
+            == makePvi.AccessType.READWRITE)
+
+    def test_access_type_imposed_access_mode(self):
+        xml = """
+        <Root>
+            <Float Name="Gain">
+                <ImposedAccessMode>RO</ImposedAccessMode>
+            </Float>
+        </Root>
+        """
+        model = GenICamModel(xml)
+        assert (
+            model.definition_nodes["Gain"].access_type
+            == makePvi.AccessType.READ)
+
+    def test_access_type_inherited_from_pvalue(self):
+        xml = """
+        <Root>
+            <Integer Name="Register">
+                <AccessMode>RO</AccessMode>
+            </Integer>
+
+            <IntConverter Name="Derived">
+                <pValue>Register</pValue>
+            </IntConverter>
+        </Root>
+        """
+        model = GenICamModel(xml)
+        assert (
+            model.definition_nodes["Derived"].access_type
+            == makePvi.AccessType.READ)
+
+    def test_access_type_pvalue_chain(self):
+        xml = """
+        <Root>
+            <Integer Name="Base">
+                <AccessMode>RW</AccessMode>
+            </Integer>
+
+            <IntConverter Name="Middle">
+                <pValue>Base</pValue>
+            </IntConverter>
+
+            <IntConverter Name="Top">
+                <pValue>Middle</pValue>
+            </IntConverter>
+        </Root>
+        """
+        model = GenICamModel(xml)
+        assert (
+            model.definition_nodes["Top"].access_type
+            == makePvi.AccessType.READWRITE)
+
+    def test_access_type_circular_dependency(self):
+        xml = """
+        <Root>
+            <IntConverter Name="A">
+                <pValue>B</pValue>
+            </IntConverter>
+
+            <IntConverter Name="B">
+                <pValue>A</pValue>
+            </IntConverter>
+        </Root>
+        """
+        with pytest.raises(
+            RuntimeError,
+            match="Circular access dependency"):
+            GenICamModel(xml)
+
+    def test_access_type_missing_pvalue_target(self):
+        xml = """
+        <Root>
+            <IntConverter Name="Derived">
+                <pValue>DoesNotExist</pValue>
+            </IntConverter>
+        </Root>
+        """
+        with pytest.raises(
+            RuntimeError,
+            match="target does not exist"):
+            GenICamModel(xml)
+
+    def test_swissknife_defaults_to_read(self):
+        xml = """
+        <Root>
+            <SwissKnife Name="Calc"/>
+        </Root>
+        """
+        model = GenICamModel(xml)
+        assert (
+            model.definition_nodes["Calc"].access_type
+            == makePvi.AccessType.READ)
+
+    def test_intswissknife_defaults_to_read(self):
+        xml = """
+        <Root>
+            <IntSwissKnife Name="Calc"/>
+        </Root>
+        """
+        model = GenICamModel(xml)
+        assert (
+            model.definition_nodes["Calc"].access_type
+            == makePvi.AccessType.READ)
+
+    def test_command_access_type_execute(self):
+        xml = """
+        <Root>
+            <Command Name="Start"/>
+        </Root>
+        """
+        model = GenICamModel(xml)
+        assert (
+            model.definition_nodes["Start"].access_type
+            == makePvi.AccessType.EXECUTE)
+
+    def test_category_has_no_access_type(self):
+        xml = """
+        <Root>
+            <Category Name="Settings"/>
+        </Root>
+        """
+        model = GenICamModel(xml)
+        assert (
+            model.definition_nodes["Settings"].access_type
+            is None)
+
+    def test_unknown_access_mode_defaults_to_readwrite_with_warning(self):
+        xml = """
+        <Root>
+            <Float Name="Gain">
+                <AccessMode>INVALID</AccessMode>
+            </Float>
+        </Root>
+        """
+        with pytest.warns(
+            UserWarning,
+            match="Defaulting access type to READWRITE"):
+            model = GenICamModel(xml)
+
+        assert (
+            model.definition_nodes["Gain"].access_type
+            == makePvi.AccessType.READWRITE)

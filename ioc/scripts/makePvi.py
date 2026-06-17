@@ -1,13 +1,14 @@
 #!/bin/env python
 from argparse import ArgumentParser, Namespace
 from enum import Enum
+from io import StringIO
 from pathlib import Path
 from pvi.device import Device, enforce_pascal_case, Grid, Group, SignalR, SignalRW, SignalW, SignalX, SubScreen
 from pvi._yaml_utils import type_first, load_yaml
 import re
-from xml.dom.minidom import Document, Element, parseString
-from io import StringIO
 from ruamel.yaml import YAML
+import warnings
+from xml.dom.minidom import Document, Element, parseString
 
 DEBUG = False
 
@@ -28,8 +29,7 @@ def main():
         instance_class=args.instance_class,
         label=args.label,
         embed_in=args.embed_in,
-        embedding_file_folder=args.output_folder
-    )
+        embedding_file_folder=args.output_folder)
 
     # Write output file
     output_folder: Path = Path(args.output_folder)
@@ -73,12 +73,11 @@ def sanitize_genicam_xml(xml_text: str) -> str:
         # Look at first 2 lines, locate the first one that looks like xml
         start_line = min(
             line_number for line_number in range(min(2, len(lines)))
-                if lines[line_number].lstrip().startswith("<")
-        )
+                if lines[line_number].lstrip().startswith("<"))
+
     except ValueError:
         raise RuntimeError(
-            "First two lines has no line that look likes valid XML:\n" + "".join(lines[:2])
-        )
+            "First two lines has no line that look likes valid XML:\n" + "".join(lines[:2]))
 
     return "".join(lines[start_line:]).lstrip()
 
@@ -306,19 +305,23 @@ class GenICamNode:
         # 2. Indirectly determined via pValue reference
         referenced_name = self.get_child_text("pValue")
         if referenced_name:
+
             referenced_node = definition_nodes_lookup.get(referenced_name)
-            if referenced_node:
-                return  referenced_node._determine_access_type(
-                    definition_nodes_lookup,
-                    visited)
+            if referenced_node is None:
+                raise RuntimeError(
+                    f"{self.name}, pValue '{referenced_name}': target does not exist")
+
+            return referenced_node._determine_access_type(
+                definition_nodes_lookup,
+                visited)
 
         # 3. SwissKnife special case
         if self.node_type in ("SwissKnife", "IntSwissKnife"):
             return AccessType.READ
 
-        raise RuntimeError(
-            f"Cannot determine access type for {self.name} ({self.node_type})"
-        )
+        warnings.warn(
+            f"Defaulting access type to READWRITE for {self.name} ({self.node_type})")
+        return AccessType.READWRITE
 
     def set_access_type(
         self,
@@ -473,32 +476,27 @@ class PviModel:
             # If not enum or no choices then use TextWrite
             write_widget = {"type": "TextWrite"}
 
-        print(f">>>>>>>> {signal_name}, {node.access_type}")
-
         match node.access_type:
 
             case AccessType.EXECUTE:
                 return SignalX(
                     name=signal_name,
                     description=signal_description,
-                    write_pv=PviModel.make_pv(node.epics_record_name)
-                )
+                    write_pv=PviModel.make_pv(node.epics_record_name))
 
             case AccessType.READ:
                 return SignalR(
                     name=signal_name,
                     description=signal_description,
                     read_pv=PviModel.make_pv(node.epics_record_name, "_RBV"),
-                    read_widget=read_widget
-                )
+                    read_widget=read_widget)
 
             case AccessType.WRITE:
                 return SignalW(
                     name=signal_name,
                     description=signal_description,
                     write_pv=PviModel.make_pv(node.epics_record_name),
-                    write_widget=write_widget
-                )
+                    write_widget=write_widget)
 
             case AccessType.READWRITE:
                 return SignalRW(
@@ -507,12 +505,10 @@ class PviModel:
                     read_pv=PviModel.make_pv(node.epics_record_name, "_RBV"),
                     read_widget=read_widget,
                     write_pv=PviModel.make_pv(node.epics_record_name),
-                    write_widget=write_widget
-                )
+                    write_widget=write_widget)
 
         raise RuntimeError(
-            f"Unexpected access type {node.access_type} for node {node.name}"
-        )
+            f"Unexpected access type {node.access_type} for node {node.name}")
 
     @staticmethod
     def _build_pvi_groups(definition_nodes: dict[str, GenICamNode], instance_class: str) -> list[Group]:
@@ -526,15 +522,14 @@ class PviModel:
 
             # Select group's children that are not category, these are leaves
             non_category_children = [
-                child for child in node.children if not child.is_category
-            ]
+                child for child in node.children if not child.is_category]
+
             if not non_category_children:
                 continue
 
             # Create signals from leaves
             signals: list[SignalR | SignalRW | SignalW | SignalX] = [
-                PviModel.make_signal(leaf) for leaf in non_category_children if leaf.is_signal
-            ]
+                PviModel.make_signal(leaf) for leaf in non_category_children if leaf.is_signal]
 
             group_name = enforce_pascal_case(node.name)
             group_description = node.description
@@ -543,9 +538,7 @@ class PviModel:
                     name= group_name,
                     description=group_description,
                     children=signals,
-                    layout=Grid()
-                )
-            )
+                    layout=Grid()))
 
         # In case no categories produced groups
         if not groups:
