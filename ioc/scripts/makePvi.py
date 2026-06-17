@@ -346,6 +346,9 @@ class GenICamModel:
             xml_text: str,
             epics_record_name_max_length: int = 20,
             epics_record_name_prefix: str = "GC_"):
+        """
+        epics_record_name_prefix is for preventing name clash with ADBase.template
+        """
         self.doc: Document = parseString(xml_text)
         self.definition_nodes: dict[str, GenICamNode] = self._build_definition_nodes()
         self._resolve_references()
@@ -540,6 +543,9 @@ class PviModel:
                     children=signals,
                     layout=Grid()))
 
+        """
+        Commented this out because makeDb.py does not have it.
+        The downside is that cameras with no Category structure will produce an empty PVI.
         # In case no categories produced groups
         if not groups:
             signals: list[SignalR | SignalRW | SignalW | SignalX] = []
@@ -554,6 +560,7 @@ class PviModel:
                     name=default_name,
                     children=signals,
                     layout=Grid())]
+        """
 
         return groups
 
