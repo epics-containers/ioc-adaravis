@@ -444,7 +444,7 @@ class GenICamModel:
         existing_values = set(epics_record_names.values())
         while record_name in existing_values:
             uniquifying_suffix = str(ii)
-            record_name = record_name[: max_length - len(uniquifying_suffix)] + uniquifying_suffix
+            record_name = record_name[:-len(str(ii))] + uniquifying_suffix
             ii += 1
 
         return record_name
@@ -467,7 +467,7 @@ class PviModel:
         return f"$(P)$(R){name}{suffix}"
 
     @staticmethod
-    def make_signal(node: GenICamNode)-> SignalR | SignalRW | SignalW | SignalX:
+    def make_signal(node: GenICamNode)-> SignalR | SignalRW | SignalW | SignalX:     
         signal_name = enforce_pascal_case(node.epics_record_name)
         signal_description = node.description
 
@@ -543,9 +543,6 @@ class PviModel:
                     children=signals,
                     layout=Grid()))
 
-        """
-        Commented this out because makeDb.py does not have it.
-        The downside is that cameras with no Category structure will produce an empty PVI.
         # In case no categories produced groups
         if not groups:
             signals: list[SignalR | SignalRW | SignalW | SignalX] = []
@@ -560,7 +557,6 @@ class PviModel:
                     name=default_name,
                     children=signals,
                     layout=Grid())]
-        """
 
         return groups
 
