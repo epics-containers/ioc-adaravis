@@ -72,12 +72,12 @@ generate_pvi_from_template() {
 
 generate_pvi_from_template() {
     local template="$1"
-    local name="$2"
+    local output_asset_namename="$2"
     local label="$3"
 
     pvi convert device \
         --template "${template}" \
-        --name "${name}" \
+        --name "${output_asset_name}" \
         --label "${label}" \
         /epics/pvi-defs/
 }
@@ -90,14 +90,15 @@ for ((count = 0 ; count < ${#entities[@]}; count++ )); do # Iterate over each en
     instance_type=$(yq -r ".entities[${count}].type" "${ibek_src}")
     [[ ${instance_type} != "ADAravis.aravisCamera" ]] && continue
 
-    instance_class_from_config=$(yq -r ".entities[${count}].CLASS // \"\"" "${ibek_src}")
-    instance_id=$(yq -r ".entities[${count}].ID" "${ibek_src}") 
-    label="GenICam ${instance_id}" 
-    instance_class="auto-${instance_id}"
-    output_file_name_root="${instance_class}"
-    auto_generated_template="/epics/support/ADGenICam/db/${instance_class}.template"
+    instance_class_from_config=$(yq -r ".entities[${count}].CLASS" "${ibek_src}")
+    instance_prefix=$(yq -r ".entities[${count}].P" "${ibek_src}")
+    label="GenICam ${instance_prefix}" 
+    output_asset_name="ADAravis-${instance_prefix}"
+    auto_generated_template="/epics/support/ADGenICam/db/${output_asset_name}.template"
 
     if [[ ${instance_class_from_config} == "AutoADGenICam" ]]; then
+        # Auto generation for CLASS=AutoADGenICam
+        instance_id=$(yq -r ".entities[${count}].ID" "${ibek_src}")
         xml_file="/tmp/${instance_id}-genicam.xml"
         arv-tool-0.8 -a "${instance_id}" genicam > "${xml_file}"
 
@@ -106,7 +107,7 @@ for ((count = 0 ; count < ${#entities[@]}; count++ )); do # Iterate over each en
             python /epics/ioc/scripts/makePvi.py \
                 "${xml_file}" \
                 "/epics/pvi-defs/" \
-                --instance_class "${instance_class}" \
+                --instance_class "${output_asset_name}" \
                 --label "${label}" \
                 --embed_in "ADAravis"
 
@@ -120,11 +121,11 @@ for ((count = 0 ; count < ${#entities[@]}; count++ )); do # Iterate over each en
     fi
 
     # fallback for class != AutoADGenICam or AutoADGenICam with no XML
-    echo "Generating blank GenICam assets for ${instance_id}"
+    echo "Generating blank GenICam assets for ${instance_prefix}"
     touch "${auto_generated_template}"
     generate_pvi_from_template \
         "${auto_generated_template}" \
-        "${output_file_name_root}" \
+        "${output_asset_name}" \
         "${label}"
 
 done
