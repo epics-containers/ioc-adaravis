@@ -86,18 +86,23 @@ ibek_src="${CONFIG_DIR}/ioc.yaml"
 readarray entities < <(yq -o=j -I=0 '.entities[]' "${ibek_src}")
 
 for ((count = 0 ; count < ${#entities[@]}; count++ )); do # Iterate over each entity
-    instance_type=$(yq ".entities[${count}].type" "${ibek_src}")
 
+    # Only process ADAravis cameras
+    instance_type=$(yq -r ".entities[${count}].type" "${ibek_src}")
     [[ ${instance_type} != "ADAravis.aravisCamera" ]] && continue
 
-    instance_id=$(yq ".entities[${count}].ID" "${ibek_src}")
+    # Only auto-generate GenICam assets for CLASS == AutoADGenICam
+    instance_class_from_config=$(yq -r ".entities[${count}].CLASS // \"\"" "${ibek_src}")
+    [[ ${instance_class_from_config} != "AutoADGenICam" ]] && continue
+
+    instance_id=$(yq -r ".entities[${count}].ID" "${ibek_src}")
     instance_class="auto-${instance_id}"
     output_file_name_root="${instance_class}"
     label="GenICam ${instance_id}" 
 
     template="/epics/support/ADGenICam/db/${instance_class}.template"
 
-    # Auto generate GenICam database from camera parameters xml
+    # Auto-generate PVI and GenICam database from camera parameters xml
     xml_file="/tmp/${instance_id}-genicam.xml"
     arv-tool-0.8 -a "${instance_id}" genicam > "${xml_file}"
 
