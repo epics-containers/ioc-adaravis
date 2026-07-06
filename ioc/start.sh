@@ -102,8 +102,8 @@ for ((count = 0 ; count < ${#entities[@]}; count++ )); do # Iterate over each en
     pvi convert device \
         --template "${auto_generated_template}" \
         --name "${output_asset_name}" \
-        --label "${label}"
-
+        --label "${label}" \
+        /epics/pvi-defs/
 done
 
 # get the ibek support yaml files this ioc's support modules
