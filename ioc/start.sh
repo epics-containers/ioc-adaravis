@@ -58,30 +58,6 @@ fi
 
 # generate pvi device and template for Aravis cameras parameters ******************************
 
-generate_pvi_from_template() {
-    local template="$1"
-    local name="$2"
-    local label="$3"
-
-    pvi convert device \
-        --template "${template}" \
-        --name "${name}" \
-        --label "${label}" \
-        /epics/pvi-defs/
-}
-
-generate_pvi_from_template() {
-    local template="$1"
-    local output_asset_name="$2"
-    local label="$3"
-
-    pvi convert device \
-        --template "${template}" \
-        --name "${output_asset_name}" \
-        --label "${label}" \
-        /epics/pvi-defs/
-}
-
 ibek_src="${CONFIG_DIR}/ioc.yaml"
 readarray entities < <(yq -o=j -I=0 '.entities[]' "${ibek_src}")
 
@@ -123,10 +99,10 @@ for ((count = 0 ; count < ${#entities[@]}; count++ )); do # Iterate over each en
     # fallback for class != AutoADGenICam or AutoADGenICam with no XML
     echo "Generating blank GenICam assets for ${instance_prefix}"
     touch "${auto_generated_template}"
-    generate_pvi_from_template \
-        "${auto_generated_template}" \
-        "${output_asset_name}" \
-        "${label}"
+    pvi convert device \
+        --template "${auto_generated_template}" \
+        --name "${output_asset_name}" \
+        --label "${label}"
 
 done
 
