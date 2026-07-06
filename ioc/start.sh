@@ -72,7 +72,7 @@ generate_pvi_from_template() {
 
 generate_pvi_from_template() {
     local template="$1"
-    local output_asset_namename="$2"
+    local output_asset_name="$2"
     local label="$3"
 
     pvi convert device \
