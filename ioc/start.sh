@@ -64,13 +64,17 @@ readarray entities < <(yq -o=j -I=0 '.entities[]' "${ibek_src}")
 for ((count = 0 ; count < ${#entities[@]}; count++ )); do # Iterate over each entity
     # Only process ADAravis cameras
     instance_type=$(yq -r ".entities[${count}].type" "${ibek_src}")
+
     [[ ${instance_type} != "ADAravis.aravisCamera" ]] && continue
 
     instance_class_from_config=$(yq -r ".entities[${count}].CLASS" "${ibek_src}")
     instance_prefix=$(yq -r ".entities[${count}].P" "${ibek_src}")
-    label="GenICam ${instance_prefix}" 
-    output_asset_name="ADAravis-${instance_prefix}"
-    auto_generated_template="/epics/support/ADGenICam/db/${output_asset_name}.template"
+
+    # PVI device name follows the same convention as ADAravis.ibek.support.yaml:
+    # always ADAravis-${P} (to keep techui-support simple)
+    pvi_device_name="ADAravis-${instance_prefix}"
+    template_file="/epics/support/ADGenICam/db/${pvi_device_name}.template"
+    label="GenICam ${instance_prefix}"
 
     if [[ ${instance_class_from_config} == "AutoADGenICam" ]]; then
         # Auto generation for CLASS=AutoADGenICam
@@ -83,25 +87,31 @@ for ((count = 0 ; count < ${#entities[@]}; count++ )); do # Iterate over each en
             python /epics/ioc/scripts/makePvi.py \
                 "${xml_file}" \
                 "/epics/pvi-defs/" \
-                --instance_class "${output_asset_name}" \
+                --instance_class "${pvi_device_name}" \
                 --label "${label}" \
                 --embed_in "ADAravis"
 
             # Make GenICam template file from the GenICam XML
             python /epics/support/ADGenICam/scripts/makeDb.py \
                 "${xml_file}" \
-                "${auto_generated_template}"
+                "${template_file}"
 
             continue
         fi
     fi
 
-    # fallback for class != AutoADGenICam or AutoADGenICam with no XML
-    echo "Generating blank GenICam assets for ${instance_prefix}"
-    touch "${auto_generated_template}"
+    # Fallback for CLASS != AutoADGenICam or AutoADGenICam but XML generation failed:
+    # use generic ADAravis template
+    echo "Falling back to generic ADAravis template for ${instance_prefix} (CLASS=${instance_class_from_config})"
+    fallback_template_file="/epics/support/ADAravis/db/aravisCamera.template"
+    # The check below isn't necessary now, but just in case one day we want to use a
+    #  pre-defined template: we wouldn't want to copy the generic template over it 
+    if [[ ! -f ${template_file} ]]; then
+        cp "${fallback_template_file}" "${template_file}"
+    fi
     pvi convert device \
-        --template "${auto_generated_template}" \
-        --name "${output_asset_name}" \
+        --template "${template_file}" \
+        --name "${pvi_device_name}" \
         --label "${label}" \
         /epics/pvi-defs/
 done
