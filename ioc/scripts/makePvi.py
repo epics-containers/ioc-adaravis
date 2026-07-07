@@ -347,6 +347,8 @@ class GenICamNode:
             self.access_type = self._determine_access_type(
                 definition_nodes_lookup,
                 visited=set())
+            if self.name == "SensorType":
+                warnings.warn(">>>>> set_access_type returned", self.access_type)
 
     def __repr__(self) -> str:
         return f"Node({self.name}, {self.node_type})"
