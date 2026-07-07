@@ -342,52 +342,6 @@ class TestPviModel:
             "GCGainFeature",
             "GCOffsetFeature"}
 
-    def test_convert_genicam_xml_to_pvi_embedded_in_adaravis(self, example_xml: str):
-        yaml_text = makePvi.convert_genicam_xml_to_pvi(
-            example_xml,
-            pvi_device_name="Camera device_name",
-            label="Camera instance ID",
-            embed_in="ADAravis",
-            embedding_file_folder="./python-tests/",
-        )
-        print(yaml_text)
-        # Load YAML to dict
-        ym = YAML(typ='safe', pure=True)
-        data = ym.load(yaml_text)
-        assert isinstance(data, dict)
-        # Device label
-        assert data["label"] == "ADAravis Camera + Camera instance ID"
-
-        level_1_childen = data["children"]
-
-        # We have the ADAravis and GenICam groupsS
-        group_names = [g["name"] for g in level_1_childen if g["type"] == "Group"]
-        assert "ADAravis" in group_names
-        assert "GenICam" in group_names
-
-        genicam_group = next(g for g in level_1_childen if g["type"] == "Group" and g["name"] == "GenICam")
-        assert genicam_group["type"] == "Group"
-        assert genicam_group["name"] == "GenICam"
-        assert genicam_group["layout"]["type"] == "SubScreen"
-
-        # Check GenICam's children  
-        genicam_children = genicam_group["children"]
-        assert len(genicam_children) == 2
-
-        group_names = [g["name"] for g in genicam_children if g["type"] == "Group"]
-        group_names = [g["name"] for g in groups if g["type"] == "Group"]
-        assert "AcquisitionCategory" in group_names
-        assert "ChildCategoryWithLeaf" in group_names
-
-        firstGroup = next(g for g in groups if g["type"] == "Group" and g["name"] == "AcquisitionCategory")
-
-        assert firstGroup["name"] == "AcquisitionCategory"
-        # Signals inside group
-        signal_names = [s["name"] for s in firstGroup["children"]]
-        assert set(signal_names) == {
-            "GCExpTimeFeature",
-            "GCGainFeature",
-            "GCOffsetFeature"}
 
     def test_convert_genicam_xml_to_pvi_embedded_in_adaravis(self, example_xml: str):
         yaml_text = makePvi.convert_genicam_xml_to_pvi(
@@ -403,7 +357,7 @@ class TestPviModel:
         data = ym.load(yaml_text)
         assert isinstance(data, dict)
         # Device label
-        assert data["label"] == "ADAravis Camera + Camera instance ID"
+        assert data["label"] == "Camera instance ID"
 
         level_1_childen = data["children"]
 
@@ -426,17 +380,50 @@ class TestPviModel:
         assert "ChildCategoryWithLeaf" in group_names
 
         firstGroup = next(g for g in genicam_children if g["type"] == "Group" and g["name"] == "AcquisitionCategory")
-        firstGroup = next(g for g in genicam_children if g["type"] == "Group" and g["name"] == "AcquisitionCategory")
 
         assert firstGroup["name"] == "AcquisitionCategory"
-        assert firstGroup["name"] == "AcquisitionCategory"
         # Signals inside group
-        signal_names = [s["name"] for s in firstGroup["children"]]
         signal_names = [s["name"] for s in firstGroup["children"]]
         assert set(signal_names) == {
             "GCExpTimeFeature",
             "GCGainFeature",
             "GCOffsetFeature"}
+
+
+    def test_convert_genicam_xml_to_pvi_with_adaravis_but_no_xml(self):
+        yaml_text = makePvi.convert_genicam_xml_to_pvi(
+            "",
+            pvi_device_name="Camera device_name",
+            label="Camera instance ID",
+            embed_in="ADAravis",
+            embedding_file_folder="./python-tests/",
+        )
+        print(yaml_text)
+        # Load YAML to dict
+        ym = YAML(typ='safe', pure=True)
+        data = ym.load(yaml_text)
+        assert isinstance(data, dict)
+        # Device label
+        assert data["label"] == "Camera instance ID"
+
+        level_1_childen = data["children"]
+
+        # We have the ADAravis group
+        group_names = [g["name"] for g in level_1_childen if g["type"] == "Group"]
+        assert "ADAravis" in group_names
+
+
+    def test_convert_genicam_xml_to_pvi_neither_adaravis_nor_xml(self):
+        with pytest.raises(
+            RuntimeError,
+            match="At least one of xml_text or embed_in must be provided"):
+            _ = makePvi.convert_genicam_xml_to_pvi(
+                "",
+                pvi_device_name="Camera device_name",
+                label="Camera instance ID",
+                embed_in="",
+                embedding_file_folder="",
+            )
 
 
 class TestAccessMode:

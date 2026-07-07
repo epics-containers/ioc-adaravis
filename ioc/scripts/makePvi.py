@@ -17,15 +17,21 @@ def main():
     # Get parameters
     args: Namespace = get_cli_params()
 
-    # Read input file
-    genicam_input_file: Path = Path(args.input_xml_file)
-    # Path.read_text closes file automatically
-    file_contents: str = genicam_input_file.read_text()
-    xml_text: str = sanitize_genicam_xml(file_contents)
+    if not(args.input_xml_file or args.embed_in):
+        raise RuntimeError(
+            "makePvi.py requires an input XML file or the ADAravis device pvi yaml or both")
+
+    # Read input xml file if exists
+    xml_text: str | None = None
+    if args.input_xml_file:
+        genicam_input_file: Path = Path(args.input_xml_file)
+        # Path.read_text closes file automatically
+        file_contents: str = genicam_input_file.read_text()
+        xml_text = sanitize_genicam_xml(file_contents)
 
     # Convert to PVI yaml
     yaml_text: str = convert_genicam_xml_to_pvi(
-        xml_text,
+        xml_text=xml_text,
         pvi_device_name=args.pvi_device_name,
         label=args.label,
         embed_in=args.embed_in,
@@ -47,14 +53,13 @@ def get_cli_params() -> Namespace:
         argparse.Namespace
     """
     parser: ArgumentParser = ArgumentParser()
-    parser.add_argument("--input_xml_file", dest="input_xml_file", required=True, help="Input XML file")
-    parser.add_argument("--output_folder", dest="output_folder", required=True, help="Output folder")
+    parser.add_argument("--output_folder", dest="output_folder", required=True, help="Folder for both output and enclosing PVI files")
     parser.add_argument("--pvi_device_name", dest="pvi_device_name", required=True, help="PVI device name, used as output file name root")
-    parser.add_argument("--label", dest="label", required=True, help="Device instance ID, used for label")
-    parser.add_argument("--embed_in", dest="embed_in", required=False, help="Root name of PVI yaml file that encloses the yaml from XML")
+    parser.add_argument("--label", dest="label", required=True, help="Device label in output yaml")
+    parser.add_argument("--input_xml_file", dest="input_xml_file", help="Input XML file")
+    parser.add_argument("--embed_in", dest="embed_in", help="Root name of PVI yaml file that encloses the yaml from XML")
 
     args = parser.parse_args()
-
     return args
 
 
@@ -83,7 +88,7 @@ def sanitize_genicam_xml(xml_text: str) -> str:
 
 
 def convert_genicam_xml_to_pvi(
-        xml_text: str,
+        xml_text: str|None,
         pvi_device_name: str,
         label: str,
         embed_in: str = "",
@@ -101,29 +106,38 @@ def convert_genicam_xml_to_pvi(
     Returns:
         YAML text as string.
     """
-    # Creating GenICam model
-    genicam_model: GenICamModel = GenICamModel(xml_text)
 
-    # Creating output model
-    genicam_pvi_model: PviModel = PviModel(genicam_model, pvi_device_name)
+    device: Device | None = None
 
-    # Build Device
-    device: Device
-    
-    if not embed_in:
-        # GenICam as alone device
-        device = Device(label=label, children=genicam_pvi_model.groups)
-
-    else:
-        # GenICam embedded as subscreen
-        enclosing_yaml = load_yaml(Path(f"{embedding_file_folder}{embed_in}.pvi.device.yaml"))
+    if embed_in:
+        # Get the enclosing device
+        embedding_file: Path = (
+            Path(embedding_file_folder) / f"{embed_in}.pvi.device.yaml"
+)
+        enclosing_yaml = load_yaml(embedding_file)
         device = Device.model_validate(enclosing_yaml)
-        device.label = f"{device.label} + {label}"
-        genicam_group: Group = Group(
-            name="GenICam",
-            layout=SubScreen(labelled=False),
-            children=genicam_pvi_model.groups)
-        device.children.append(genicam_group)
+        device.label = f"{label}"
+
+    if xml_text:
+        # Create GenICam PVI model
+        genicam_model: GenICamModel = GenICamModel(xml_text)
+        genicam_pvi_model: PviModel = PviModel(genicam_model, pvi_device_name)
+
+        if device is None:
+            # GenICam as alone device
+            device = Device(label=label, children=genicam_pvi_model.groups)
+
+        else:
+            # Embed GenIcam inside the enclosing device
+            genicam_group: Group = Group(
+                name="GenICam",
+                layout=SubScreen(labelled=False),
+                children=genicam_pvi_model.groups)
+            device.children.append(genicam_group)
+
+    if device is None:
+        raise RuntimeError(
+            "At least one of xml_text or embed_in must be provided")
 
     # Return YAML from Device
     # Not using typ='safe' to default to typ='rt', ie, full round-trip YAML engine.
@@ -468,7 +482,7 @@ class PviModel:
         return f"$(P)$(R){name}{suffix}"
 
     @staticmethod
-    def make_signal(node: GenICamNode)-> SignalR | SignalRW | SignalW | SignalX:     
+    def make_signal(node: GenICamNode) -> SignalR | SignalRW | SignalW | SignalX:     
         signal_name = enforce_pascal_case(node.epics_record_name)
         signal_description = node.description
 

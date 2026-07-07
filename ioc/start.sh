@@ -101,19 +101,28 @@ for ((count = 0 ; count < ${#entities[@]}; count++ )); do # Iterate over each en
     fi
 
     # Fallback for CLASS != AutoADGenICam or AutoADGenICam but XML generation failed:
-    # use generic ADAravis template
-    echo "Falling back to generic ADAravis template for ${instance_prefix} (CLASS=${instance_class_from_config})"
-    fallback_template_file="/epics/support/ADAravis/db/aravisCamera.template"
-    # The check below isn't necessary now, but just in case one day we want to use a
-    #  pre-defined template: we wouldn't want to copy the generic template over it 
+    # Output generic ADAravis template and device pvi
+    echo "Falling back to generic ADAravis template and device pvi for ${instance_prefix} (CLASS=${instance_class_from_config})"
+
+    # Create fallback template_file from aravisCamera.template.
+    # The check that template_file  doesn't exist already isn't really necessary now,
+    # but just in case one day we set template_file to a pre-defined template,
+    # in which case we wouldn't want to copy aravisCamera.template over it 
     if [[ ! -f ${template_file} ]]; then
-        cp "${fallback_template_file}" "${template_file}"
+        cp "/epics/support/ADAravis/db/aravisCamera.template" "${template_file}"
     fi
-    pvi convert device \
-        --template "${template_file}" \
-        --name "${pvi_device_name}" \
+
+    # Create fall back pvi_device_name.
+    # In theory we could generate it from template_file like below
+    # pvi convert device --template "${template_file}" --name "${pvi_device_name}" --label "${label}" /epics/pvi-defs/
+    # but it's better to use makePvi.py to create it from ADAravis.device.pvi.yaml
+    # because the result will have any tweaking we put into makePvi.py.
+    python /epics/ioc/scripts/makePvi.py \
+        --input_xml_file "" \
+        --output_folder "/epics/pvi-defs/" \
+        --pvi_device_name "${pvi_device_name}" \
         --label "${label}" \
-        /epics/pvi-defs/
+        --embed_in "ADAravis"
 done
 
 # get the ibek support yaml files this ioc's support modules
