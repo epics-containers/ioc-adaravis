@@ -87,7 +87,7 @@ for ((count = 0 ; count < ${#entities[@]}; count++ )); do # Iterate over each en
             python /epics/ioc/scripts/makePvi.py \
                 "${xml_file}" \
                 "/epics/pvi-defs/" \
-                --instance_class "${pvi_device_name}" \
+                --pvi_device_name "${pvi_device_name}" \
                 --label "${label}" \
                 --embed_in "ADAravis"
 

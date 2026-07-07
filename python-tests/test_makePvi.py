@@ -82,8 +82,8 @@ def genicam_model(example_xml: str) -> GenICamModel:
 
 @pytest.fixture
 def pvi_model(genicam_model: GenICamModel) -> PviModel:
-    instance_class: str ="Camera instance class"
-    return PviModel(genicam_model, instance_class)
+    pvi_device_name: str ="Camera device_name"
+    return PviModel(genicam_model, pvi_device_name)
 
 
 class TestUtilities:
@@ -314,7 +314,7 @@ class TestPviModel:
     def test_convert_genicam_xml_to_pvi_generates_yaml(self, example_xml: str):
         yaml_text = makePvi.convert_genicam_xml_to_pvi(
             example_xml,
-            instance_class="Camera instance class",
+            pvi_device_name="Camera device_name",
             label="Camera test label"
         )
         print(yaml_text)
@@ -345,7 +345,7 @@ class TestPviModel:
     def test_convert_genicam_xml_to_pvi_embedded_in_adaravis(self, example_xml: str):
         yaml_text = makePvi.convert_genicam_xml_to_pvi(
             example_xml,
-            instance_class="Camera instance class",
+            pvi_device_name="Camera device_name",
             label="Camera instance ID",
             embed_in="ADAravis",
             embedding_file_folder="./python-tests/",
@@ -392,7 +392,7 @@ class TestPviModel:
     def test_convert_genicam_xml_to_pvi_embedded_in_adaravis(self, example_xml: str):
         yaml_text = makePvi.convert_genicam_xml_to_pvi(
             example_xml,
-            instance_class="Camera instance class",
+            pvi_device_name="Camera device_name",
             label="Camera instance ID",
             embed_in="ADAravis",
             embedding_file_folder="./python-tests/",

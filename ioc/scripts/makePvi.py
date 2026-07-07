@@ -26,7 +26,7 @@ def main():
     # Convert to PVI yaml
     yaml_text: str = convert_genicam_xml_to_pvi(
         xml_text,
-        instance_class=args.instance_class,
+        pvi_device_name=args.pvi_device_name,
         label=args.label,
         embed_in=args.embed_in,
         embedding_file_folder=args.output_folder)
@@ -35,7 +35,7 @@ def main():
     output_folder: Path = Path(args.output_folder)
     output_folder.mkdir(parents=True, exist_ok=True)
     # Path.write_text closes file automatically
-    yaml_file: Path = output_folder / f"{args.instance_class}.pvi.device.yaml"
+    yaml_file: Path = output_folder / f"{args.pvi_device_name}.pvi.device.yaml"
     yaml_file.write_text(yaml_text)
     print(f"Generated PVI YAML: {yaml_file}")
 
@@ -49,7 +49,7 @@ def get_cli_params() -> Namespace:
     parser: ArgumentParser = ArgumentParser()
     parser.add_argument("input_xml", help="Input XML file")
     parser.add_argument("output_folder", help="Output folder")
-    parser.add_argument("--instance_class", dest="instance_class", required=True, help="Device class name, used as output file name root")
+    parser.add_argument("--pvi_device_name", dest="pvi_device_name", required=True, help="PVI device name, used as output file name root")
     parser.add_argument("--label", dest="label", required=True, help="Device instance ID, used for label")
     parser.add_argument("--embed_in", dest="embed_in", required=False, help="Root name of PVI yaml file that encloses the yaml from XML")
 
@@ -84,7 +84,7 @@ def sanitize_genicam_xml(xml_text: str) -> str:
 
 def convert_genicam_xml_to_pvi(
         xml_text: str,
-        instance_class: str,
+        pvi_device_name: str,
         label: str,
         embed_in: str = "",
         embedding_file_folder: str = "") -> str:
@@ -93,7 +93,7 @@ def convert_genicam_xml_to_pvi(
     optionally enclose it as a subscreen in another PVI YAML.
      Args:
         xml_text: GenICam XML as string.
-        instance_class: Device class name (used for YAML name/class fields).
+        pvi_device_name: PVI device name, used for output file name.
         label: Device label (used for YAML label field).
         embed_in: Root name of PVI yaml file that encloses the yaml from XML.
         embedding_file_folder: Folder containing the embedding file.
@@ -105,7 +105,7 @@ def convert_genicam_xml_to_pvi(
     genicam_model: GenICamModel = GenICamModel(xml_text)
 
     # Creating output model
-    genicam_pvi_model: PviModel = PviModel(genicam_model, instance_class)
+    genicam_pvi_model: PviModel = PviModel(genicam_model, pvi_device_name)
 
     # Build Device
     device: Device
@@ -452,13 +452,13 @@ class GenICamModel:
 
 class PviModel:
     """Creates PVI model whose groups property can be used by pvi.device.Device."""
-    def __init__(self, genicam_model: GenICamModel, instance_class: str):
+    def __init__(self, genicam_model: GenICamModel, pvi_device_name: str):
         self.groups: list[Group] = \
-            PviModel._build_pvi_groups(genicam_model.definition_nodes, instance_class)
+            PviModel._build_pvi_groups(genicam_model.definition_nodes, pvi_device_name)
         # tree is just all the groups nested in a top group
         # Comment out because not used
         #self.tree: Group = Group(
-        #    name=enforce_pascal_case(instance_class),
+        #    name=enforce_pascal_case(pvi_device_name),
         #    layout=Grid(),
         #    children=self.groups
         #)
@@ -515,7 +515,7 @@ class PviModel:
             f"Unexpected access type {node.access_type} for node {node.name}")
 
     @staticmethod
-    def _build_pvi_groups(definition_nodes: dict[str, GenICamNode], instance_class: str) -> list[Group]:
+    def _build_pvi_groups(definition_nodes: dict[str, GenICamNode], pvi_device_name: str) -> list[Group]:
         groups: list[Group] = []
 
         # Sort to make sure consistent test results
@@ -544,7 +544,7 @@ class PviModel:
                     children=signals,
                     layout=Grid()))
 
-        # In case no categories produced groups
+        # In case no categories produced groups, create default group using PVI device name
         if not groups:
             signals: list[SignalR | SignalRW | SignalW | SignalX] = []
             # Sort to make sure consistent test results
@@ -553,7 +553,7 @@ class PviModel:
                     signals.append(PviModel.make_signal(node))
 
             if signals:
-                default_name = enforce_pascal_case(instance_class)
+                default_name = enforce_pascal_case(pvi_device_name)
                 groups = [Group(
                     name=default_name,
                     children=signals,
