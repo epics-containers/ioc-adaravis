@@ -291,6 +291,10 @@ class GenICamNode:
         """
         Recursive helper equivalent to makeDb.py:is_node_readonly()
         """
+
+        if self.name == "SensorType":
+            print(">>>>>> node_type =", self.node_type)
+
         if self.name in visited:
             raise RuntimeError(f"Circular access dependency involving {self.name}")
 
@@ -305,6 +309,10 @@ class GenICamNode:
         # The ordering 1, 2, 3 below mirrors  makeDb.py
         # 1. Directly determined via AccessMode/ImposedAccessMode
         access_mode = self.get_child_text("AccessMode", "ImposedAccessMode")
+
+        if self.name == "SensorType":
+            print(">>>>>> access_mode =", repr(access_mode))
+
         if access_mode:
             access_mode = access_mode.strip().upper()
             if access_mode in ("RO", "READONLY"):
@@ -318,6 +326,10 @@ class GenICamNode:
 
         # 2. Indirectly determined via pValue reference
         referenced_name = self.get_child_text("pValue")
+
+        if self.name == "SensorType":
+            print(">>>>>> pValue =", repr(referenced_name))
+
         if referenced_name:
 
             referenced_node = definition_nodes_lookup.get(referenced_name)
@@ -332,6 +344,9 @@ class GenICamNode:
         # 3. SwissKnife special case
         if self.node_type in ("SwissKnife", "IntSwissKnife"):
             return AccessType.READ
+
+        if self.name == "SensorType":
+            print(">>>>>> Defaulting to READWRITE")
 
         warnings.warn(
             f"Defaulting access type to READWRITE for {self.name} ({self.node_type})")
@@ -348,7 +363,8 @@ class GenICamNode:
                 definition_nodes_lookup,
                 visited=set())
             if self.name == "SensorType":
-                warnings.warn(">>>>> set_access_type returned {self.access_type!r} for {self.name}")
+                print(">>>>>> Returned from _determine_access_type:", self.access_type)
+
 
     def __repr__(self) -> str:
         return f"Node({self.name}, {self.node_type})"
