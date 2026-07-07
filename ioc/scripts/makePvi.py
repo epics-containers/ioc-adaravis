@@ -369,7 +369,11 @@ class GenICamModel:
         self._set_access_type_for_nodes()
         for node in self.definition_nodes.values():
             if node.is_signal and node.access_type is None:
-                raise RuntimeError(f"Signal node {node.name} has no access type")
+                raise RuntimeError(
+                    f"Signal node {node.name!r} "
+                    f"type={node.node_type!r} "
+                    f"is_signal={node.is_signal} "
+                    f"access={node.access_type}")
 
         self.epics_record_name_max_length: int = epics_record_name_max_length
         self.epics_record_name_prefix: str = epics_record_name_prefix
