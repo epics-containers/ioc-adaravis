@@ -18,7 +18,7 @@ def main():
     args: Namespace = get_cli_params()
 
     # Read input file
-    genicam_input_file: Path = Path(args.input_xml)
+    genicam_input_file: Path = Path(args.input_xml_file)
     # Path.read_text closes file automatically
     file_contents: str = genicam_input_file.read_text()
     xml_text: str = sanitize_genicam_xml(file_contents)
@@ -47,8 +47,8 @@ def get_cli_params() -> Namespace:
         argparse.Namespace
     """
     parser: ArgumentParser = ArgumentParser()
-    parser.add_argument("input_xml", help="Input XML file")
-    parser.add_argument("output_folder", help="Output folder")
+    parser.add_argument("--input_xml_file", dest="input_xml_file", required=True, help="Input XML file")
+    parser.add_argument("--output_folder", dest="output_folder", required=True, help="Output folder")
     parser.add_argument("--pvi_device_name", dest="pvi_device_name", required=True, help="PVI device name, used as output file name root")
     parser.add_argument("--label", dest="label", required=True, help="Device instance ID, used for label")
     parser.add_argument("--embed_in", dest="embed_in", required=False, help="Root name of PVI yaml file that encloses the yaml from XML")

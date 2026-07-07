@@ -85,8 +85,8 @@ for ((count = 0 ; count < ${#entities[@]}; count++ )); do # Iterate over each en
         if [[ -s ${xml_file} ]]; then
             # Generate pvi device from GenICam XML, embedded in a copy of ADAravis as subscreen
             python /epics/ioc/scripts/makePvi.py \
-                "${xml_file}" \
-                "/epics/pvi-defs/" \
+                --input_xml_file "${xml_file}" \
+                --output_folder "/epics/pvi-defs/" \
                 --pvi_device_name "${pvi_device_name}" \
                 --label "${label}" \
                 --embed_in "ADAravis"
