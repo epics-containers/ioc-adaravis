@@ -456,11 +456,12 @@ class PviModel:
         self.groups: list[Group] = \
             PviModel._build_pvi_groups(genicam_model.definition_nodes, instance_class)
         # tree is just all the groups nested in a top group
-        self.tree: Group = Group(
-            name=enforce_pascal_case(instance_class),
-            layout=Grid(),
-            children=self.groups
-        )
+        # Comment out because not used
+        #self.tree: Group = Group(
+        #    name=enforce_pascal_case(instance_class),
+        #    layout=Grid(),
+        #    children=self.groups
+        #)
 
     @staticmethod
     def make_pv(name: str, suffix: str = "") -> str:
