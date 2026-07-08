@@ -292,10 +292,6 @@ class GenICamNode:
         """
         Recursive helper equivalent to makeDb.py:is_node_readonly()
         """
-
-        if self.name == "SensorType":
-            print(">>>>>> node_type =", self.node_type)
-
         if self.name in visited:
             raise RuntimeError(f"Circular access dependency involving {self.name}")
 
@@ -310,9 +306,6 @@ class GenICamNode:
         # The ordering 1, 2, 3 below mirrors  makeDb.py
         # 1. Directly determined via AccessMode/ImposedAccessMode
         access_mode = self.get_child_text("AccessMode", "ImposedAccessMode")
-
-        if self.name == "SensorType":
-            print(">>>>>> access_mode =", repr(access_mode))
 
         if access_mode:
             access_mode = access_mode.strip().upper()
@@ -329,9 +322,6 @@ class GenICamNode:
         # If the referenced node cannot determine an access type,
         # continue with the remaining rules for this node
         referenced_name = self.get_child_text("pValue")
-
-        if self.name == "SensorType":
-            print(">>>>>> pValue =", repr(referenced_name))
 
         if referenced_name:
 
@@ -351,9 +341,6 @@ class GenICamNode:
         if self.node_type in ("SwissKnife", "IntSwissKnife"):
             return AccessType.READ
 
-        if self.name == "SensorType":
-            print(">>>>>> Defaulting to READWRITE")
-
         warnings.warn(
             f"Defaulting access type to READWRITE for {self.name} ({self.node_type})")
         return AccessType.READWRITE
@@ -368,8 +355,6 @@ class GenICamNode:
             self.access_type = self._determine_access_type(
                 definition_nodes_lookup,
                 visited=set())
-            if self.name == "SensorType":
-                print(">>>>>> Returned from _determine_access_type:", self.access_type)
 
 
     def __repr__(self) -> str:
@@ -436,9 +421,10 @@ class GenICamModel:
     def _build_epics_record_names(self) -> dict[str, str]:
         epics_record_names: dict[str, str] = {}
 
-        # Need to iterate over self.definition_nodes in an ordered way so that
-        # the ouput is deterministic
-        for node in sorted(self.definition_nodes.values(), key=lambda n: n.name):
+        # The iteration below is non-deterministic, hopefully it preserves the XML order.
+        # To make it deterministic, do
+        # for node in sorted(self.definition_nodes.values(), key=lambda n: n.name):
+        for node in self.definition_nodes.values():
             epics_record_name: str = GenICamModel._generate_epics_record_name(
                 node.name,
                 epics_record_names,
@@ -560,8 +546,10 @@ class PviModel:
     def _build_pvi_groups(definition_nodes: dict[str, GenICamNode], pvi_device_name: str) -> list[Group]:
         groups: list[Group] = []
 
-        # Sort to make sure consistent test results
-        for node in sorted(definition_nodes.values(), key=lambda n: n.name):
+        # The iteration below is non-deterministic, hopefully it preserves the XML order.
+        # To make it deterministic, do
+        # for node in sorted(definition_nodes.values(), key=lambda n: n.name):
+        for node in definition_nodes.values():
             # Select group nodes
             if not node.is_group():
                 continue
@@ -579,12 +567,26 @@ class PviModel:
 
             group_name = enforce_pascal_case(node.name)
             group_description = node.description
-            groups.append(
-                Group(
-                    name= group_name,
-                    description=group_description,
-                    children=signals,
-                    layout=Grid()))
+
+            MAX_SIGNALS_PER_GROUP = 32
+
+            if len(signals) <= MAX_SIGNALS_PER_GROUP:
+                groups.append(
+                    Group(
+                        name=group_name,
+                        description=group_description,
+                        children=signals,
+                        layout=Grid()))
+            else:
+                part = 1
+                for index in range(0, len(signals), MAX_SIGNALS_PER_GROUP):
+                    groups.append(
+                        Group(
+                            name=f"{group_name}{part}",
+                            description=group_description,
+                            children=signals[index:index + MAX_SIGNALS_PER_GROUP],
+                            layout=Grid()))
+                    part += 1
 
         # In case no categories produced groups, create default group using PVI device name
         if not groups:
