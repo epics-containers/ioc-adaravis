@@ -189,6 +189,7 @@ class GenICamNode:
         self.is_signal: bool = self.node_type in [
             "Integer",
             "IntReg",
+            "MaskedIntReg",
             "IntConverter",
             "IntSwissKnife",
             "Boolean",
@@ -325,6 +326,8 @@ class GenICamNode:
                 return AccessType.READWRITE
 
         # 2. Indirectly determined via pValue reference
+        # If the referenced node cannot determine an access type,
+        # continue with the remaining rules for this node
         referenced_name = self.get_child_text("pValue")
 
         if self.name == "SensorType":
@@ -337,9 +340,12 @@ class GenICamNode:
                 raise RuntimeError(
                     f"{self.name}, pValue '{referenced_name}': target does not exist")
 
-            return referenced_node._determine_access_type(
+            access = referenced_node._determine_access_type(
                 definition_nodes_lookup,
                 visited)
+            
+            if access is not None:
+                return access
 
         # 3. SwissKnife special case
         if self.node_type in ("SwissKnife", "IntSwissKnife"):
