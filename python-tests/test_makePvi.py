@@ -224,6 +224,7 @@ class TestPviModel:
             <pFeature>IntegerSignal</pFeature>
             <pFeature>NotASignal</pFeature>
             <pFeature>IntRegSignal</pFeature>
+            <pFeature>MaskedIntRegSignal</pFeature>
             <pFeature>IntConSignal</pFeature>
             <pFeature>IntSwiKnifeSignal</pFeature>
             <pFeature>BooleanSignal</pFeature>
@@ -248,6 +249,10 @@ class TestPviModel:
             <Description>IntReg Signal</Description>
             <ImposedAccessMode>WO</ImposedAccessMode>
         </IntReg>
+        <MaskedIntReg Name="MaskedIntRegSignal">
+            <Description>IntReg Signal</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </MaskedIntReg>
         <IntConverter Name="IntConSignal">
             <Description>IntConverter Signal</Description>
             <ImposedAccessMode>WO</ImposedAccessMode>
@@ -299,6 +304,7 @@ class TestPviModel:
         assert set(signal_names) == {
             "GCIntegerSignal",
             "GCIntRegSignal",
+            "GCMasIntRegSignal",
             "GCIntConSignal",
             "GCIntSwiKnifeSignal",
             "GCBooleanSignal",
@@ -310,6 +316,232 @@ class TestPviModel:
             "GCCommandSignal",
             "GCEnumerationSignal"
         }
+
+    def test_split_group_by_32_signals(self):
+        xml = """
+        <Root>
+        <Category Name="Category">
+            <pFeature>Signal_01</pFeature>
+            <pFeature>Signal_02</pFeature>
+            <pFeature>Signal_03</pFeature>
+            <pFeature>Signal_04</pFeature>
+            <pFeature>Signal_05</pFeature>
+            <pFeature>Signal_06</pFeature>
+            <pFeature>Signal_07</pFeature>
+            <pFeature>Signal_08</pFeature>
+            <pFeature>Signal_09</pFeature>
+            <pFeature>Signal_10</pFeature>
+            <pFeature>Signal_11</pFeature>
+            <pFeature>Signal_12</pFeature>
+            <pFeature>Signal_13</pFeature>
+            <pFeature>Signal_14</pFeature>
+            <pFeature>Signal_15</pFeature>
+            <pFeature>Signal_16</pFeature>
+            <pFeature>Signal_17</pFeature>
+            <pFeature>Signal_18</pFeature>
+            <pFeature>Signal_19</pFeature>
+            <pFeature>Signal_20</pFeature>
+            <pFeature>Signal_21</pFeature>
+            <pFeature>Signal_22</pFeature>
+            <pFeature>Signal_23</pFeature>
+            <pFeature>Signal_24</pFeature>
+            <pFeature>Signal_25</pFeature>
+            <pFeature>Signal_26</pFeature>
+            <pFeature>Signal_27</pFeature>
+            <pFeature>Signal_28</pFeature>
+            <pFeature>Signal_29</pFeature>
+            <pFeature>Signal_30</pFeature>
+            <pFeature>Signal_31</pFeature>
+            <pFeature>Signal_32</pFeature>
+            <pFeature>Signal_33</pFeature>
+            <pFeature>Signal_34</pFeature>
+            <pFeature>Signal_35</pFeature>
+            <pFeature>Signal_36</pFeature>
+            <pFeature>Signal_37</pFeature>
+            <pFeature>Signal_38</pFeature>
+            <pFeature>Signal_39</pFeature>
+            <pFeature>Signal_40</pFeature>
+        </Category>
+
+        <Integer Name="Signal_01">
+            <Description>Signal_01</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+         <Integer Name="Signal_02">
+            <Description>Signal_02</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_03">
+            <Description>Signal_03</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_04">
+            <Description>Signal_04</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_05">
+            <Description>Signal_05</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_06">
+            <Description>Signal_06</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_07">
+            <Description>Signal_07</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_08">
+            <Description>Signal_08</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_09">
+            <Description>Signal_09</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_10">
+            <Description>Signal_10</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_11">
+            <Description>Signal_11</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+         <Integer Name="Signal_12">
+            <Description>Signal_12</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_13">
+            <Description>Signal_13</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_14">
+            <Description>Signal_14</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_15">
+            <Description>Signal_15</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_16">
+            <Description>Signal_16</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_17">
+            <Description>Signal_17</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_18">
+            <Description>Signal_18</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_19">
+            <Description>Signal_19</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_20">
+            <Description>Signal_20</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_21">
+            <Description>Signal_21</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+         <Integer Name="Signal_22">
+            <Description>Signal_22</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_23">
+            <Description>Signal_23</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_24">
+            <Description>Signal_24</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_25">
+            <Description>Signal_25</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_26">
+            <Description>Signal_26</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_27">
+            <Description>Signal_27</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_28">
+            <Description>Signal_28</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_29">
+            <Description>Signal_29</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_30">
+            <Description>Signal_30</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_31">
+            <Description>Signal_31</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+         <Integer Name="Signal_32">
+            <Description>Signal_32</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_33">
+            <Description>Signal_33</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_34">
+            <Description>Signal_34</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_35">
+            <Description>Signal_35</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_36">
+            <Description>Signal_36</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_37">
+            <Description>Signal_37</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_38">
+            <Description>Signal_38</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_39">
+            <Description>Signal_39</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_40">
+            <Description>Signal_40</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+
+        </Root>
+        """
+
+        genicam_model: GenICamModel = GenICamModel(xml)
+        pvi_model: PviModel = PviModel(genicam_model, "Camera")
+        groups: list[Group] = pvi_model.groups
+        assert len(groups) == 2
+        group_1 = next(g for g in groups if g.name == "Category1")
+        group_1_signal_names = [s.name for s in group_1.children]
+        assert len(group_1_signal_names) == 32
+        assert group_1_signal_names[0] == "GCSignal01"
+        assert group_1_signal_names[31] == "GCSignal32"
+        group_2 = next(g for g in groups if g.name == "Category2")
+        group_2_signal_names = [s.name for s in group_2.children]
+        assert len(group_2_signal_names) == 8
+        assert group_2_signal_names[0] == "GCSignal33"
+        assert group_2_signal_names[7] == "GCSignal40"
+
 
     def test_convert_genicam_xml_to_pvi_generates_yaml(self, example_xml: str):
         yaml_text = makePvi.convert_genicam_xml_to_pvi(
