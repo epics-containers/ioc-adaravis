@@ -1,12 +1,14 @@
 #!/bin/env python
 from argparse import ArgumentParser, Namespace
+from enum import Enum
+from io import StringIO
 from pathlib import Path
 from pvi.device import Device, enforce_pascal_case, Grid, Group, SignalR, SignalRW, SignalW, SignalX, SubScreen
 from pvi._yaml_utils import type_first, load_yaml
 import re
-from xml.dom.minidom import Document, Element, parseString
-from io import StringIO
 from ruamel.yaml import YAML
+import warnings
+from xml.dom.minidom import Document, Element, parseString
 
 DEBUG = False
 
@@ -15,26 +17,31 @@ def main():
     # Get parameters
     args: Namespace = get_cli_params()
 
-    # Read input file
-    genicam_input_file: Path = Path(args.input_xml)
-    # Path.read_text closes file automatically
-    file_contents: str = genicam_input_file.read_text()
-    xml_text: str = sanitize_genicam_xml(file_contents)
+    if not(args.input_xml_file or args.embed_in):
+        raise RuntimeError(
+            "makePvi.py requires an input XML file or the ADAravis device pvi yaml or both")
+
+    # Read input xml file if exists
+    xml_text: str | None = None
+    if args.input_xml_file:
+        genicam_input_file: Path = Path(args.input_xml_file)
+        # Path.read_text closes file automatically
+        file_contents: str = genicam_input_file.read_text()
+        xml_text = sanitize_genicam_xml(file_contents)
 
     # Convert to PVI yaml
     yaml_text: str = convert_genicam_xml_to_pvi(
-        xml_text,
-        instance_class=args.instance_class,
+        xml_text=xml_text,
+        pvi_device_name=args.pvi_device_name,
         label=args.label,
         embed_in=args.embed_in,
-        embedding_file_folder=args.output_folder
-    )
+        embedding_file_folder=args.output_folder)
 
     # Write output file
     output_folder: Path = Path(args.output_folder)
     output_folder.mkdir(parents=True, exist_ok=True)
     # Path.write_text closes file automatically
-    yaml_file: Path = output_folder / f"{args.instance_class}.pvi.device.yaml"
+    yaml_file: Path = output_folder / f"{args.pvi_device_name}.pvi.device.yaml"
     yaml_file.write_text(yaml_text)
     print(f"Generated PVI YAML: {yaml_file}")
 
@@ -46,14 +53,13 @@ def get_cli_params() -> Namespace:
         argparse.Namespace
     """
     parser: ArgumentParser = ArgumentParser()
-    parser.add_argument("input_xml", help="Input XML file")
-    parser.add_argument("output_folder", help="Output folder")
-    parser.add_argument("--instance_class", dest="instance_class", required=True, help="Device class name, used as output file name root")
-    parser.add_argument("--label", dest="label", required=True, help="Device instance ID, used for label")
-    parser.add_argument("--embed_in", dest="embed_in", required=False, help="Root name of PVI yaml file that encloses the yaml from XML")
+    parser.add_argument("--output_folder", dest="output_folder", required=True, help="Folder for both output and enclosing PVI files")
+    parser.add_argument("--pvi_device_name", dest="pvi_device_name", required=True, help="PVI device name, used as output file name root")
+    parser.add_argument("--label", dest="label", required=True, help="Device label in output yaml")
+    parser.add_argument("--input_xml_file", dest="input_xml_file", help="Input XML file")
+    parser.add_argument("--embed_in", dest="embed_in", help="Root name of PVI yaml file that encloses the yaml from XML")
 
     args = parser.parse_args()
-
     return args
 
 
@@ -72,19 +78,18 @@ def sanitize_genicam_xml(xml_text: str) -> str:
         # Look at first 2 lines, locate the first one that looks like xml
         start_line = min(
             line_number for line_number in range(min(2, len(lines)))
-                if lines[line_number].lstrip().startswith("<")
-        )
+                if lines[line_number].lstrip().startswith("<"))
+
     except ValueError:
         raise RuntimeError(
-            "First two lines has no line that look likes valid XML:\n" + "".join(lines[:2])
-        )
+            "First two lines has no line that look likes valid XML:\n" + "".join(lines[:2]))
 
     return "".join(lines[start_line:]).lstrip()
 
 
 def convert_genicam_xml_to_pvi(
-        xml_text: str,
-        instance_class: str,
+        xml_text: str|None,
+        pvi_device_name: str,
         label: str,
         embed_in: str = "",
         embedding_file_folder: str = "") -> str:
@@ -93,7 +98,7 @@ def convert_genicam_xml_to_pvi(
     optionally enclose it as a subscreen in another PVI YAML.
      Args:
         xml_text: GenICam XML as string.
-        instance_class: Device class name (used for YAML name/class fields).
+        pvi_device_name: PVI device name, used for output file name.
         label: Device label (used for YAML label field).
         embed_in: Root name of PVI yaml file that encloses the yaml from XML.
         embedding_file_folder: Folder containing the embedding file.
@@ -101,29 +106,38 @@ def convert_genicam_xml_to_pvi(
     Returns:
         YAML text as string.
     """
-    # Creating GenICam model
-    genicam_model: GenICamModel = GenICamModel(xml_text)
 
-    # Creating output model
-    genicam_pvi_model: PviModel = PviModel(genicam_model, instance_class)
+    device: Device | None = None
 
-    # Build Device
-    device: Device
-    
-    if not embed_in:
-        # GenICam as alone device
-        device = Device(label=label, children=genicam_pvi_model.groups)
-
-    else:
-        # GenICam embedded as subscreen
-        enclosing_yaml = load_yaml(Path(f"{embedding_file_folder}{embed_in}.pvi.device.yaml"))
+    if embed_in:
+        # Get the enclosing device
+        embedding_file: Path = (
+            Path(embedding_file_folder) / f"{embed_in}.pvi.device.yaml"
+)
+        enclosing_yaml = load_yaml(embedding_file)
         device = Device.model_validate(enclosing_yaml)
-        device.label = f"{device.label} + {label}"
-        genicam_group: Group = Group(
-            name="GenICam",
-            layout=SubScreen(labelled=False),
-            children=genicam_pvi_model.groups)
-        device.children.append(genicam_group)
+        device.label = f"{label}"
+
+    if xml_text:
+        # Create GenICam PVI model
+        genicam_model: GenICamModel = GenICamModel(xml_text)
+        genicam_pvi_model: PviModel = PviModel(genicam_model, pvi_device_name)
+
+        if device is None:
+            # GenICam as alone device
+            device = Device(label=label, children=genicam_pvi_model.groups)
+
+        else:
+            # Embed GenIcam inside the enclosing device
+            genicam_group: Group = Group(
+                name="GenICam",
+                layout=SubScreen(labelled=False),
+                children=genicam_pvi_model.groups)
+            device.children.append(genicam_group)
+
+    if device is None:
+        raise RuntimeError(
+            "At least one of xml_text or embed_in must be provided")
 
     # Return YAML from Device
     # Not using typ='safe' to default to typ='rt', ie, full round-trip YAML engine.
@@ -145,6 +159,13 @@ def convert_genicam_xml_to_pvi(
     return stream.getvalue()
 
 
+class AccessType(Enum):
+    READ = "R"
+    WRITE = "W"
+    READWRITE = "RW"
+    EXECUTE = "X"
+
+
 class GenICamNode:
     def __init__(self, xml_element: Element) -> None:
         """
@@ -154,7 +175,7 @@ class GenICamNode:
 
         Args:
             xml_element: an xml.dom.minidom.Element representing a
-                         <Category>, <Float>, <Int>, <Enumeration>, etc.
+                         <Category>, <Float>, <Int>, <Enumeration>, etc
         """
         # Original XML element
         self.xml_element: Element = xml_element
@@ -162,10 +183,24 @@ class GenICamNode:
         # Basic metadata
         self.name: str = xml_element.getAttribute("Name")
         self.description: str | None = self._extract_description()
-        self.access: str = self._extract_access_mode()
-        self.node_type: str = xml_element.nodeName  # Category, Float, Int, Enumeration
+        self.node_type: str = xml_element.nodeName # Raw from XML: Category, Float, Enumeration, etc
+        self.access_type: AccessType | None = None # Parsed, to parse later
+        self.is_category = self.node_type == "Category"
+        self.is_signal: bool = self.node_type in [
+            "Integer",
+            "IntReg",
+            "MaskedIntReg",
+            "IntConverter",
+            "IntSwissKnife",
+            "Boolean",
+            "Float",
+            "Converter",
+            "SwissKnife",
+            "String",
+            "StringReg",
+            "Command",
+            "Enumeration"]
         self.is_enum: bool = self.node_type == "Enumeration"
-        self.is_command: bool = self.node_type == "Command"
         self.epics_record_name: str | None = None
 
         # Children Node objects (from <pFeature> references)
@@ -187,13 +222,6 @@ class GenICamNode:
                 return child.firstChild.nodeValue.strip()
         return None
 
-    def _extract_access_mode(self) -> str:
-        # Similar search logic to _extract_description
-        for child in self.xml_element.childNodes:
-            if child.nodeName == "AccessMode" and child.firstChild:
-                return child.firstChild.nodeValue.strip()
-        return "RW"  # default
-
     def _extract_enum_choices(self) -> list[str]:
         choices: list[str] = []
         # Similar search logic to _extract_description
@@ -204,8 +232,11 @@ class GenICamNode:
                     choices.append(name)
         return choices
 
-    def is_category(self) -> bool:
-        return self.node_type == "Category"
+    def get_child_text(self, *names: str) -> str | None:
+        for child in self.xml_element.childNodes:
+            if child.nodeName in names and child.firstChild:
+                return child.firstChild.nodeValue.strip()
+        return None
 
     def is_leaf(self) -> bool:
         if not self.references_resolved:
@@ -218,9 +249,11 @@ class GenICamNode:
         """
         if not self.references_resolved:
             raise RuntimeError(f"References not yet resolved for node {self.name}")
-        return self.is_category() and any(child.is_leaf() for child in self.children)
+        return self.is_category and any(child.is_leaf() for child in self.children)
 
-    def resolve_children(self, definition_nodes_lookup: dict[str, "GenICamNode"]) -> None:
+    def resolve_children(
+        self,
+        definition_nodes_lookup: dict[str, "GenICamNode"]) -> None:
         """
         Populating self.children by resolving <pFeature> references.
         <pFeature> references are inside <Category > like this:
@@ -236,7 +269,7 @@ class GenICamNode:
         """
         if self.references_resolved:
             return
-        if not self.is_category():
+        if not self.is_category:
             self.references_resolved = True
             return
 
@@ -251,6 +284,78 @@ class GenICamNode:
                 self.children.append(referenced_definition_node)
 
         self.references_resolved = True
+   
+    def _determine_access_type(
+        self,
+        definition_nodes_lookup: dict[str, "GenICamNode"],
+        visited: set[str]) -> AccessType | None:
+        """
+        Recursive helper equivalent to makeDb.py:is_node_readonly()
+        """
+        if self.name in visited:
+            raise RuntimeError(f"Circular access dependency involving {self.name}")
+
+        visited.add(self.name)
+
+        if self.node_type == "Command":
+            return AccessType.EXECUTE
+        
+        if not self.is_signal:
+            return None
+
+        # The ordering 1, 2, 3 below mirrors  makeDb.py
+        # 1. Directly determined via AccessMode/ImposedAccessMode
+        access_mode = self.get_child_text("AccessMode", "ImposedAccessMode")
+
+        if access_mode:
+            access_mode = access_mode.strip().upper()
+            if access_mode in ("RO", "READONLY"):
+                return AccessType.READ
+            
+            if access_mode in ("WO", "WRITEONLY"):
+                return AccessType.WRITE
+            
+            if access_mode in ("RW", "READWRITE"):
+                return AccessType.READWRITE
+
+        # 2. Indirectly determined via pValue reference
+        # If the referenced node cannot determine an access type,
+        # continue with the remaining rules for this node
+        referenced_name = self.get_child_text("pValue")
+
+        if referenced_name:
+
+            referenced_node = definition_nodes_lookup.get(referenced_name)
+            if referenced_node is None:
+                raise RuntimeError(
+                    f"{self.name}, pValue '{referenced_name}': target does not exist")
+
+            access = referenced_node._determine_access_type(
+                definition_nodes_lookup,
+                visited)
+            
+            if access is not None:
+                return access
+
+        # 3. SwissKnife special case
+        if self.node_type in ("SwissKnife", "IntSwissKnife"):
+            return AccessType.READ
+
+        warnings.warn(
+            f"Defaulting access type to READWRITE for {self.name} ({self.node_type})")
+        return AccessType.READWRITE
+
+    def set_access_type(
+        self,
+        definition_nodes_lookup: dict[str, "GenICamNode"]) -> None:
+        """
+        Public entry point called once by GenICamModel.
+        """
+        if self.is_signal and self.access_type is None:
+            self.access_type = self._determine_access_type(
+                definition_nodes_lookup,
+                visited=set())
+
 
     def __repr__(self) -> str:
         return f"Node({self.name}, {self.node_type})"
@@ -264,9 +369,21 @@ class GenICamModel:
             xml_text: str,
             epics_record_name_max_length: int = 20,
             epics_record_name_prefix: str = "GC_"):
+        """
+        epics_record_name_prefix is for preventing name clash with ADBase.template
+        """
         self.doc: Document = parseString(xml_text)
         self.definition_nodes: dict[str, GenICamNode] = self._build_definition_nodes()
         self._resolve_references()
+        self._set_access_type_for_nodes()
+        for node in self.definition_nodes.values():
+            if node.is_signal and node.access_type is None:
+                raise RuntimeError(
+                    f"Signal node {node.name!r} "
+                    f"type={node.node_type!r} "
+                    f"is_signal={node.is_signal} "
+                    f"access={node.access_type}")
+
         self.epics_record_name_max_length: int = epics_record_name_max_length
         self.epics_record_name_prefix: str = epics_record_name_prefix
         self.epics_record_names: dict[str, str] = self._build_epics_record_names()
@@ -297,12 +414,17 @@ class GenICamModel:
         for definition_node in self.definition_nodes.values():
             definition_node.resolve_children(self.definition_nodes)
 
+    def _set_access_type_for_nodes(self) -> None:  
+        for node in self.definition_nodes.values():
+            node.set_access_type(self.definition_nodes)
+
     def _build_epics_record_names(self) -> dict[str, str]:
         epics_record_names: dict[str, str] = {}
 
-        # Need to iterate over self.definition_nodes in an ordered way so that
-        # the ouput is deterministic
-        for node in sorted(self.definition_nodes.values(), key=lambda n: n.name):
+        # The iteration below is non-deterministic, hopefully it preserves the XML order.
+        # To make it deterministic, do
+        # for node in sorted(self.definition_nodes.values(), key=lambda n: n.name):
+        for node in self.definition_nodes.values():
             epics_record_name: str = GenICamModel._generate_epics_record_name(
                 node.name,
                 epics_record_names,
@@ -350,7 +472,7 @@ class GenICamModel:
         existing_values = set(epics_record_names.values())
         while record_name in existing_values:
             uniquifying_suffix = str(ii)
-            record_name = record_name[: max_length - len(uniquifying_suffix)] + uniquifying_suffix
+            record_name = record_name[:-len(str(ii))] + uniquifying_suffix
             ii += 1
 
         return record_name
@@ -358,22 +480,23 @@ class GenICamModel:
 
 class PviModel:
     """Creates PVI model whose groups property can be used by pvi.device.Device."""
-    def __init__(self, genicam_model: GenICamModel, instance_class: str):
+    def __init__(self, genicam_model: GenICamModel, pvi_device_name: str):
         self.groups: list[Group] = \
-            PviModel._build_pvi_groups(genicam_model.definition_nodes, instance_class)
+            PviModel._build_pvi_groups(genicam_model.definition_nodes, pvi_device_name)
         # tree is just all the groups nested in a top group
-        self.tree: Group = Group(
-            name=enforce_pascal_case(instance_class),
-            layout=Grid(),
-            children=self.groups
-        )
+        # Comment out because not used
+        #self.tree: Group = Group(
+        #    name=enforce_pascal_case(pvi_device_name),
+        #    layout=Grid(),
+        #    children=self.groups
+        #)
 
     @staticmethod
     def make_pv(name: str, suffix: str = "") -> str:
         return f"$(P)$(R){name}{suffix}"
 
     @staticmethod
-    def make_signal(node: GenICamNode)-> SignalR | SignalRW | SignalW | SignalX:
+    def make_signal(node: GenICamNode) -> SignalR | SignalRW | SignalW | SignalX:     
         signal_name = enforce_pascal_case(node.epics_record_name)
         signal_description = node.description
 
@@ -385,87 +508,96 @@ class PviModel:
             # If not enum or no choices then use TextWrite
             write_widget = {"type": "TextWrite"}
 
-        access = node.access.upper()
+        match node.access_type:
 
-        # Read only
-        if access in ("RO", "READONLY"):
-            return SignalR(
-                name=signal_name,
-                description=signal_description,
-                read_pv=PviModel.make_pv(node.epics_record_name),
-                read_widget=read_widget
-            )
+            case AccessType.EXECUTE:
+                return SignalX(
+                    name=signal_name,
+                    description=signal_description,
+                    write_pv=PviModel.make_pv(node.epics_record_name))
 
-        # Command
-        if node.is_command:
-            return SignalX(
-                name=signal_name,
-                description=signal_description,
-                write_pv=PviModel.make_pv(node.epics_record_name)
-            )
+            case AccessType.READ:
+                return SignalR(
+                    name=signal_name,
+                    description=signal_description,
+                    read_pv=PviModel.make_pv(node.epics_record_name, "_RBV"),
+                    read_widget=read_widget)
 
-        # Write only
-        if access in ("WO", "WRITEONLY"):
-            return SignalW(
-                name=signal_name,
-                description=signal_description,
-                write_pv=PviModel.make_pv(node.epics_record_name),
-                write_widget=write_widget
-            )
+            case AccessType.WRITE:
+                return SignalW(
+                    name=signal_name,
+                    description=signal_description,
+                    write_pv=PviModel.make_pv(node.epics_record_name),
+                    write_widget=write_widget)
 
-        # Assume read-write
-        return SignalRW(
-            name=signal_name,
-            description=signal_description,
-            read_pv=PviModel.make_pv(node.epics_record_name, "_RBV"),
-            read_widget=read_widget,
-            write_pv=PviModel.make_pv(node.epics_record_name),
-            write_widget=write_widget
-        )
+            case AccessType.READWRITE:
+                return SignalRW(
+                    name=signal_name,
+                    description=signal_description,
+                    read_pv=PviModel.make_pv(node.epics_record_name, "_RBV"),
+                    read_widget=read_widget,
+                    write_pv=PviModel.make_pv(node.epics_record_name),
+                    write_widget=write_widget)
+
+        raise RuntimeError(
+            f"Unexpected access type {node.access_type} for node {node.name}")
 
     @staticmethod
-    def _build_pvi_groups(definition_nodes: dict[str, GenICamNode], instance_class: str) -> list[Group]:
+    def _build_pvi_groups(definition_nodes: dict[str, GenICamNode], pvi_device_name: str) -> list[Group]:
         groups: list[Group] = []
 
-        # Sort to make sure consistent test results
-        for node in sorted(definition_nodes.values(), key=lambda n: n.name):
+        # The iteration below is non-deterministic, hopefully it preserves the XML order.
+        # To make it deterministic, do
+        # for node in sorted(definition_nodes.values(), key=lambda n: n.name):
+        for node in definition_nodes.values():
             # Select group nodes
             if not node.is_group():
                 continue
 
             # Select group's children that are not category, these are leaves
             non_category_children = [
-                child for child in node.children if not child.is_category()
-            ]
+                child for child in node.children if not child.is_category]
+
             if not non_category_children:
                 continue
 
             # Create signals from leaves
             signals: list[SignalR | SignalRW | SignalW | SignalX] = [
-                PviModel.make_signal(leaf) for leaf in non_category_children
-            ]
+                PviModel.make_signal(leaf) for leaf in non_category_children if leaf.is_signal]
 
             group_name = enforce_pascal_case(node.name)
             group_description = node.description
-            groups.append(
-                Group(
-                    name= group_name,
-                    description=group_description,
-                    children=signals,
-                    layout=Grid()
-                )
-            )
 
-        # In case no categories produced groups
+            MAX_SIGNALS_PER_GROUP = 32
+
+            if len(signals) <= MAX_SIGNALS_PER_GROUP:
+                groups.append(
+                    Group(
+                        name=group_name,
+                        description=group_description,
+                        children=signals,
+                        layout=Grid()))
+            else:
+                part = 1
+                for index in range(0, len(signals), MAX_SIGNALS_PER_GROUP):
+                    groups.append(
+                        Group(
+                            name=f"{group_name}{part}",
+                            description=group_description,
+                            children=signals[index:index + MAX_SIGNALS_PER_GROUP],
+                            layout=Grid()))
+                    part += 1
+
+        # In case no categories produced groups, create default group using PVI device name
         if not groups:
             signals: list[SignalR | SignalRW | SignalW | SignalX] = []
             # Sort to make sure consistent test results
             for node in sorted(definition_nodes.values(), key=lambda n: n.name):
-                if not node.is_category():
+                if not node.is_category and node.is_signal:
                     signals.append(PviModel.make_signal(node))
 
             if signals:
-                default_name = enforce_pascal_case(instance_class)
+                default_name = enforce_pascal_case(pvi_device_name)
                 groups = [Group(
                     name=default_name,
                     children=signals,

@@ -58,55 +58,71 @@ fi
 
 # generate pvi device and template for Aravis cameras parameters ******************************
 
-generate_pvi_from_template() {
-    local template="$1"
-    local name="$2"
-    local label="$3"
-
-    pvi convert device \
-        --template "${template}" \
-        --name "${name}" \
-        --label "${label}" \
-        /epics/pvi-defs/
-}
-
 ibek_src="${CONFIG_DIR}/ioc.yaml"
 readarray entities < <(yq -o=j -I=0 '.entities[]' "${ibek_src}")
 
 for ((count = 0 ; count < ${#entities[@]}; count++ )); do # Iterate over each entity
-    instance_type=$(yq ".entities[${count}].type" "${ibek_src}")
+    # Only process ADAravis cameras
+    instance_type=$(yq -r ".entities[${count}].type" "${ibek_src}")
 
     [[ ${instance_type} != "ADAravis.aravisCamera" ]] && continue
 
-    instance_id=$(yq ".entities[${count}].ID" "${ibek_src}")
-    instance_class="auto-${instance_id}"
-    label="GenICam ${instance_id}"
-    xml_file="/tmp/${instance_id}-genicam.xml"
-    template="/epics/support/ADGenICam/db/${instance_class}.template"
+    instance_class_from_config=$(yq -r ".entities[${count}].CLASS" "${ibek_src}")
+    instance_prefix=$(yq -r ".entities[${count}].P" "${ibek_src}")
 
-    arv-tool-0.8 -a "${instance_id}" genicam > "${xml_file}"
+    # PVI device name follows the same convention as ADAravis.ibek.support.yaml:
+    # always ADAravis-${P} (to keep techui-support simple)
+    pvi_device_name="ADAravis-${instance_prefix}"
+    template_file="/epics/support/ADGenICam/db/${pvi_device_name}.template"
+    label="GenICam ${instance_prefix}"
 
-    if [[ -s ${xml_file} ]]; then
-        # Generate pvi device from GenICam XML, embedded in a copy of ADAravis as subscreen
-        python /epics/ioc/scripts/makePvi.py \
-            "${xml_file}" \
-            "/epics/pvi-defs/" \
-            --instance_class "${instance_class}" \
-            --label "${label}" \
-            --embed_in "ADAravis"
+    if [[ ${instance_class_from_config} == "AutoADGenICam" ]]; then
+        # Auto generation for CLASS=AutoADGenICam
+        instance_id=$(yq -r ".entities[${count}].ID" "${ibek_src}")
+        xml_file="/tmp/${instance_id}-genicam.xml"
+        arv-tool-0.8 -a "${instance_id}" genicam > "${xml_file}"
 
-        # Make a db file from the GenICam XML
-        python /epics/support/ADGenICam/scripts/makeDb.py \
-            "${xml_file}" \
-            "${template}"
+        if [[ -s ${xml_file} ]]; then
+            # Generate pvi device from GenICam XML, embedded in a copy of ADAravis as subscreen
+            python /epics/ioc/scripts/makePvi.py \
+                --input_xml_file "${xml_file}" \
+                --output_folder "/epics/pvi-defs/" \
+                --pvi_device_name "${pvi_device_name}" \
+                --label "${label}" \
+                --embed_in "ADAravis"
 
-        continue
+            # Make GenICam template file from the GenICam XML
+            python /epics/support/ADGenICam/scripts/makeDb.py \
+                "${xml_file}" \
+                "${template_file}"
+
+            continue
+        fi
     fi
 
-    # Can't get xml from camera: make empty GenICam template and generate pvi device from it
-    echo "Can't get xml from camera ${instance_id}"
-    touch "${template}"
-    generate_pvi_from_template "${template}" "${instance_class}" "${label}"
+    # Fallback for CLASS != AutoADGenICam or AutoADGenICam but XML generation failed:
+    # Output generic ADAravis template and device pvi
+    echo "Falling back to generic ADAravis template and device pvi for ${instance_prefix} (CLASS=${instance_class_from_config})"
+
+    # Create fallback template_file from aravisCamera.template.
+    # The check that template_file  doesn't exist already isn't really necessary now,
+    # but just in case one day we set template_file to a pre-defined template,
+    # in which case we wouldn't want to copy aravisCamera.template over it 
+    if [[ ! -f ${template_file} ]]; then
+        cp "/epics/support/ADAravis/db/aravisCamera.template" "${template_file}"
+    fi
+
+    # Create fall back pvi_device_name.
+    # In theory we could generate it from template_file like below
+    # pvi convert device --template "${template_file}" --name "${pvi_device_name}" --label "${label}" /epics/pvi-defs/
+    # but it's better to use makePvi.py to create it from ADAravis.device.pvi.yaml
+    # because the result will have any tweaking we put into makePvi.py.
+    python /epics/ioc/scripts/makePvi.py \
+        --input_xml_file "" \
+        --output_folder "/epics/pvi-defs/" \
+        --pvi_device_name "${pvi_device_name}" \
+        --label "${label}" \
+        --embed_in "ADAravis"
 done
 
 # get the ibek support yaml files this ioc's support modules

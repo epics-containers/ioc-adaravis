@@ -2,7 +2,7 @@ ARG IMAGE_EXT
 
 ARG REGISTRY=ghcr.io/epics-containers
 ARG RUNTIME=${REGISTRY}/epics-base${IMAGE_EXT}-runtime:7.0.10ec1
-ARG DEVELOPER=${REGISTRY}/ioc-areadetector${IMAGE_EXT}-developer:3.14ec2
+ARG DEVELOPER=${REGISTRY}/ioc-areadetector${IMAGE_EXT}-developer:3.14ec3-beta.1
 
 ##### build stage ##############################################################
 FROM  ${DEVELOPER} AS developer
@@ -20,8 +20,8 @@ RUN ln -s ${SOURCE_FOLDER}/ioc ${IOC}
 RUN apt update -y
 
 # Update the version of ibek if needed
-# COPY requirements.txt requirements.txt
-# RUN uv pip install --upgrade -r requirements.txt
+COPY requirements.txt requirements.txt
+RUN uv pip install --upgrade -r requirements.txt
 
 WORKDIR ${SOURCE_FOLDER}/ibek-support
 
@@ -55,7 +55,12 @@ FROM ${RUNTIME} AS runtime
 
 # get runtime assets from the preparation stage
 COPY --from=runtime_prep /assets /
-COPY --from=runtime_prep /usr/bin/yq /usr/bin/yq
+# Huy try changing
+# COPY --from=runtime_prep /usr/bin/yq /usr/bin/yq
+RUN apt-get update && apt-get install -y curl
+RUN curl -L \
+  https://github.com/mikefarah/yq/releases/download/v4.44.2/yq_linux_amd64 \
+  -o /usr/local/bin/yq && chmod +x /usr/local/bin/yq
 
 # install runtime system dependencies, collected from install.sh scripts
 RUN ibek support apt-install-runtime-packages

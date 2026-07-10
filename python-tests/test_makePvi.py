@@ -5,7 +5,7 @@ import sys
 SCRIPT_DIR = Path(__file__).resolve().parents[1] / "ioc"
 sys.path.insert(0, str(SCRIPT_DIR))
 
-from pvi.device import Group
+from pvi.device import Group, SignalX
 import pytest
 from xml.dom.minidom import Document, parseString
 from ruamel.yaml import YAML
@@ -33,14 +33,17 @@ def example_xml() -> str:
 
       <Float Name="ExposureTimeFeature">
         <Description>ExposureTimeFeature description</Description>
+        <AccessMode>RW</AccessMode>
       </Float>
 
       <Float Name="GainFeature">
         <Description>GainFeature description</Description>
+        <ImposedAccessMode>WO</ImposedAccessMode>
       </Float>
 
       <Float Name="OffsetFeature">
         <Description>OffsetFeature description</Description>
+        <ImposedAccessMode>WO</ImposedAccessMode>
       </Float>
 
       <Category Name="EmptyCategoryIgnored">
@@ -54,10 +57,12 @@ def example_xml() -> str:
 
       <Float Name="NestedFeature">
         <Description>NestedFeature description</Description>
+        <ImposedAccessMode>WO</ImposedAccessMode>
       </Float>
 
       <Enumeration Name="TriggerModeEnumeration">
         <Description>TriggerEnumeration description</Description>
+        <ImposedAccessMode>WO</ImposedAccessMode>
         <EnumEntry Name="Off"/>
         <EnumEntry Name="On"/>
       </Enumeration>
@@ -77,8 +82,8 @@ def genicam_model(example_xml: str) -> GenICamModel:
 
 @pytest.fixture
 def pvi_model(genicam_model: GenICamModel) -> PviModel:
-    instance_class: str ="Camera instance class"
-    return PviModel(genicam_model, instance_class)
+    pvi_device_name: str ="Camera device_name"
+    return PviModel(genicam_model, pvi_device_name)
 
 
 class TestUtilities:
@@ -187,13 +192,361 @@ class TestPviModel:
         assert set(signal_names) == \
             {"GCExpTimeFeature", "GCGainFeature", "GCOffsetFeature"}
         for signal in acquisitionGroup.children:
-            assert signal.write_pv in ["$(P)$(R)GC_ExpTimeFeature", "$(P)$(R)GC_GainFeature", "$(P)$(R)GC_OffsetFeature"]
-            assert signal.read_pv in ["$(P)$(R)GC_ExpTimeFeature_RBV", "$(P)$(R)GC_GainFeature_RBV", "$(P)$(R)GC_OffsetFeature_RBV"]
+            if signal.name == "GCExpTimeFeature":
+                assert signal.write_pv in ["$(P)$(R)GC_ExpTimeFeature", "$(P)$(R)GC_GainFeature", "$(P)$(R)GC_OffsetFeature"]
+                assert signal.read_pv in ["$(P)$(R)GC_ExpTimeFeature_RBV", "$(P)$(R)GC_GainFeature_RBV", "$(P)$(R)GC_OffsetFeature_RBV"]
+
+    def test_command_generates_signalx(self):
+        xml = """
+        <Root>
+        <Category Name="AcquisitionCategory">
+            <pFeature>AcquisitionStart</pFeature>
+        </Category>
+
+        <Command Name="AcquisitionStart">
+            <Description>Start acquisition</Description>
+        </Command>
+        </Root>
+        """
+
+        genicam_model: GenICamModel = GenICamModel(xml)
+        pvi_model: PviModel = PviModel(genicam_model, "Camera")
+
+        signal = pvi_model.groups[0].children[0]
+
+        assert isinstance(signal, SignalX)
+        assert signal.write_pv == "$(P)$(R)GC_AcquisitionStart"
+
+    def test_filter_for_signals(self):
+        xml = """
+        <Root>
+        <Category Name="AcquisitionCategory">
+            <pFeature>IntegerSignal</pFeature>
+            <pFeature>NotASignal</pFeature>
+            <pFeature>IntRegSignal</pFeature>
+            <pFeature>MaskedIntRegSignal</pFeature>
+            <pFeature>IntConSignal</pFeature>
+            <pFeature>IntSwiKnifeSignal</pFeature>
+            <pFeature>BooleanSignal</pFeature>
+            <pFeature>FloatSignal</pFeature>
+            <pFeature>ConverterSignal</pFeature>
+            <pFeature>SwissKnifeSignal</pFeature>
+            <pFeature>StringSignal</pFeature>
+            <pFeature>StringRegSignal</pFeature>
+            <pFeature>CommandSignal</pFeature>
+            <pFeature>EnumerationSignal</pFeature>          
+        </Category>
+
+        <Integer Name="IntegerSignal">
+            <Description>Integer Signal</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <NotASignal Name="NotASignal">
+            <Description>Not A Signal</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </NotASignal>
+        <IntReg Name="IntRegSignal">
+            <Description>IntReg Signal</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </IntReg>
+        <MaskedIntReg Name="MaskedIntRegSignal">
+            <Description>IntReg Signal</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </MaskedIntReg>
+        <IntConverter Name="IntConSignal">
+            <Description>IntConverter Signal</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </IntConverter>
+        <IntSwissKnife Name="IntSwiKnifeSignal">
+            <Description>Int Swiss Knife Signal</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </IntSwissKnife>
+        <Boolean Name="BooleanSignal">
+            <Description>Boolean Signal</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Boolean>
+        <Float Name="FloatSignal">
+            <Description>Float Signal</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Float>
+        <Converter Name="ConverterSignal">
+            <Description>Converter Signal</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Converter>
+        <SwissKnife Name="SwissKnifeSignal">
+            <Description>Swiss Knife Signal</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </SwissKnife>
+        <String Name="StringSignal">
+            <Description>String Signal</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </String>
+        <StringReg Name="StringRegSignal">
+            <Description>StringReg Signal</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </StringReg>
+        <Command Name="CommandSignal">
+            <Description>Command Signal</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Command>
+        <Enumeration Name="EnumerationSignal">
+            <Description>Enumeration Signal</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Enumeration>   
+        </Root>
+        """
+
+        genicam_model: GenICamModel = GenICamModel(xml)
+        pvi_model: PviModel = PviModel(genicam_model, "Camera")
+        groups: list[Group] = pvi_model.groups
+        acquisitionGroup = next(g for g in groups if g.name == "AcquisitionCategory")
+        signal_names = [s.name for s in acquisitionGroup.children]
+        assert set(signal_names) == {
+            "GCIntegerSignal",
+            "GCIntRegSignal",
+            "GCMasIntRegSignal",
+            "GCIntConSignal",
+            "GCIntSwiKnifeSignal",
+            "GCBooleanSignal",
+            "GCFloatSignal",
+            "GCConverterSignal",
+            "GCSwissKnifeSignal",
+            "GCStringSignal",
+            "GCStringRegSignal",
+            "GCCommandSignal",
+            "GCEnumerationSignal"
+        }
+
+    def test_split_group_by_32_signals(self):
+        xml = """
+        <Root>
+        <Category Name="Category">
+            <pFeature>Signal_01</pFeature>
+            <pFeature>Signal_02</pFeature>
+            <pFeature>Signal_03</pFeature>
+            <pFeature>Signal_04</pFeature>
+            <pFeature>Signal_05</pFeature>
+            <pFeature>Signal_06</pFeature>
+            <pFeature>Signal_07</pFeature>
+            <pFeature>Signal_08</pFeature>
+            <pFeature>Signal_09</pFeature>
+            <pFeature>Signal_10</pFeature>
+            <pFeature>Signal_11</pFeature>
+            <pFeature>Signal_12</pFeature>
+            <pFeature>Signal_13</pFeature>
+            <pFeature>Signal_14</pFeature>
+            <pFeature>Signal_15</pFeature>
+            <pFeature>Signal_16</pFeature>
+            <pFeature>Signal_17</pFeature>
+            <pFeature>Signal_18</pFeature>
+            <pFeature>Signal_19</pFeature>
+            <pFeature>Signal_20</pFeature>
+            <pFeature>Signal_21</pFeature>
+            <pFeature>Signal_22</pFeature>
+            <pFeature>Signal_23</pFeature>
+            <pFeature>Signal_24</pFeature>
+            <pFeature>Signal_25</pFeature>
+            <pFeature>Signal_26</pFeature>
+            <pFeature>Signal_27</pFeature>
+            <pFeature>Signal_28</pFeature>
+            <pFeature>Signal_29</pFeature>
+            <pFeature>Signal_30</pFeature>
+            <pFeature>Signal_31</pFeature>
+            <pFeature>Signal_32</pFeature>
+            <pFeature>Signal_33</pFeature>
+            <pFeature>Signal_34</pFeature>
+            <pFeature>Signal_35</pFeature>
+            <pFeature>Signal_36</pFeature>
+            <pFeature>Signal_37</pFeature>
+            <pFeature>Signal_38</pFeature>
+            <pFeature>Signal_39</pFeature>
+            <pFeature>Signal_40</pFeature>
+        </Category>
+
+        <Integer Name="Signal_01">
+            <Description>Signal_01</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+         <Integer Name="Signal_02">
+            <Description>Signal_02</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_03">
+            <Description>Signal_03</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_04">
+            <Description>Signal_04</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_05">
+            <Description>Signal_05</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_06">
+            <Description>Signal_06</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_07">
+            <Description>Signal_07</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_08">
+            <Description>Signal_08</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_09">
+            <Description>Signal_09</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_10">
+            <Description>Signal_10</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_11">
+            <Description>Signal_11</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+         <Integer Name="Signal_12">
+            <Description>Signal_12</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_13">
+            <Description>Signal_13</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_14">
+            <Description>Signal_14</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_15">
+            <Description>Signal_15</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_16">
+            <Description>Signal_16</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_17">
+            <Description>Signal_17</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_18">
+            <Description>Signal_18</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_19">
+            <Description>Signal_19</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_20">
+            <Description>Signal_20</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_21">
+            <Description>Signal_21</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+         <Integer Name="Signal_22">
+            <Description>Signal_22</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_23">
+            <Description>Signal_23</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_24">
+            <Description>Signal_24</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_25">
+            <Description>Signal_25</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_26">
+            <Description>Signal_26</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_27">
+            <Description>Signal_27</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_28">
+            <Description>Signal_28</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_29">
+            <Description>Signal_29</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_30">
+            <Description>Signal_30</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_31">
+            <Description>Signal_31</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+         <Integer Name="Signal_32">
+            <Description>Signal_32</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_33">
+            <Description>Signal_33</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_34">
+            <Description>Signal_34</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_35">
+            <Description>Signal_35</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_36">
+            <Description>Signal_36</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_37">
+            <Description>Signal_37</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_38">
+            <Description>Signal_38</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_39">
+            <Description>Signal_39</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+        <Integer Name="Signal_40">
+            <Description>Signal_40</Description>
+            <ImposedAccessMode>WO</ImposedAccessMode>
+        </Integer>
+
+        </Root>
+        """
+
+        genicam_model: GenICamModel = GenICamModel(xml)
+        pvi_model: PviModel = PviModel(genicam_model, "Camera")
+        groups: list[Group] = pvi_model.groups
+        assert len(groups) == 2
+        group_1 = next(g for g in groups if g.name == "Category1")
+        group_1_signal_names = [s.name for s in group_1.children]
+        assert len(group_1_signal_names) == 32
+        assert group_1_signal_names[0] == "GCSignal01"
+        assert group_1_signal_names[31] == "GCSignal32"
+        group_2 = next(g for g in groups if g.name == "Category2")
+        group_2_signal_names = [s.name for s in group_2.children]
+        assert len(group_2_signal_names) == 8
+        assert group_2_signal_names[0] == "GCSignal33"
+        assert group_2_signal_names[7] == "GCSignal40"
+
 
     def test_convert_genicam_xml_to_pvi_generates_yaml(self, example_xml: str):
         yaml_text = makePvi.convert_genicam_xml_to_pvi(
             example_xml,
-            instance_class="Camera instance class",
+            pvi_device_name="Camera device_name",
             label="Camera test label"
         )
         print(yaml_text)
@@ -221,10 +574,11 @@ class TestPviModel:
             "GCGainFeature",
             "GCOffsetFeature"}
 
+
     def test_convert_genicam_xml_to_pvi_embedded_in_adaravis(self, example_xml: str):
         yaml_text = makePvi.convert_genicam_xml_to_pvi(
             example_xml,
-            instance_class="Camera instance class",
+            pvi_device_name="Camera device_name",
             label="Camera instance ID",
             embed_in="ADAravis",
             embedding_file_folder="./python-tests/",
@@ -235,7 +589,7 @@ class TestPviModel:
         data = ym.load(yaml_text)
         assert isinstance(data, dict)
         # Device label
-        assert data["label"] == "ADAravis Camera + Camera instance ID"
+        assert data["label"] == "Camera instance ID"
 
         level_1_childen = data["children"]
 
@@ -266,3 +620,235 @@ class TestPviModel:
             "GCExpTimeFeature",
             "GCGainFeature",
             "GCOffsetFeature"}
+
+
+    def test_convert_genicam_xml_to_pvi_with_adaravis_but_no_xml(self):
+        yaml_text = makePvi.convert_genicam_xml_to_pvi(
+            "",
+            pvi_device_name="Camera device_name",
+            label="Camera instance ID",
+            embed_in="ADAravis",
+            embedding_file_folder="./python-tests/",
+        )
+        print(yaml_text)
+        # Load YAML to dict
+        ym = YAML(typ='safe', pure=True)
+        data = ym.load(yaml_text)
+        assert isinstance(data, dict)
+        # Device label
+        assert data["label"] == "Camera instance ID"
+
+        level_1_childen = data["children"]
+
+        # We have the ADAravis group
+        group_names = [g["name"] for g in level_1_childen if g["type"] == "Group"]
+        assert "ADAravis" in group_names
+
+
+    def test_convert_genicam_xml_to_pvi_neither_adaravis_nor_xml(self):
+        with pytest.raises(
+            RuntimeError,
+            match="At least one of xml_text or embed_in must be provided"):
+            _ = makePvi.convert_genicam_xml_to_pvi(
+                "",
+                pvi_device_name="Camera device_name",
+                label="Camera instance ID",
+                embed_in="",
+                embedding_file_folder="",
+            )
+
+
+class TestAccessMode:
+    def test_access_type_ro(self):
+        xml = """
+        <Root>
+            <Float Name="Gain">
+                <AccessMode>RO</AccessMode>
+            </Float>
+        </Root>
+        """
+        model = GenICamModel(xml)
+        assert (
+            model.definition_nodes["Gain"].access_type
+            == makePvi.AccessType.READ)
+
+    def test_access_type_readonly(self):
+        xml = """
+        <Root>
+            <Float Name="Gain">
+                <AccessMode>ReadOnly</AccessMode>
+            </Float>
+        </Root>
+        """
+        model = GenICamModel(xml)
+        assert (
+            model.definition_nodes["Gain"].access_type
+            == makePvi.AccessType.READ)
+        
+    def test_access_type_wo(self):
+        xml = """
+        <Root>
+            <Float Name="Gain">
+                <AccessMode>WO</AccessMode>
+            </Float>
+        </Root>
+        """
+        model = GenICamModel(xml)
+        assert (
+            model.definition_nodes["Gain"].access_type
+            == makePvi.AccessType.WRITE)
+
+    def test_access_type_rw(self):
+        xml = """
+        <Root>
+            <Float Name="Gain">
+                <AccessMode>RW</AccessMode>
+            </Float>
+        </Root>
+        """
+        model = GenICamModel(xml)
+        assert (
+            model.definition_nodes["Gain"].access_type
+            == makePvi.AccessType.READWRITE)
+
+    def test_access_type_imposed_access_mode(self):
+        xml = """
+        <Root>
+            <Float Name="Gain">
+                <ImposedAccessMode>RO</ImposedAccessMode>
+            </Float>
+        </Root>
+        """
+        model = GenICamModel(xml)
+        assert (
+            model.definition_nodes["Gain"].access_type
+            == makePvi.AccessType.READ)
+
+    def test_access_type_inherited_from_pvalue(self):
+        xml = """
+        <Root>
+            <Integer Name="Register">
+                <AccessMode>RO</AccessMode>
+            </Integer>
+
+            <IntConverter Name="Derived">
+                <pValue>Register</pValue>
+            </IntConverter>
+        </Root>
+        """
+        model = GenICamModel(xml)
+        assert (
+            model.definition_nodes["Derived"].access_type
+            == makePvi.AccessType.READ)
+
+    def test_access_type_pvalue_chain(self):
+        xml = """
+        <Root>
+            <Integer Name="Base">
+                <AccessMode>RW</AccessMode>
+            </Integer>
+
+            <IntConverter Name="Middle">
+                <pValue>Base</pValue>
+            </IntConverter>
+
+            <IntConverter Name="Top">
+                <pValue>Middle</pValue>
+            </IntConverter>
+        </Root>
+        """
+        model = GenICamModel(xml)
+        assert (
+            model.definition_nodes["Top"].access_type
+            == makePvi.AccessType.READWRITE)
+
+    def test_access_type_circular_dependency(self):
+        xml = """
+        <Root>
+            <IntConverter Name="A">
+                <pValue>B</pValue>
+            </IntConverter>
+
+            <IntConverter Name="B">
+                <pValue>A</pValue>
+            </IntConverter>
+        </Root>
+        """
+        with pytest.raises(
+            RuntimeError,
+            match="Circular access dependency"):
+            GenICamModel(xml)
+
+    def test_access_type_missing_pvalue_target(self):
+        xml = """
+        <Root>
+            <IntConverter Name="Derived">
+                <pValue>DoesNotExist</pValue>
+            </IntConverter>
+        </Root>
+        """
+        with pytest.raises(
+            RuntimeError,
+            match="target does not exist"):
+            GenICamModel(xml)
+
+    def test_swissknife_defaults_to_read(self):
+        xml = """
+        <Root>
+            <SwissKnife Name="Calc"/>
+        </Root>
+        """
+        model = GenICamModel(xml)
+        assert (
+            model.definition_nodes["Calc"].access_type
+            == makePvi.AccessType.READ)
+
+    def test_intswissknife_defaults_to_read(self):
+        xml = """
+        <Root>
+            <IntSwissKnife Name="Calc"/>
+        </Root>
+        """
+        model = GenICamModel(xml)
+        assert (
+            model.definition_nodes["Calc"].access_type
+            == makePvi.AccessType.READ)
+
+    def test_command_access_type_execute(self):
+        xml = """
+        <Root>
+            <Command Name="Start"/>
+        </Root>
+        """
+        model = GenICamModel(xml)
+        assert (
+            model.definition_nodes["Start"].access_type
+            == makePvi.AccessType.EXECUTE)
+
+    def test_category_has_no_access_type(self):
+        xml = """
+        <Root>
+            <Category Name="Settings"/>
+        </Root>
+        """
+        model = GenICamModel(xml)
+        assert (
+            model.definition_nodes["Settings"].access_type
+            is None)
+
+    def test_unknown_access_mode_defaults_to_readwrite_with_warning(self):
+        xml = """
+        <Root>
+            <Float Name="Gain">
+                <AccessMode>INVALID</AccessMode>
+            </Float>
+        </Root>
+        """
+        with pytest.warns(
+            UserWarning,
+            match="Defaulting access type to READWRITE"):
+            model = GenICamModel(xml)
+
+        assert (
+            model.definition_nodes["Gain"].access_type
+            == makePvi.AccessType.READWRITE)
