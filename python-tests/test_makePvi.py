@@ -956,3 +956,31 @@ class TestAccessMode:
         assert (
             model.definition_nodes["BinningHorizontal"].access_type
             == makePvi.AccessType.READWRITE)
+
+
+@pytest.mark.filterwarnings("ignore:Defaulting access type")
+def test_sample_matches_makepvi_output():
+    """
+    ADAravisMergedWithGenICamFromMakePvi.pvi.device.yaml is the output of:
+
+      makePvi.py --output_folder <folder holding ADAravis.pvi.device.yaml>
+        --pvi_device_name ADAravisMergedWithGenICamFromMakePvi
+        --label "ADAravis Camera + NewInstance"
+        --input_xml_file python-tests/GenICamXml.xml --embed_in ADAravis
+
+    If this fails after a change to makePvi.py, run that command and commit
+    the new sample.
+    """
+    tests_dir = Path(__file__).resolve().parent
+    xml_text = makePvi.sanitize_genicam_xml(
+        (tests_dir / "GenICamXml.xml").read_text())
+
+    yaml_text = makePvi.convert_genicam_xml_to_pvi(
+        xml_text=xml_text,
+        pvi_device_name="ADAravisMergedWithGenICamFromMakePvi",
+        label="ADAravis Camera + NewInstance",
+        embed_in="ADAravis",
+        embedding_file_folder=str(tests_dir))
+
+    sample = tests_dir / "ADAravisMergedWithGenICamFromMakePvi.pvi.device.yaml"
+    assert yaml_text == sample.read_text()
