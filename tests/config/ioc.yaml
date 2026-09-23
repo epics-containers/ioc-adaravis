@@ -12,6 +12,23 @@ entities:
   - type: devIocStats.iocAdminSoft
     IOC: "{{ ioc_name | upper }}"
 
+  # A fixed CLASS (not AutoADGenICam) so start.sh's GenICam loop always takes
+  # the aravisCamera.template + makePvi.py fallback branch, exercising the
+  # per-camera pvi/template generation in CI without ever calling arv-tool to
+  # discover a real camera. P is a plain literal (not a Jinja macro): start.sh
+  # reads it with yq before ibek does any Jinja rendering, so a macro here
+  # would leak "{{ }}" into the generated pvi/template filenames. ID is a
+  # TEST-NET-1 address (RFC 5737): reserved for documentation/testing, never
+  # routable, so aravisConfig() fails the connection immediately at IOC boot
+  # instead of blocking it (see ADAravis.cpp connectToCamera(), which logs
+  # and continues on failure).
+  - type: ADAravis.aravisCamera
+    ID: "192.0.2.1"
+    P: "IOC-ADARAVIS-TESTCAM"
+    R: ":CAM:"
+    PORT: TESTCAM1
+    CLASS: AVT_Mako_G125B
+
   - type: epics.StartupCommand
     command: dbLoadRecords("/epics/ioc/config/ioc.db")
 
