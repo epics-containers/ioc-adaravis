@@ -3,7 +3,7 @@ from argparse import ArgumentParser, Namespace
 from enum import Enum
 from io import StringIO
 from pathlib import Path
-from pvi.device import Device, enforce_pascal_case, Grid, Group, SignalR, SignalRW, SignalW, SignalX, SubScreen
+from pvi.device import Device, enforce_pascal_case, to_title_case, Grid, Group, SignalR, SignalRW, SignalW, SignalX, SubScreen
 from pvi._yaml_utils import type_first, load_yaml
 import re
 from ruamel.yaml import YAML
@@ -183,6 +183,7 @@ class GenICamNode:
         # Basic metadata
         self.name: str = xml_element.getAttribute("Name")
         self.description: str | None = self._extract_description()
+        self.display_name: str | None = self._extract_display_name()
         self.node_type: str = xml_element.nodeName # Raw from XML: Category, Float, Enumeration, etc
         self.access_type: AccessType | None = None # Parsed, to parse later
         self.is_category = self.node_type == "Category"
@@ -221,6 +222,23 @@ class GenICamNode:
             if child.nodeName == "Description" and child.firstChild:
                 return child.firstChild.nodeValue.strip()
         return None
+
+    def _extract_display_name(self) -> str | None:
+        # Look in immediate layer down only, as for _extract_description
+        for child in self.xml_element.childNodes:
+            if child.nodeName == "DisplayName" and child.firstChild:
+                return child.firstChild.nodeValue.strip()
+        return None
+
+    @property
+    def label(self) -> str:
+        """
+        GUI label from the full GenICam feature name rather than the shortened
+        EPICS record name: the DisplayName if the XML gives one, otherwise the
+        feature Name split into words, e.g. FrameStartTriggerDelay ->
+        Frame Start Trigger Delay
+        """
+        return self.display_name or to_title_case(enforce_pascal_case(self.name))
 
     def _extract_enum_choices(self) -> list[str]:
         choices: list[str] = []
@@ -503,6 +521,7 @@ class PviModel:
     @staticmethod
     def make_signal(node: GenICamNode) -> SignalR | SignalRW | SignalW | SignalX:     
         signal_name = enforce_pascal_case(node.epics_record_name)
+        signal_label = node.label
         signal_description = node.description
 
         read_widget={"type": "TextRead"}
@@ -518,12 +537,14 @@ class PviModel:
             case AccessType.EXECUTE:
                 return SignalX(
                     name=signal_name,
+                    label=signal_label,
                     description=signal_description,
                     write_pv=PviModel.make_pv(node.epics_record_name))
 
             case AccessType.READ:
                 return SignalR(
                     name=signal_name,
+                    label=signal_label,
                     description=signal_description,
                     read_pv=PviModel.make_pv(node.epics_record_name, "_RBV"),
                     read_widget=read_widget)
@@ -531,6 +552,7 @@ class PviModel:
             case AccessType.WRITE:
                 return SignalW(
                     name=signal_name,
+                    label=signal_label,
                     description=signal_description,
                     write_pv=PviModel.make_pv(node.epics_record_name),
                     write_widget=write_widget)
@@ -538,6 +560,7 @@ class PviModel:
             case AccessType.READWRITE:
                 return SignalRW(
                     name=signal_name,
+                    label=signal_label,
                     description=signal_description,
                     read_pv=PviModel.make_pv(node.epics_record_name, "_RBV"),
                     read_widget=read_widget,

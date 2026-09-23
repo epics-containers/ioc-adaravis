@@ -217,6 +217,40 @@ class TestPviModel:
         assert isinstance(signal, SignalX)
         assert signal.write_pv == "$(P)$(R)GC_AcquisitionStart"
 
+    def test_signal_label_uses_full_genicam_name(self):
+        xml = """
+        <Root>
+        <Category Name="TriggerCategory">
+            <pFeature>FrameStartTriggerDelay</pFeature>
+            <pFeature>TriggerMode</pFeature>
+        </Category>
+
+        <Float Name="FrameStartTriggerDelay">
+            <AccessMode>RW</AccessMode>
+        </Float>
+
+        <Enumeration Name="TriggerMode">
+            <DisplayName>Trigger Mode (FrameStart)</DisplayName>
+            <AccessMode>RW</AccessMode>
+            <EnumEntry Name="Off"><Value>0</Value></EnumEntry>
+            <EnumEntry Name="On"><Value>1</Value></EnumEntry>
+        </Enumeration>
+        </Root>
+        """
+
+        genicam_model: GenICamModel = GenICamModel(xml)
+        pvi_model: PviModel = PviModel(genicam_model, "Camera")
+
+        signals = {s.write_pv: s for s in pvi_model.groups[0].children}
+
+        # the record name is shortened, but the label keeps the full feature name
+        delay = signals["$(P)$(R)GC_FraStaTriDelay"]
+        assert delay.name == "GCFraStaTriDelay"
+        assert delay.get_label() == "Frame Start Trigger Delay"
+
+        # a DisplayName in the XML takes precedence
+        assert signals["$(P)$(R)GC_TriggerMode"].get_label() == "Trigger Mode (FrameStart)"
+
     def test_filter_for_signals(self):
         xml = """
         <Root>
