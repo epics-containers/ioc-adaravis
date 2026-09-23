@@ -1,0 +1,49 @@
+# yaml-language-server: $schema=https://github.com/epics-containers/ioc-template-example/releases/download/4.1.0/ibek.ioc.schema.json
+
+ioc_name: "{{ ioc_yaml_file_name }}"
+
+description: Very generic instance for testing generic IOCs
+
+# Used only by run-tests.sh's --test run (mounted over ioc.yaml for that run
+# only). ioc.yaml stays camera-free: ADAravis logs a benign connection
+# failure containing "error" for this camera, which the plain boot run's
+# grep -i error would wrongly treat as a real startup error.
+entities:
+  - type: epics.EpicsEnvSet
+    name: EPICS_TZ
+    value: "GMT0BST"
+
+  - type: devIocStats.iocAdminSoft
+    IOC: "{{ ioc_name | upper }}"
+
+  # A fixed CLASS (not AutoADGenICam) so start.sh's GenICam loop always takes
+  # the aravisCamera.template + makePvi.py fallback branch, exercising the
+  # per-camera pvi/template generation in CI without ever calling arv-tool to
+  # discover a real camera. P is a plain literal (not a Jinja macro): start.sh
+  # reads it with yq before ibek does any Jinja rendering, so a macro here
+  # would leak "{{ }}" into the generated pvi/template filenames. ID is a
+  # TEST-NET-1 address (RFC 5737): reserved for documentation/testing, never
+  # routable, so aravisConfig() fails the connection immediately at IOC boot
+  # instead of blocking it (see ADAravis.cpp connectToCamera(), which logs
+  # and continues on failure).
+  - type: ADAravis.aravisCamera
+    ID: "192.0.2.1"
+    P: "IOC-ADARAVIS-TESTCAM"
+    R: ":CAM:"
+    PORT: TESTCAM1
+    CLASS: AVT_Mako_G125B
+
+  - type: epics.StartupCommand
+    command: dbLoadRecords("/epics/ioc/config/ioc.db")
+
+  - type: epics.dbpf
+    pv: EXAMPLE:IBEK:A
+    value: "2.54"
+
+  - type: epics.dbpf
+    pv: EXAMPLE:IBEK:B
+    value: "2.61"
+
+  - type: epics.PostStartupCommand
+    command: |
+      dbgf EXAMPLE:IBEK:SUM
