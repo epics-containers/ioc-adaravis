@@ -183,7 +183,6 @@ class GenICamNode:
         # Basic metadata
         self.name: str = xml_element.getAttribute("Name")
         self.description: str | None = self._extract_description()
-        self.display_name: str | None = self._extract_display_name()
         self.node_type: str = xml_element.nodeName # Raw from XML: Category, Float, Enumeration, etc
         self.access_type: AccessType | None = None # Parsed, to parse later
         self.is_category = self.node_type == "Category"
@@ -223,22 +222,16 @@ class GenICamNode:
                 return child.firstChild.nodeValue.strip()
         return None
 
-    def _extract_display_name(self) -> str | None:
-        # Look in immediate layer down only, as for _extract_description
-        for child in self.xml_element.childNodes:
-            if child.nodeName == "DisplayName" and child.firstChild:
-                return child.firstChild.nodeValue.strip()
-        return None
-
     @property
     def label(self) -> str:
         """
-        GUI label from the full GenICam feature name rather than the shortened
-        EPICS record name: the DisplayName if the XML gives one, otherwise the
-        feature Name split into words, e.g. FrameStartTriggerDelay ->
-        Frame Start Trigger Delay
+        GUI label from the full GenICam feature Name rather than the shortened
+        EPICS record name, split into words, e.g. FrameStartTriggerDelay ->
+        Frame Start Trigger Delay. As upstream ADGenICam makeAdl.py, the XML
+        DisplayName is not used: vendors often leave it unspaced or stale, and
+        it can differ from the feature (and record) name.
         """
-        return self.display_name or to_title_case(enforce_pascal_case(self.name))
+        return to_title_case(enforce_pascal_case(self.name))
 
     def _extract_enum_choices(self) -> list[str]:
         choices: list[str] = []

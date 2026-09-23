@@ -230,7 +230,7 @@ class TestPviModel:
         </Float>
 
         <Enumeration Name="TriggerMode">
-            <DisplayName>Trigger Mode (FrameStart)</DisplayName>
+            <DisplayName>TriggerModeFrameStart</DisplayName>
             <AccessMode>RW</AccessMode>
             <EnumEntry Name="Off"><Value>0</Value></EnumEntry>
             <EnumEntry Name="On"><Value>1</Value></EnumEntry>
@@ -248,8 +248,8 @@ class TestPviModel:
         assert delay.name == "GCFraStaTriDelay"
         assert delay.get_label() == "Frame Start Trigger Delay"
 
-        # a DisplayName in the XML takes precedence
-        assert signals["$(P)$(R)GC_TriggerMode"].get_label() == "Trigger Mode (FrameStart)"
+        # the feature Name is used even when the XML gives a DisplayName
+        assert signals["$(P)$(R)GC_TriggerMode"].get_label() == "Trigger Mode"
 
     def test_filter_for_signals(self):
         xml = """
