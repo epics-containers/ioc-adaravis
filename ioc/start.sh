@@ -3,12 +3,11 @@
 # parse arguments *************************************************************
 
 # --test: generate all runtime assets, but skip hardware access and the IOC
-# launch. Used by CI to validate configs.
-case "$*" in
-    "") TEST_MODE=false ;;
-    --test) TEST_MODE=true ;;
-    *) echo "Unknown argument: $*" >&2; exit 1 ;;
-esac
+# launch. Used by CI to validate configs. All arguments, including --test,
+# are also forwarded unchanged to a config override start.sh (see below) if
+# one exists, for it to interpret itself.
+TEST_MODE=false
+[[ "$1" == "--test" ]] && TEST_MODE=true
 
 # wrap the console *************************************************************
 # test mode is not wrapped: stdio-socket takes a single command with no
@@ -48,6 +47,8 @@ if [[ -f ${SUPPORT}/configure/RELEASE.shell ]]; then
 fi
 
 # check for an override start.sh script ****************************************
+# this script's arguments are passed on unchanged, for the override to
+# interpret itself.
 
 if [ -f ${CONFIG_DIR}/start.sh ]; then
     exec bash "${CONFIG_DIR}/start.sh" "$@"
