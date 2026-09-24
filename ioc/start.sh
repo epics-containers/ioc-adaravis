@@ -1,9 +1,22 @@
 #!/bin/bash
 
-# wrap the console *************************************************************
+# parse arguments *************************************************************
 
-if [[ -n ${KUBERNETES_PORT} && -z ${STDIO_EXPOSED} ]]; then
-    STDIO_EXPOSED=YES exec stdio-socket ${IOC}/start.sh
+# --test: generate all runtime assets, but skip hardware access and the IOC
+# launch. Used by CI to validate configs. All arguments, including --test,
+# are also forwarded unchanged to a config override start.sh (see below) if
+# one exists, for it to interpret itself.
+TEST_MODE=false
+[[ "$1" == "--test" ]] && TEST_MODE=true
+
+# wrap the console *************************************************************
+# test mode is not wrapped: stdio-socket takes a single command with no
+# arguments and always exits 0, so a wrapped --test could never fail.
+
+# stdio-socket runs the wrapped command as one string via `sh -c`, so the
+# arguments are passed as "$*": arguments containing spaces are not supported.
+if [[ -n ${KUBERNETES_PORT} && -z ${STDIO_EXPOSED} && "${TEST_MODE}" != "true" ]]; then
+    STDIO_EXPOSED=YES exec stdio-socket "${IOC}/start.sh $*"
     exit 0
 fi
 
@@ -36,9 +49,11 @@ if [[ -f ${SUPPORT}/configure/RELEASE.shell ]]; then
 fi
 
 # check for an override start.sh script ****************************************
+# this script's arguments are passed on unchanged, for the override to
+# interpret itself.
 
 if [ -f ${CONFIG_DIR}/start.sh ]; then
-    exec bash ${CONFIG_DIR}/start.sh
+    exec bash "${CONFIG_DIR}/start.sh" "$@"
 fi
 
 # copy hand coded files to runtime folder **************************************
@@ -76,7 +91,8 @@ for ((count = 0 ; count < ${#entities[@]}; count++ )); do # Iterate over each en
     template_file="/epics/support/ADGenICam/db/${pvi_device_name}.template"
     label="GenICam ${instance_prefix}"
 
-    if [[ ${instance_class_from_config} == "AutoADGenICam" ]]; then
+    # test mode has no camera to query, so it takes the fallback below
+    if [[ ${instance_class_from_config} == "AutoADGenICam" && "${TEST_MODE}" != "true" ]]; then
         # Auto generation for CLASS=AutoADGenICam
         instance_id=$(yq -r ".entities[${count}].ID" "${ibek_src}")
         xml_file="/tmp/${instance_id}-genicam.xml"
@@ -150,5 +166,9 @@ fi
 
 # Launch the IOC ***************************************************************
 
-${IOC}/bin/linux-x86_64/ioc ${RUNTIME_DIR}/st.cmd
+if [[ "${TEST_MODE}" == "true" ]]; then
+    echo "Test mode: all runtime assets generated successfully, skipping IOC binary launch"
+else
+    ${IOC}/bin/linux-x86_64/ioc ${RUNTIME_DIR}/st.cmd
+fi
 

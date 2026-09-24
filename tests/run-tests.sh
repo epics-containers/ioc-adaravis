@@ -41,4 +41,22 @@ elif [[ ! ${result} =~ "5.15" || ! ${result} =~ "/epics/runtime/st.cmd" ]]; then
     exit 1
 fi
 
+# verify --test mode generates runtime assets but does not launch the IOC binary.
+# KUBERNETES_PORT is set as it is inside a pod (e.g. kodman on GitLab CI),
+# where start.sh would otherwise re-exec through stdio-socket.
+# ioc-test.yaml is mounted over ioc.yaml for this run only: it adds a fixed-class
+# test camera to exercise per-camera pvi/template generation. Its unreachable
+# address makes ADAravis log a benign "error" at connect, which must not reach
+# the plain boot run above (see tests/config/ioc-test.yaml).
+test_mounts="${mounts} -v ${THIS}/config/ioc-test.yaml:${CONF}/ioc.yaml:ro"
+test_result=$($docker run ${opts} -e KUBERNETES_PORT=tcp://ci:443 ${test_mounts} ${TAG} /epics/ioc/start.sh --test 2>&1)
+
+if echo "${test_result}" | grep -i error; then
+    echo "ERROR: errors in IOC --test startup"
+    exit 1
+elif ! echo "${test_result}" | grep -q "Test mode:"; then
+    echo "ERROR: --test did not report test mode"
+    exit 1
+fi
+
 echo "Tests passed!"
