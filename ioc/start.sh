@@ -13,8 +13,10 @@ TEST_MODE=false
 # test mode is not wrapped: stdio-socket takes a single command with no
 # arguments and always exits 0, so a wrapped --test could never fail.
 
+# stdio-socket runs the wrapped command as one string via `sh -c`, so the
+# arguments are passed as "$*": arguments containing spaces are not supported.
 if [[ -n ${KUBERNETES_PORT} && -z ${STDIO_EXPOSED} && "${TEST_MODE}" != "true" ]]; then
-    STDIO_EXPOSED=YES exec stdio-socket ${IOC}/start.sh
+    STDIO_EXPOSED=YES exec stdio-socket "${IOC}/start.sh $*"
     exit 0
 fi
 
