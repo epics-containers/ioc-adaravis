@@ -45,16 +45,12 @@
             "python.defaultInterpreterPath": "/venv/bin/python",
             "python.terminal.activateEnvInCurrentTerminal": false,
             "python.terminal.activateEnvironment": false,
-            "python.testing.unittestEnabled": false,
-            "python.testing.pytestEnabled": true,
-            "editor.formatOnSave": true,
-            "editor.codeActionsOnSave": {
-                "source.organizeImports": "explicit"
-            },
-            "remote.autoForwardPorts": false,
-            "[python]": {
-                "editor.defaultFormatter": "charliermarsh.ruff"
-            }
+            // Workaround to prevent garbled python REPL in the terminal
+            // https://github.com/microsoft/vscode-python/issues/25505
+            "python.terminal.shellIntegration.enabled": false,
+            // make sure IOC server ports are available locally on the host
+            "remote.autoForwardPorts": true,
+            "remote.autoForwardPortsSource": "process"
         }
     },
     // Populate the user's terminal config folder with default config if it is blank

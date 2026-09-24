@@ -7,6 +7,9 @@ ARG DEVELOPER=${REGISTRY}/ioc-areadetector${IMAGE_EXT}-developer:3.14ec3-beta.1
 ##### build stage ##############################################################
 FROM  ${DEVELOPER} AS developer
 
+# initiate ioc image verson variable for manifest
+ARG IOC_VERSION=unknown
+
 # Add missing dependencies
 RUN curl -o /usr/bin/yq -L https://github.com/mikefarah/yq/releases/download/v4.44.2/yq_linux_amd64 && chmod +x /usr/bin/yq
 
@@ -19,7 +22,7 @@ RUN ln -s ${SOURCE_FOLDER}/ioc ${IOC}
 # Update the apt cache
 RUN apt update -y
 
-# Update the version of ibek if needed
+# get the current versions of pvi and ibek
 COPY requirements.txt requirements.txt
 RUN uv pip install --upgrade -r requirements.txt
 
@@ -43,12 +46,17 @@ RUN ansible.sh ioc
 RUN chmod a+rw -R /epics/pvi-defs /epics/support/ADGenICam/db \
     /epics/generic-source/ibek-support
 
+# generate a manifest of installed EPICS modules and python packages
+COPY scripts/generate_manifest.py /tmp/generate_manifest.py
+RUN python3 /tmp/generate_manifest.py "${IOC_VERSION}"
+
 ##### runtime preparation stage ################################################
 FROM developer AS runtime_prep
 
 # get the products from the build stage and reduce to runtime assets only
 # /python is created by uv linux-gnu is added aravis library build
-RUN ibek ioc extract-runtime-assets /assets /python /usr/local/lib/x86_64-linux-gnu
+# /epics/versions.json is the manifest of support module and python versions
+RUN ibek ioc extract-runtime-assets /assets /python /usr/local/lib/x86_64-linux-gnu /epics/versions.json
 
 ##### runtime stage ############################################################
 FROM ${RUNTIME} AS runtime
