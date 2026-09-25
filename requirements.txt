@@ -3,11 +3,13 @@
 # latest ibek / pvi release on PyPI. Bump these deliberately.
 #
 # pvi is listed explicitly (above ibek) so it can be bumped without an ibek
-# release. 0.14.1 fixes sub-screen button links broken in 0.14.0
-# (https://github.com/epics-containers/pvi/pull/203)
-pvi>=0.14.1,<0.15
-# 4.8.0 matches the ibek floor of services-template-helm and ibek-runtime-streamdevice
-ibek>=4.8.0,<5
+# release. 0.14.2 adds +trigger to PVI groups so pvxs serves them without warnings
+# (https://github.com/epics-containers/pvi/pull/206).
+#
+# A floor that names a pre-release is what lets uv select pre-releases; move both
+# floors to the final releases once they are out.
+pvi>=0.14.2b1,<0.15
+ibek>=4.8.2b2,<5
 # to install direct from github during development in a branch
 # git+https://github.com/epics-containers/ibek.git@fix-extract-assets
 stdio-socket>=1.4.0
