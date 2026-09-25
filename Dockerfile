@@ -1,6 +1,6 @@
 ARG IMAGE_EXT
 
-ARG BASE=7.0.10ec1
+ARG BASE=7.0.10ec2
 ARG REGISTRY=ghcr.io/epics-containers
 ARG RUNTIME=${REGISTRY}/epics-base${IMAGE_EXT}-runtime:${BASE}
 ARG DEVELOPER=${REGISTRY}/epics-base${IMAGE_EXT}-developer:${BASE}
@@ -16,9 +16,6 @@ RUN curl -o /usr/bin/yq -L https://github.com/mikefarah/yq/releases/download/v4.
 ENV SOURCE_FOLDER=/epics/generic-source
 # connect ioc source folder to its know location
 RUN ln -s ${SOURCE_FOLDER}/ioc ${IOC}
-
-# make sure that apt can find the system packages the support modules need
-RUN apt-get update -y
 
 # get the current versions of pvi and ibek
 COPY requirements.txt requirements.txt
