@@ -5,7 +5,7 @@ import sys
 SCRIPT_DIR = Path(__file__).resolve().parents[1] / "ioc"
 sys.path.insert(0, str(SCRIPT_DIR))
 
-from pvi.device import Group, SignalR, SignalX
+from pvi.device import Group, SignalR, SignalW, SignalX
 import pytest
 from xml.dom.minidom import Document, parseString
 from ruamel.yaml import YAML
@@ -223,7 +223,22 @@ class TestPviModel:
         <Category Name="TriggerCategory">
             <pFeature>FrameStartTriggerDelay</pFeature>
             <pFeature>TriggerMode</pFeature>
+            <pFeature>DeviceTemperatureReading</pFeature>
+            <pFeature>TimestampLatchValue</pFeature>
+            <pFeature>TimestampControlLatch</pFeature>
         </Category>
+
+        <Float Name="DeviceTemperatureReading">
+            <AccessMode>RO</AccessMode>
+        </Float>
+
+        <Integer Name="TimestampLatchValue">
+            <AccessMode>WO</AccessMode>
+        </Integer>
+
+        <Command Name="TimestampControlLatch">
+            <pValue>TimestampControlLatchReg</pValue>
+        </Command>
 
         <Float Name="FrameStartTriggerDelay">
             <AccessMode>RW</AccessMode>
@@ -241,15 +256,22 @@ class TestPviModel:
         genicam_model: GenICamModel = GenICamModel(xml)
         pvi_model: PviModel = PviModel(genicam_model, "Camera")
 
-        signals = {s.write_pv: s for s in pvi_model.groups[0].children}
+        signals = {s.name: s for s in pvi_model.groups[0].children}
 
         # the record name is shortened, but the label keeps the full feature name
-        delay = signals["$(P)$(R)GC_FraStaTriDelay"]
-        assert delay.name == "GCFraStaTriDelay"
+        delay = signals["GCFraStaTriDelay"]
+        assert delay.write_pv == "$(P)$(R)GC_FraStaTriDelay"
         assert delay.get_label() == "Frame Start Trigger Delay"
 
         # the feature Name is used even when the XML gives a DisplayName
-        assert signals["$(P)$(R)GC_TriggerMode"].get_label() == "Trigger Mode"
+        assert signals["GCTriggerMode"].get_label() == "Trigger Mode"
+
+        # every signal type carries the label: read-only, write-only, command
+        labels = {
+            type(s): s.get_label() for s in pvi_model.groups[0].children}
+        assert labels[SignalR] == "Device Temperature Reading"
+        assert labels[SignalW] == "Timestamp Latch Value"
+        assert labels[SignalX] == "Timestamp Control Latch"
 
     def test_filter_for_signals(self):
         xml = """
@@ -956,6 +978,7 @@ class TestAccessMode:
         assert (
             model.definition_nodes["BinningHorizontal"].access_type
             == makePvi.AccessType.READWRITE)
+
 
 
 @pytest.mark.filterwarnings("ignore:Defaulting access type")
