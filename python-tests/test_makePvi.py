@@ -5,7 +5,7 @@ import sys
 SCRIPT_DIR = Path(__file__).resolve().parents[1] / "ioc"
 sys.path.insert(0, str(SCRIPT_DIR))
 
-from pvi.device import Group, SignalR, SignalX
+from pvi.device import Group, SignalR, SignalW, SignalX
 import pytest
 from xml.dom.minidom import Document, parseString
 from ruamel.yaml import YAML
@@ -216,6 +216,62 @@ class TestPviModel:
 
         assert isinstance(signal, SignalX)
         assert signal.write_pv == "$(P)$(R)GC_AcquisitionStart"
+
+    def test_signal_label_uses_full_genicam_name(self):
+        xml = """
+        <Root>
+        <Category Name="TriggerCategory">
+            <pFeature>FrameStartTriggerDelay</pFeature>
+            <pFeature>TriggerMode</pFeature>
+            <pFeature>DeviceTemperatureReading</pFeature>
+            <pFeature>TimestampLatchValue</pFeature>
+            <pFeature>TimestampControlLatch</pFeature>
+        </Category>
+
+        <Float Name="DeviceTemperatureReading">
+            <AccessMode>RO</AccessMode>
+        </Float>
+
+        <Integer Name="TimestampLatchValue">
+            <AccessMode>WO</AccessMode>
+        </Integer>
+
+        <Command Name="TimestampControlLatch">
+            <pValue>TimestampControlLatchReg</pValue>
+        </Command>
+
+        <Float Name="FrameStartTriggerDelay">
+            <AccessMode>RW</AccessMode>
+        </Float>
+
+        <Enumeration Name="TriggerMode">
+            <DisplayName>TriggerModeFrameStart</DisplayName>
+            <AccessMode>RW</AccessMode>
+            <EnumEntry Name="Off"><Value>0</Value></EnumEntry>
+            <EnumEntry Name="On"><Value>1</Value></EnumEntry>
+        </Enumeration>
+        </Root>
+        """
+
+        genicam_model: GenICamModel = GenICamModel(xml)
+        pvi_model: PviModel = PviModel(genicam_model, "Camera")
+
+        signals = {s.name: s for s in pvi_model.groups[0].children}
+
+        # the record name is shortened, but the label keeps the full feature name
+        delay = signals["GCFraStaTriDelay"]
+        assert delay.write_pv == "$(P)$(R)GC_FraStaTriDelay"
+        assert delay.get_label() == "Frame Start Trigger Delay"
+
+        # the feature Name is used even when the XML gives a DisplayName
+        assert signals["GCTriggerMode"].get_label() == "Trigger Mode"
+
+        # every signal type carries the label: read-only, write-only, command
+        labels = {
+            type(s): s.get_label() for s in pvi_model.groups[0].children}
+        assert labels[SignalR] == "Device Temperature Reading"
+        assert labels[SignalW] == "Timestamp Latch Value"
+        assert labels[SignalX] == "Timestamp Control Latch"
 
     def test_filter_for_signals(self):
         xml = """
@@ -922,3 +978,32 @@ class TestAccessMode:
         assert (
             model.definition_nodes["BinningHorizontal"].access_type
             == makePvi.AccessType.READWRITE)
+
+
+
+@pytest.mark.filterwarnings("ignore:Defaulting access type")
+def test_sample_matches_makepvi_output():
+    """
+    ADAravisMergedWithGenICamFromMakePvi.pvi.device.yaml is the output of:
+
+      makePvi.py --output_folder <folder holding ADAravis.pvi.device.yaml>
+        --pvi_device_name ADAravisMergedWithGenICamFromMakePvi
+        --label "ADAravis Camera + NewInstance"
+        --input_xml_file python-tests/GenICamXml.xml --embed_in ADAravis
+
+    If this fails after a change to makePvi.py, run that command and commit
+    the new sample.
+    """
+    tests_dir = Path(__file__).resolve().parent
+    xml_text = makePvi.sanitize_genicam_xml(
+        (tests_dir / "GenICamXml.xml").read_text())
+
+    yaml_text = makePvi.convert_genicam_xml_to_pvi(
+        xml_text=xml_text,
+        pvi_device_name="ADAravisMergedWithGenICamFromMakePvi",
+        label="ADAravis Camera + NewInstance",
+        embed_in="ADAravis",
+        embedding_file_folder=str(tests_dir))
+
+    sample = tests_dir / "ADAravisMergedWithGenICamFromMakePvi.pvi.device.yaml"
+    assert yaml_text == sample.read_text()

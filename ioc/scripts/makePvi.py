@@ -3,7 +3,7 @@ from argparse import ArgumentParser, Namespace
 from enum import Enum
 from io import StringIO
 from pathlib import Path
-from pvi.device import Device, enforce_pascal_case, Grid, Group, SignalR, SignalRW, SignalW, SignalX, SubScreen
+from pvi.device import Device, enforce_pascal_case, to_title_case, Grid, Group, SignalR, SignalRW, SignalW, SignalX, SubScreen
 from pvi._yaml_utils import type_first, load_yaml
 import re
 from ruamel.yaml import YAML
@@ -221,6 +221,17 @@ class GenICamNode:
             if child.nodeName == "Description" and child.firstChild:
                 return child.firstChild.nodeValue.strip()
         return None
+
+    @property
+    def label(self) -> str:
+        """
+        GUI label from the full GenICam feature Name rather than the shortened
+        EPICS record name, split into words, e.g. FrameStartTriggerDelay ->
+        Frame Start Trigger Delay. As upstream ADGenICam makeAdl.py, the XML
+        DisplayName is not used: vendors often leave it unspaced or stale, and
+        it can differ from the feature (and record) name.
+        """
+        return to_title_case(enforce_pascal_case(self.name))
 
     def _extract_enum_choices(self) -> list[str]:
         choices: list[str] = []
@@ -503,6 +514,7 @@ class PviModel:
     @staticmethod
     def make_signal(node: GenICamNode) -> SignalR | SignalRW | SignalW | SignalX:     
         signal_name = enforce_pascal_case(node.epics_record_name)
+        signal_label = node.label
         signal_description = node.description
 
         read_widget={"type": "TextRead"}
@@ -518,12 +530,14 @@ class PviModel:
             case AccessType.EXECUTE:
                 return SignalX(
                     name=signal_name,
+                    label=signal_label,
                     description=signal_description,
                     write_pv=PviModel.make_pv(node.epics_record_name))
 
             case AccessType.READ:
                 return SignalR(
                     name=signal_name,
+                    label=signal_label,
                     description=signal_description,
                     read_pv=PviModel.make_pv(node.epics_record_name, "_RBV"),
                     read_widget=read_widget)
@@ -531,6 +545,7 @@ class PviModel:
             case AccessType.WRITE:
                 return SignalW(
                     name=signal_name,
+                    label=signal_label,
                     description=signal_description,
                     write_pv=PviModel.make_pv(node.epics_record_name),
                     write_widget=write_widget)
@@ -538,6 +553,7 @@ class PviModel:
             case AccessType.READWRITE:
                 return SignalRW(
                     name=signal_name,
+                    label=signal_label,
                     description=signal_description,
                     read_pv=PviModel.make_pv(node.epics_record_name, "_RBV"),
                     read_widget=read_widget,
