@@ -5,7 +5,7 @@ import sys
 SCRIPT_DIR = Path(__file__).resolve().parents[1] / "ioc"
 sys.path.insert(0, str(SCRIPT_DIR))
 
-from pvi.device import Group, SignalX
+from pvi.device import Group, SignalR, SignalX
 import pytest
 from xml.dom.minidom import Document, parseString
 from ruamel.yaml import YAML
@@ -304,7 +304,6 @@ class TestPviModel:
         assert set(signal_names) == {
             "GCIntegerSignal",
             "GCIntRegSignal",
-            "GCMasIntRegSignal",
             "GCIntConSignal",
             "GCIntSwiKnifeSignal",
             "GCBooleanSignal",
@@ -316,6 +315,28 @@ class TestPviModel:
             "GCCommandSignal",
             "GCEnumerationSignal"
         }
+
+    def test_category_without_signals_gives_no_group(self):
+        xml = """
+        <Root>
+        <Category Name="MaskCategory">
+            <pFeature>MaskedIntRegFeature</pFeature>
+        </Category>
+        <MaskedIntReg Name="MaskedIntRegFeature">
+            <AccessMode>RW</AccessMode>
+        </MaskedIntReg>
+        <Float Name="Gain">
+            <AccessMode>RW</AccessMode>
+        </Float>
+        </Root>
+        """
+
+        genicam_model: GenICamModel = GenICamModel(xml)
+        pvi_model: PviModel = PviModel(genicam_model, "Camera")
+
+        assert [g.name for g in pvi_model.groups] == ["Camera"]
+        assert [s.name for s in pvi_model.groups[0].children] == [
+            "GCGain"]
 
     def test_split_group_by_32_signals(self):
         xml = """
@@ -851,4 +872,53 @@ class TestAccessMode:
 
         assert (
             model.definition_nodes["Gain"].access_type
+            == makePvi.AccessType.READWRITE)
+
+    def test_access_type_inherited_from_read_only_float_reg(self):
+        # Standard SFNC layout, e.g. DeviceTemperature: a Float whose pValue is
+        # a FloatReg register carrying the AccessMode. makeDb.py follows the
+        # pValue into any node type, so it creates only the _RBV record.
+        xml = """
+        <Root>
+            <Category Name="DeviceControl">
+                <pFeature>DeviceTemperature</pFeature>
+            </Category>
+
+            <Float Name="DeviceTemperature">
+                <pValue>DeviceTemperatureReg</pValue>
+            </Float>
+
+            <FloatReg Name="DeviceTemperatureReg">
+                <Address>0x0</Address>
+                <Length>4</Length>
+                <AccessMode>RO</AccessMode>
+                <pPort>Device</pPort>
+            </FloatReg>
+        </Root>
+        """
+        model = GenICamModel(xml)
+        assert (
+            model.definition_nodes["DeviceTemperature"].access_type
+            == makePvi.AccessType.READ)
+
+        pvi_model = PviModel(model, "Camera")
+        signal = pvi_model.groups[0].children[0]
+        assert isinstance(signal, SignalR)
+        assert signal.read_pv == "$(P)$(R)GC_DeviceTemperature_RBV"
+
+    def test_access_type_inherited_from_read_write_mask_register(self):
+        xml = """
+        <Root>
+            <Integer Name="BinningHorizontal">
+                <pValue>BinningHorizontalReg</pValue>
+            </Integer>
+
+            <MaskedIntReg Name="BinningHorizontalReg">
+                <AccessMode>RW</AccessMode>
+            </MaskedIntReg>
+        </Root>
+        """
+        model = GenICamModel(xml)
+        assert (
+            model.definition_nodes["BinningHorizontal"].access_type
             == makePvi.AccessType.READWRITE)
