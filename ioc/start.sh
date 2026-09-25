@@ -87,12 +87,12 @@ for ((count = 0 ; count < ${#entities[@]}; count++ )); do # Iterate over each en
     # PVI device name follows the same convention as ADAravis.ibek.support.yaml:
     # always ADAravis-${P} (to keep techui-support simple)
     pvi_device_name="ADAravis-${instance_prefix}"
-    template_file="/epics/support/ADGenICam/db/${pvi_device_name}.template"
     label="GenICam ${instance_prefix}"
 
     # test mode has no camera to query, so it takes the fallback below
     if [[ ${instance_class_from_config} == "AutoADGenICam" && "${TEST_MODE}" != "true" ]]; then
         # Auto generation for CLASS=AutoADGenICam
+        template_file="/epics/support/ADGenICam/db/${pvi_device_name}.template"
         instance_id=$(yq -r ".entities[${count}].ID" "${ibek_src}")
         xml_file="/tmp/${instance_id}-genicam.xml"
         arv-tool-0.8 -a "${instance_id}" genicam > "${xml_file}"
@@ -115,19 +115,32 @@ for ((count = 0 ; count < ${#entities[@]}; count++ )); do # Iterate over each en
         fi
     fi
 
-    # Fallback for CLASS != AutoADGenICam or AutoADGenICam but XML generation failed:
-    # Output generic ADAravis template and device pvi
-    echo "Falling back to generic ADAravis template and device pvi for ${instance_prefix} (CLASS=${instance_class_from_config})"
+    # Below this point: either CLASS != AutoADGenICam, or CLASS ==
+    # AutoADGenICam but the camera XML query failed (or --test).
+    #
+    # ADAravis.ibek.support.yaml selects the settings template file by the
+    # same rule: ADAravis-${P}.template for AutoADGenICam, or CLASS.template
+    # otherwise. Only the AutoADGenICam case needs a template generated here
+    # -- for every other CLASS value, CLASS.template is one of the predefined
+    # templates that ships with ADGenICam (areaDetector GenICamApp/Db), so
+    # there is nothing to fall back to and it must be left alone.
+    if [[ ${instance_class_from_config} == "AutoADGenICam" ]]; then
+        echo "Falling back to generic ADAravis template for ${instance_prefix} (CLASS=${instance_class_from_config})"
 
-    # Create fallback template_file from aravisCamera.template.
-    # The check that template_file  doesn't exist already isn't really necessary now,
-    # but just in case one day we set template_file to a pre-defined template,
-    # in which case we wouldn't want to copy aravisCamera.template over it 
-    if [[ ! -f ${template_file} ]]; then
-        cp "/epics/support/ADAravis/db/aravisCamera.template" "${template_file}"
+        # Create fallback template_file from aravisCamera.template.
+        # The check that template_file doesn't exist already isn't really
+        # necessary now, but just in case one day we set template_file to a
+        # pre-defined template, in which case we wouldn't want to copy
+        # aravisCamera.template over it
+        template_file="/epics/support/ADGenICam/db/${pvi_device_name}.template"
+        if [[ ! -f ${template_file} ]]; then
+            cp "/epics/support/ADAravis/db/aravisCamera.template" "${template_file}"
+        fi
     fi
 
-    # Create fall back pvi_device_name.
+    # Create pvi_device_name's device pvi. This runs for every CLASS value:
+    # the pvi device yaml is always named ADAravis-${P}, independently of
+    # which template file backs it.
     # In theory we could generate it from template_file like below
     # pvi convert device --template "${template_file}" --name "${pvi_device_name}" --label "${label}" /epics/pvi-defs/
     # but it's better to use makePvi.py to create it from ADAravis.device.pvi.yaml
