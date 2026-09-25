@@ -8,9 +8,6 @@ ARG DEVELOPER=${REGISTRY}/epics-base${IMAGE_EXT}-developer:${BASE}
 ##### build stage ##############################################################
 FROM  ${DEVELOPER} AS developer
 
-# initiate ioc image verson variable for manifest
-ARG IOC_VERSION=unknown
-
 # yq is used by start.sh to read camera entities from ioc.yaml
 RUN curl -o /usr/bin/yq -L https://github.com/mikefarah/yq/releases/download/v4.44.2/yq_linux_amd64 && chmod +x /usr/bin/yq
 
@@ -77,6 +74,9 @@ RUN chmod a+rw -R /epics/pvi-defs /epics/support/ADGenICam/db \
     /epics/generic-source/ibek-support
 
 # generate a manifest of installed EPICS modules and python packages
+# IOC_VERSION is declared here, not earlier: every RUN after an ARG sees it,
+# so a new value (each branch or tag) would rebuild all the steps above
+ARG IOC_VERSION=unknown
 COPY scripts/generate_manifest.py /tmp/generate_manifest.py
 RUN python3 /tmp/generate_manifest.py "${IOC_VERSION}"
 

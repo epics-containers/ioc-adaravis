@@ -54,7 +54,7 @@ else
     # its own tz database. (Bind-mounting /etc/localtime, or podman --tz=local,
     # does not help: in the image /etc/localtime is a symlink, so both land on
     # its target and the JDK still reads the symlink name Etc/UTC.)
-    host_tz=${TZ:-$(timedatectl show -p Timezone --value 2>/dev/null)}
+    host_tz=${TZ:-$(timedatectl show -p Timezone --value 2>/dev/null || true)}
     if [[ -z ${host_tz} && -L /etc/localtime ]]; then
         host_tz=$(readlink -f /etc/localtime | sed -n 's|.*/zoneinfo/||p')
     fi

@@ -198,8 +198,14 @@ fi
 # set IBEK_DO_WAIT_DISABLE=true to skip this step (e.g. to force IOC startup
 # without waiting for hardware, or to bypass it at the shell level in pipelines
 # where ibek is unavailable)
+# 'ibek ioc do-wait' writes /tmp/doWait_completed.txt when it finishes, and
+# startup.sh waits for that file when it is used as the startup probe
+# (ioc-instance startupExecutable). When do-wait is skipped, write the file
+# here so the probe does not wait for ever.
 if [[ -f ${CONFIG_DIR}/ioc.yaml && "${IBEK_DO_WAIT_DISABLE}" != "true" && "${TEST_MODE}" != "true" ]]; then
     ibek ioc do-wait
+else
+    touch /tmp/doWait_completed.txt
 fi
 
 # Launch the IOC ***************************************************************
