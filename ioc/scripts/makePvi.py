@@ -186,10 +186,10 @@ class GenICamNode:
         self.node_type: str = xml_element.nodeName # Raw from XML: Category, Float, Enumeration, etc
         self.access_type: AccessType | None = None # Parsed, to parse later
         self.is_category = self.node_type == "Category"
+        # The node types makeDb.py creates records for
         self.is_signal: bool = self.node_type in [
             "Integer",
             "IntReg",
-            "MaskedIntReg",
             "IntConverter",
             "IntSwissKnife",
             "Boolean",
@@ -290,18 +290,16 @@ class GenICamNode:
         definition_nodes_lookup: dict[str, "GenICamNode"],
         visited: set[str]) -> AccessType | None:
         """
-        Recursive helper equivalent to makeDb.py:is_node_readonly()
+        Recursive helper equivalent to makeDb.py:is_node_readonly().
+
+        Like makeDb.py, this reads the AccessMode of any node type and follows
+        pValue into any node type, including registers such as FloatReg that
+        are not signals themselves. Returns None when neither decides.
         """
         if self.name in visited:
             raise RuntimeError(f"Circular access dependency involving {self.name}")
 
         visited.add(self.name)
-
-        if self.node_type == "Command":
-            return AccessType.EXECUTE
-        
-        if not self.is_signal:
-            return None
 
         # The ordering 1, 2, 3 below mirrors  makeDb.py
         # 1. Directly determined via AccessMode/ImposedAccessMode
@@ -341,9 +339,7 @@ class GenICamNode:
         if self.node_type in ("SwissKnife", "IntSwissKnife"):
             return AccessType.READ
 
-        warnings.warn(
-            f"Defaulting access type to READWRITE for {self.name} ({self.node_type})")
-        return AccessType.READWRITE
+        return None
 
     def set_access_type(
         self,
@@ -351,10 +347,19 @@ class GenICamNode:
         """
         Public entry point called once by GenICamModel.
         """
-        if self.is_signal and self.access_type is None:
-            self.access_type = self._determine_access_type(
-                definition_nodes_lookup,
-                visited=set())
+        if not self.is_signal or self.access_type is not None:
+            return
+
+        if self.node_type == "Command":
+            self.access_type = AccessType.EXECUTE
+            return
+
+        access = self._determine_access_type(definition_nodes_lookup, visited=set())
+        if access is None:
+            warnings.warn(
+                f"Defaulting access type to READWRITE for {self.name} ({self.node_type})")
+            access = AccessType.READWRITE
+        self.access_type = access
 
 
     def __repr__(self) -> str:
