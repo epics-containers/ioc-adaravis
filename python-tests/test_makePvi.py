@@ -316,6 +316,28 @@ class TestPviModel:
             "GCEnumerationSignal"
         }
 
+    def test_category_without_signals_gives_no_group(self):
+        xml = """
+        <Root>
+        <Category Name="MaskCategory">
+            <pFeature>MaskedIntRegFeature</pFeature>
+        </Category>
+        <MaskedIntReg Name="MaskedIntRegFeature">
+            <AccessMode>RW</AccessMode>
+        </MaskedIntReg>
+        <Float Name="Gain">
+            <AccessMode>RW</AccessMode>
+        </Float>
+        </Root>
+        """
+
+        genicam_model: GenICamModel = GenICamModel(xml)
+        pvi_model: PviModel = PviModel(genicam_model, "Camera")
+
+        assert [g.name for g in pvi_model.groups] == ["Camera"]
+        assert [s.name for s in pvi_model.groups[0].children] == [
+            "GCGain"]
+
     def test_split_group_by_32_signals(self):
         xml = """
         <Root>

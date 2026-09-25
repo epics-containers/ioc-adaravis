@@ -570,6 +570,10 @@ class PviModel:
             signals: list[SignalR | SignalRW | SignalW | SignalX] = [
                 PviModel.make_signal(leaf) for leaf in non_category_children if leaf.is_signal]
 
+            # A category whose features have no records gives no group
+            if not signals:
+                continue
+
             group_name = enforce_pascal_case(node.name)
             group_description = node.description
 
