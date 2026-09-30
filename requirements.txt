@@ -3,8 +3,8 @@
 # latest ibek / pvi release on PyPI. Bump these deliberately.
 #
 # pvi is listed explicitly (above ibek) so it can be bumped without an ibek
-# release. 0.14.3 is the current release.
-pvi>=0.14.3,<0.15
+# release. 0.14.4 is the current release.
+pvi>=0.14.4,<0.15
 # 4.8.2 is the current release
 ibek>=4.8.2,<5
 # to install direct from github during development in a branch
