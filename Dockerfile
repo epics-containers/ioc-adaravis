@@ -1,15 +1,13 @@
-ARG IMAGE_EXT
-
-ARG BASE=7.0.10ec2
+ARG BASE=7.0.10ec4-beta.2
 ARG REGISTRY=ghcr.io/epics-containers
-ARG RUNTIME=${REGISTRY}/epics-base${IMAGE_EXT}-runtime:${BASE}
-ARG DEVELOPER=${REGISTRY}/epics-base${IMAGE_EXT}-developer:${BASE}
+ARG RUNTIME=${REGISTRY}/epics-base-runtime:${BASE}
+ARG DEVELOPER=${REGISTRY}/epics-base-developer:${BASE}
 
 ##### build stage ##############################################################
 FROM  ${DEVELOPER} AS developer
 
 # yq is used by start.sh to read camera entities from ioc.yaml
-RUN curl -o /usr/bin/yq -L https://github.com/mikefarah/yq/releases/download/v4.44.2/yq_linux_amd64 && chmod +x /usr/bin/yq
+RUN curl -o /usr/bin/yq -L https://github.com/mikefarah/yq/releases/download/v4.44.2/yq_linux_$(dpkg --print-architecture) && chmod +x /usr/bin/yq
 
 # The devcontainer mounts the project root to /epics/generic-source
 # Using the same location here makes devcontainer/runtime differences transparent.
@@ -82,10 +80,10 @@ FROM developer AS runtime_prep
 
 # get the products from the build stage and reduce to runtime assets only
 # /python is created by uv and is needed in the runtime target
-# /usr/local/lib/x86_64-linux-gnu holds the aravis library built by ADAravis
+# /usr/local/lib/<multiarch triplet> holds the aravis library built by ADAravis
 # /epics/versions.json is the manifest of support module and python versions
 RUN ibek ioc extract-runtime-assets /assets /python \
-    /usr/local/lib/x86_64-linux-gnu /epics/versions.json
+    /usr/local/lib/$(gcc -dumpmachine) /epics/versions.json
 
 ##### runtime stage ############################################################
 FROM ${RUNTIME} AS runtime
@@ -96,7 +94,7 @@ COPY --from=runtime_prep /assets /
 # yq is used by start.sh to read camera entities from ioc.yaml
 RUN apt-get update && apt-get install -y curl
 RUN curl -L \
-  https://github.com/mikefarah/yq/releases/download/v4.44.2/yq_linux_amd64 \
+  https://github.com/mikefarah/yq/releases/download/v4.44.2/yq_linux_$(dpkg --print-architecture) \
   -o /usr/local/bin/yq && chmod +x /usr/local/bin/yq
 
 # install runtime system dependencies, collected from install.sh scripts
