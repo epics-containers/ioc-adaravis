@@ -195,6 +195,19 @@ jobs:
         run: |
           cp /epics/versions.json versions.json
 
+      - name: Pre-release check
+        id: prerelease
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          # same pre-release patterns as the ibek-support check in the build job
+          case "${TAG}" in
+              *a[0-9]*|*b[0-9]*|*rc[0-9]*|*alpha*|*beta*|*rc.[0-9]*)
+                  echo "prerelease=true" >> $GITHUB_OUTPUT ;;
+              *)
+                  echo "prerelease=false" >> $GITHUB_OUTPUT ;;
+          esac
+
       - name: Github Release
         uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
         with:
@@ -202,3 +215,4 @@ jobs:
             ibek.ioc.schema.json
             versions.json
           generate_release_notes: true
+          prerelease: ${{ steps.prerelease.outputs.prerelease == 'true' }}
