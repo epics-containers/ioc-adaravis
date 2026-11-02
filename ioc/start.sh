@@ -153,20 +153,12 @@ for ((count = 0 ; count < ${#entities[@]}; count++ )); do # Iterate over each en
         --embed_in "ADAravis"
 done
 
-# get the ibek support yaml files this ioc's support modules
-defs=/epics/ibek-defs/*.ibek.support.yaml
-# prepare the runtime assets: ioc.db, st.cmd + protocol, autosave files
-ibek runtime generate ${ibek_src} ${defs}
-ibek runtime generate-autosave
-if [[ -d /epics/support/configure/protocol ]] ; then
-    rm -fr ${RUNTIME_DIR}/protocol
-    cp -r /epics/support/configure/protocol  ${RUNTIME_DIR}
-fi
-
 # generate EPICS runtime assets ************************************************
+# generate2 discovers both image-installed definitions and runtime-support
+# definitions in CONFIG_DIR.
 
 if [[ -f ${CONFIG_DIR}/ioc.yaml ]] ; then
-    ibek runtime generate2 ${CONFIG_DIR}
+    ibek runtime generate2 "${CONFIG_DIR}"
     ibek runtime generate-autosave
 fi
 
