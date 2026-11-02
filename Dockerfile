@@ -1,4 +1,4 @@
-ARG BASE=7.0.10ec4-beta.2
+ARG BASE=7.0.10ec6
 ARG REGISTRY=ghcr.io/epics-containers
 ARG RUNTIME=${REGISTRY}/epics-base-runtime:${BASE}
 ARG DEVELOPER=${REGISTRY}/epics-base-developer:${BASE}
