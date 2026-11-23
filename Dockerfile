@@ -109,4 +109,4 @@ RUN curl -L \
 # install runtime system dependencies, collected from install.sh scripts
 RUN ibek support apt-install-runtime-packages
 
-CMD ["bash", "-c", "stdio-expose ${IOC}/start.sh"]
+CMD ["bash", "-c", "${IOC}/start.sh"]
