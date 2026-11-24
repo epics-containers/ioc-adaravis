@@ -1,0 +1,117 @@
+# yaml-language-server: $schema=../ioc.schema.json
+# Copied from https://gitlab.diamond.ac.uk/controls/containers/beamline/b01-1-services
+# services/bl01c-di-dcam-02/config/ioc.yaml at commit cc8a2a3b2db38b4fa2abc06141b096c3f75dc1f3
+# Changed, so that nobody running this test reaches a real device:
+# - 1 device address replaced with 127.0.0.1
+# tests/run-tests.sh runs it with start.sh --test, which generates the
+# runtime assets but does not launch the IOC.
+
+ioc_name: bl01c-di-dcam-02
+description: spectroscopy camera
+
+entities:
+  - type: epics.EpicsCaMaxArrayBytes
+    max_bytes: 6000000
+
+  - type: devIocStats.iocAdminSoft
+    IOC: "{{ ioc_name | upper }}"
+
+  - type: ADAravis.aravisCamera
+    ADDR: 0
+    CLASS: AutoADGenICam
+    ID: 127.0.0.1
+    P: BL01C-DI-DCAM-02
+    PORT: D2.DRV
+    R: ":DRV:"
+    TIMEOUT: 1
+    CACHING: False
+
+  - type: ADCore.NDROI
+    ADDR: 0
+    NDARRAY_ADDR: 0
+    NDARRAY_PORT: D2.DRV
+    P: BL01C-DI-DCAM-02
+    PORT: D2.ROI
+    QUEUE: 16
+    R: ":ROI:"
+    TIMEOUT: 1
+
+  - type: ADCore.NDStats
+    ADDR: 0
+    HIST_SIZE: 256
+    NCHANS: 20000
+    NDARRAY_ADDR: 0
+    NDARRAY_PORT: D2.ROI
+    P: BL01C-DI-DCAM-02
+    PORT: D2.STAT
+    QUEUE: 16
+    R: ":STAT:"
+    TIMEOUT: 1
+    XSIZE: 1292
+    YSIZE: 964
+    ENABLED: 1
+
+  - type: ADCore.NDROIStat
+    P: BL01C-DI-DCAM-02
+    R: ":ROISTAT:"
+    PORT: D2.ROISTAT
+    NDARRAY_PORT: D2.DRV
+    ENABLED: 1
+    XMLSIZE: 1048576 # 1MB
+
+  - type: ADCore.NDStdArrays
+    ADDR: 0
+    FTVL: UCHAR
+    NDARRAY_ADDR: 0
+    NDARRAY_PORT: D2.ROI
+    NELEMENTS: 1245488
+    P: BL01C-DI-DCAM-02
+    PORT: D2.ARR
+    QUEUE: 2
+    R: ":ARR:"
+    TIMEOUT: 1
+    TYPE: Int8
+
+  - type: ADCore.NDProcess
+    ADDR: 0
+    NDARRAY_ADDR: 0
+    NDARRAY_PORT: D2.DRV
+    P: BL01C-DI-DCAM-02
+    PORT: D2.PROC
+    QUEUE: 16
+    R: ":PROC:"
+    TIMEOUT: 1
+
+  - type: ADCore.NDFileTIFF
+    ADDR: 0
+    NDARRAY_ADDR: 0
+    NDARRAY_PORT: D2.DRV
+    P: BL01C-DI-DCAM-02
+    PORT: D2.TIFF
+    QUEUE: 16
+    R: ":TIFF:"
+    TIMEOUT: 1
+
+  - type: ADCore.NDFileHDF5
+    PORT: D2.HDF
+    P: BL01C-DI-DCAM-02
+    R: ":HDF5:"
+    NDARRAY_PORT: D2.ROISTAT
+    XMLSIZE: 1048576 # 1MB
+    QUEUE: 1000
+
+  - type: ADCore.NDPvxsPlugin
+    PORT: DET.PVA
+    PVNAME: BL01C-DI-DCAM-02:PVA:OUTPUT
+    P: BL01C-DI-DCAM-02
+    R: ":PVA:"
+    NDARRAY_PORT: D2.DRV
+
+  - type: ADAravis.aravisSettings
+    camera: D2.DRV
+
+  - type: epics.PostStartupCommand
+    command: |
+      dbpf BL01C-DI-DCAM-02:DRV:GC_GevSCPSPacketSize 1500
+      # enable the PVA plugin
+      dbpf BL01C-DI-DCAM-02:PVA:EnableCallbacks 1

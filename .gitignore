@@ -41,3 +41,6 @@ __pycache__/
 dist/
 build/
 .pytest_cache/
+
+# run-tests.sh copies each tests/instances config here, and leaves it on failure
+tests/.instance-config
